@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { 
-  LayoutDashboard, User, UserCheck, Award, 
+  LayoutDashboard, User, UserCheck, 
   BookOpen, Clock, X, ChevronLeft, ChevronRight, 
   ShieldCheck 
 } from 'lucide-react';
@@ -11,7 +11,6 @@ interface AppSidebarProps {
     students: number;
     teachers: number;
     groups: number;
-    ratings: number;
   };
   // Mobile/Tablet Sheet state
   isMobileOpen: boolean;
@@ -36,7 +35,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
     { to: '/dashboard/students', label: 'الطلاب', icon: User, count: counts.students, exact: false },
     { to: '/dashboard/teachers', label: 'المعلمون والمشايخ', icon: UserCheck, count: counts.teachers, exact: false },
     { to: '/dashboard/groups', label: 'الحلقات الدراسية', icon: Clock, count: counts.groups, exact: false },
-    { to: '/dashboard/ratings', label: 'التقييمات الشهرية', icon: Award, count: counts.ratings, exact: false },
   ];
 
   // Close on Escape key press

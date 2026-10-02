@@ -18,8 +18,6 @@ import { Route as DashboardParentsRouteImport } from './routes/dashboard/parents
 import { Route as ApiStorageKeyRouteImport } from './routes/api/storage/$key'
 import { Route as DashboardGroupsIndexRouteImport } from './routes/dashboard/groups/index'
 import { Route as DashboardGroupsNewRouteImport } from './routes/dashboard/groups/new'
-import { Route as DashboardRatingsIndexRouteImport } from './routes/dashboard/ratings/index'
-import { Route as DashboardRatingsNewRouteImport } from './routes/dashboard/ratings/new'
 import { Route as DashboardSessionsIndexRouteImport } from './routes/dashboard/sessions/index'
 import { Route as DashboardStudentsIndexRouteImport } from './routes/dashboard/students/index'
 import { Route as DashboardStudentsNewRouteImport } from './routes/dashboard/students/new'
@@ -79,16 +77,6 @@ const DashboardGroupsIndexRoute = DashboardGroupsIndexRouteImport.update({
 const DashboardGroupsNewRoute = DashboardGroupsNewRouteImport.update({
   id: '/groups/new',
   path: '/groups/new',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardRatingsIndexRoute = DashboardRatingsIndexRouteImport.update({
-  id: '/ratings/',
-  path: '/ratings/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardRatingsNewRoute = DashboardRatingsNewRouteImport.update({
-  id: '/ratings/new',
-  path: '/ratings/new',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSessionsIndexRoute = DashboardSessionsIndexRouteImport.update({
@@ -184,11 +172,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
-  '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
   '/dashboard/teachers/new': typeof DashboardTeachersNewRoute
   '/dashboard/groups/': typeof DashboardGroupsIndexRoute
-  '/dashboard/ratings/': typeof DashboardRatingsIndexRoute
   '/dashboard/sessions/': typeof DashboardSessionsIndexRoute
   '/dashboard/students/': typeof DashboardStudentsIndexRoute
   '/dashboard/teachers/': typeof DashboardTeachersIndexRoute
@@ -211,11 +197,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
-  '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
   '/dashboard/teachers/new': typeof DashboardTeachersNewRoute
   '/dashboard/groups': typeof DashboardGroupsIndexRoute
-  '/dashboard/ratings': typeof DashboardRatingsIndexRoute
   '/dashboard/sessions': typeof DashboardSessionsIndexRoute
   '/dashboard/students': typeof DashboardStudentsIndexRoute
   '/dashboard/teachers': typeof DashboardTeachersIndexRoute
@@ -240,11 +224,9 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
-  '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
   '/dashboard/teachers/new': typeof DashboardTeachersNewRoute
   '/dashboard/groups/': typeof DashboardGroupsIndexRoute
-  '/dashboard/ratings/': typeof DashboardRatingsIndexRoute
   '/dashboard/sessions/': typeof DashboardSessionsIndexRoute
   '/dashboard/students/': typeof DashboardStudentsIndexRoute
   '/dashboard/teachers/': typeof DashboardTeachersIndexRoute
@@ -270,11 +252,9 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/storage/$key'
     | '/dashboard/groups/new'
-    | '/dashboard/ratings/new'
     | '/dashboard/students/new'
     | '/dashboard/teachers/new'
     | '/dashboard/groups/'
-    | '/dashboard/ratings/'
     | '/dashboard/sessions/'
     | '/dashboard/students/'
     | '/dashboard/teachers/'
@@ -297,11 +277,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/storage/$key'
     | '/dashboard/groups/new'
-    | '/dashboard/ratings/new'
     | '/dashboard/students/new'
     | '/dashboard/teachers/new'
     | '/dashboard/groups'
-    | '/dashboard/ratings'
     | '/dashboard/sessions'
     | '/dashboard/students'
     | '/dashboard/teachers'
@@ -325,11 +303,9 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/storage/$key'
     | '/dashboard/groups/new'
-    | '/dashboard/ratings/new'
     | '/dashboard/students/new'
     | '/dashboard/teachers/new'
     | '/dashboard/groups/'
-    | '/dashboard/ratings/'
     | '/dashboard/sessions/'
     | '/dashboard/students/'
     | '/dashboard/teachers/'
@@ -415,20 +391,6 @@ declare module '@tanstack/react-router' {
       path: '/groups/new'
       fullPath: '/dashboard/groups/new'
       preLoaderRoute: typeof DashboardGroupsNewRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/ratings/': {
-      id: '/dashboard/ratings/'
-      path: '/ratings'
-      fullPath: '/dashboard/ratings/'
-      preLoaderRoute: typeof DashboardRatingsIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/ratings/new': {
-      id: '/dashboard/ratings/new'
-      path: '/ratings/new'
-      fullPath: '/dashboard/ratings/new'
-      preLoaderRoute: typeof DashboardRatingsNewRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/sessions/': {
@@ -544,11 +506,9 @@ interface DashboardRouteChildren {
   DashboardParentsRoute: typeof DashboardParentsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardGroupsNewRoute: typeof DashboardGroupsNewRoute
-  DashboardRatingsNewRoute: typeof DashboardRatingsNewRoute
   DashboardStudentsNewRoute: typeof DashboardStudentsNewRoute
   DashboardTeachersNewRoute: typeof DashboardTeachersNewRoute
   DashboardGroupsIndexRoute: typeof DashboardGroupsIndexRoute
-  DashboardRatingsIndexRoute: typeof DashboardRatingsIndexRoute
   DashboardSessionsIndexRoute: typeof DashboardSessionsIndexRoute
   DashboardStudentsIndexRoute: typeof DashboardStudentsIndexRoute
   DashboardTeachersIndexRoute: typeof DashboardTeachersIndexRoute
@@ -569,11 +529,9 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardParentsRoute: DashboardParentsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardGroupsNewRoute: DashboardGroupsNewRoute,
-  DashboardRatingsNewRoute: DashboardRatingsNewRoute,
   DashboardStudentsNewRoute: DashboardStudentsNewRoute,
   DashboardTeachersNewRoute: DashboardTeachersNewRoute,
   DashboardGroupsIndexRoute: DashboardGroupsIndexRoute,
-  DashboardRatingsIndexRoute: DashboardRatingsIndexRoute,
   DashboardSessionsIndexRoute: DashboardSessionsIndexRoute,
   DashboardStudentsIndexRoute: DashboardStudentsIndexRoute,
   DashboardTeachersIndexRoute: DashboardTeachersIndexRoute,

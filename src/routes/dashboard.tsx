@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/apiClient';
 import { 
   PanelLeft, RefreshCw, BookOpen, LayoutDashboard, 
-  User, UserCheck, Clock, Award, ChevronLeft, ChevronRight, 
+  User, UserCheck, Clock, ChevronLeft, ChevronRight, 
   ShieldCheck, X, UserX, Users, LogOut
 } from 'lucide-react';
 import { ScrollArea } from '../components/ui/scroll-area';
@@ -30,7 +30,6 @@ function DashboardLayout() {
     parents: 0,
     teachers: 0,
     groups: 0,
-    ratings: 0
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -68,8 +67,7 @@ function DashboardLayout() {
             students: statsRes.data.stats.totalStudents || 0,
             parents: 0,
             teachers: statsRes.data.stats.totalTeachers || 0,
-            groups: statsRes.data.stats.totalGroups || 0,
-            ratings: 0
+            groups: statsRes.data.stats.totalGroups || 0
           });
         }
       } catch (fallbackErr) {
@@ -93,7 +91,6 @@ function DashboardLayout() {
     { to: '/dashboard/teachers', label: 'المعلمون والمشايخ', icon: UserCheck, count: counts.teachers, exact: false },
     { to: '/dashboard/groups', label: 'الحلقات الدراسية', icon: Clock, count: counts.groups, exact: false },
     { to: '/dashboard/sessions', label: 'الحصص واللقاءات اليومية', icon: Clock, count: null, exact: false },
-    { to: '/dashboard/ratings', label: 'التقييمات الشهرية', icon: Award, count: counts.ratings, exact: false },
   ];
 
   const navItems = rawNavItems.filter(item => {
@@ -159,12 +156,6 @@ function DashboardLayout() {
     }
     if (currentPath.startsWith('/dashboard/groups')) {
       return 'حلقات تحفيظ القرآن';
-    }
-    if (currentPath.startsWith('/dashboard/ratings/new')) {
-      return 'إجراء تقييم شهري جديد';
-    }
-    if (currentPath.startsWith('/dashboard/ratings')) {
-      return 'جدول التقييمات الشهرية';
     }
     return 'بوابة المدرسة القرآنية';
   };
