@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { heroMosqueImg } from './mockData';
+import { PLACEHOLDER_IMAGES } from './mockData';
 
 interface HeroBannerCarouselProps {
   onStartQuran: () => void;
@@ -92,7 +92,7 @@ export const HeroBannerCarousel: React.FC<HeroBannerCarouselProps> = ({
           <div className="relative w-28 h-28 -mr-1 shrink-0 flex items-center justify-center">
             {current.hasIllustration ? (
               <img
-                src={heroMosqueImg}
+                src={PLACEHOLDER_IMAGES.mosqueHero}
                 alt="Mosque Dome"
                 className="w-full h-full object-contain filter drop-shadow-sm select-none pointer-events-none rounded-xl"
                 loading="eager"

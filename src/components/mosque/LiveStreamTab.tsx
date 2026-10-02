@@ -1,13 +1,14 @@
 import React from 'react';
 import { Play, Users, MessageSquare } from 'lucide-react';
-import { SCHOLARS } from './mockData';
+import { PLACEHOLDER_IMAGES } from './mockData';
 import { Scholar } from './types';
 
 interface LiveStreamTabProps {
+  scholars: Scholar[];
   onSelectScholar: (scholar: Scholar) => void;
 }
 
-export const LiveStreamTab: React.FC<LiveStreamTabProps> = ({ onSelectScholar }) => {
+export const LiveStreamTab: React.FC<LiveStreamTabProps> = ({ scholars, onSelectScholar }) => {
   return (
     <div className="p-4 space-y-4 pb-20">
       <div className="flex items-center justify-between">
@@ -17,12 +18,12 @@ export const LiveStreamTab: React.FC<LiveStreamTabProps> = ({ onSelectScholar })
         </div>
         <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-600 text-[11px] font-bold flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-          2 Live Now
+          {scholars.filter((scholar) => scholar.isLive).length} Live Now
         </span>
       </div>
 
       <div className="space-y-3">
-        {SCHOLARS.map((scholar) => (
+        {scholars.map((scholar) => (
           <div
             key={scholar.id}
             onClick={() => onSelectScholar(scholar)}
@@ -30,7 +31,7 @@ export const LiveStreamTab: React.FC<LiveStreamTabProps> = ({ onSelectScholar })
           >
             <div className="relative shrink-0">
               <img
-                src={scholar.avatar}
+                src={scholar.avatar || PLACEHOLDER_IMAGES.scholarAvatar}
                 alt={scholar.name}
                 className="w-16 h-16 rounded-2xl object-cover"
               />

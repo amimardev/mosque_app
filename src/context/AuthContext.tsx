@@ -16,7 +16,7 @@ interface AuthContextType {
   user: UserProfile | null;
   role: 'admin' | 'teacher' | 'parent' | null;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -43,10 +43,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void refreshUser();
   }, []);
 
-  const login = async (email: string, password?: string) => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const result = await loginFn({ data: { email, password: password || 'password123' } });
+      const result = await loginFn({ data: { email, password } });
       setUser(result.user);
       return result.success && !!result.user;
     } catch (error) {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Download, Sparkles, Check } from 'lucide-react';
-import { WALLPAPERS } from './mockData';
+import { PLACEHOLDER_IMAGES } from './mockData';
+import type { WallpaperItem } from './types';
 
-export const WallpapersTab: React.FC = () => {
+export const WallpapersTab: React.FC<{ wallpapers: WallpaperItem[] }> = ({ wallpapers }) => {
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
 
   const handleDownload = (id: string, url: string) => {
@@ -24,13 +25,13 @@ export const WallpapersTab: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {WALLPAPERS.map((wall) => (
+        {wallpapers.map((wall) => (
           <div
             key={wall.id}
             className="group relative rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-950 aspect-[9/14]"
           >
             <img
-              src={wall.imageUrl}
+              src={wall.imageUrl || PLACEHOLDER_IMAGES.wallpaper}
               alt={wall.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -40,7 +41,7 @@ export const WallpapersTab: React.FC = () => {
               <p className="text-[10px] text-gray-400 mt-0.5">{wall.downloads.toLocaleString()} downloads</p>
               
               <button
-                onClick={() => handleDownload(wall.id, wall.imageUrl)}
+                onClick={() => handleDownload(wall.id, wall.imageUrl || PLACEHOLDER_IMAGES.wallpaper)}
                 className="mt-2.5 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-[#1fa38b] hover:bg-[#188874] text-[11px] font-bold text-white transition-all shadow-xs active:scale-95"
               >
                 {downloadedId === wall.id ? (

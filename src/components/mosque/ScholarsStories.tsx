@@ -1,16 +1,17 @@
 import React from 'react';
 import { Scholar } from './types';
-import { SCHOLARS } from './mockData';
+import { PLACEHOLDER_IMAGES } from './mockData';
 
 interface ScholarsStoriesProps {
+  scholars: Scholar[];
   onSelectScholar: (scholar: Scholar) => void;
 }
 
-export const ScholarsStories: React.FC<ScholarsStoriesProps> = ({ onSelectScholar }) => {
+export const ScholarsStories: React.FC<ScholarsStoriesProps> = ({ scholars, onSelectScholar }) => {
   return (
     <section className="w-full py-2.5 px-4">
       <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
-        {SCHOLARS.map((scholar) => (
+        {scholars.map((scholar) => (
           <button
             key={scholar.id}
             onClick={() => onSelectScholar(scholar)}
@@ -26,7 +27,7 @@ export const ScholarsStories: React.FC<ScholarsStoriesProps> = ({ onSelectSchola
                 }`}
               >
                 <img
-                  src={scholar.avatar}
+                  src={scholar.avatar || PLACEHOLDER_IMAGES.scholarAvatar}
                   alt={scholar.name}
                   className="w-full h-full rounded-full object-cover bg-gray-100"
                   referrerPolicy="no-referrer"

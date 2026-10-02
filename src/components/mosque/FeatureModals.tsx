@@ -20,8 +20,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { FeatureType } from './FeatureGrid';
-import { SURAHS, HADITHS, DUAS, WALLPAPERS, DONATION_PROJECTS, SCHOLARS } from './mockData';
-import { Scholar } from './types';
+import type { DuaItem, DonationProject, HadithItem, QuranSurah, Scholar, WallpaperItem } from './types';
 
 interface FeatureModalsProps {
   activeFeature: FeatureType | null;
@@ -30,6 +29,11 @@ interface FeatureModalsProps {
   onCloseScholar: () => void;
   isNotificationsOpen: boolean;
   onCloseNotifications: () => void;
+  quranSurahs: QuranSurah[];
+  hadiths: HadithItem[];
+  duas: DuaItem[];
+  wallpapers: WallpaperItem[];
+  donationProjects: DonationProject[];
 }
 
 export const FeatureModals: React.FC<FeatureModalsProps> = ({
@@ -39,6 +43,11 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
   onCloseScholar,
   isNotificationsOpen,
   onCloseNotifications,
+  quranSurahs,
+  hadiths,
+  duas,
+  wallpapers,
+  donationProjects,
 }) => {
   // Tasbih State
   const [tasbihCount, setTasbihCount] = useState(0);
@@ -53,13 +62,14 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
   ];
 
   // Quran Player State
-  const [selectedSurah, setSelectedSurah] = useState(SURAHS[0]);
+  const [selectedSurahNumber, setSelectedSurahNumber] = useState<number | null>(null);
+  const selectedSurah = quranSurahs.find((surah) => surah.number === selectedSurahNumber) ?? quranSurahs[0];
   const [isPlayingSurah, setIsPlayingSurah] = useState(false);
 
   // Donation State
   const [donationAmount, setDonationAmount] = useState<number>(500);
   const [donorName, setDonorName] = useState('Brother / Sister');
-  const [selectedProject, setSelectedProject] = useState(DONATION_PROJECTS[0].id);
+  const [selectedProject, setSelectedProject] = useState('');
   const [donationSuccess, setDonationSuccess] = useState(false);
 
   // Zakat Calculator State
@@ -163,15 +173,15 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
             <div className="space-y-4">
               {/* Surah Selector Pills */}
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                {SURAHS.map((surah) => (
+                {quranSurahs.map((surah) => (
                   <button
                     key={surah.number}
                     onClick={() => {
-                      setSelectedSurah(surah);
+                      setSelectedSurahNumber(surah.number);
                       setIsPlayingSurah(false);
                     }}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                      selectedSurah.number === surah.number
+                      selectedSurah?.number === surah.number
                         ? 'bg-[#1fa38b] text-white shadow-xs'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
@@ -181,6 +191,7 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
                 ))}
               </div>
 
+              {selectedSurah ? <>
               {/* Surah Header Card */}
               <div className="bg-gradient-to-r from-[#1fa38b] to-[#157866] text-white rounded-2xl p-4 text-center">
                 <span className="text-xs uppercase tracking-wider text-emerald-200 font-semibold">
@@ -217,13 +228,14 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
                   </div>
                 ))}
               </div>
+              </> : <p className="text-sm text-gray-500">Quran content is not available.</p>}
             </div>
           )}
 
           {/* 2. HADITH */}
           {activeFeature === 'hadith' && (
             <div className="space-y-3">
-              {HADITHS.map((item) => (
+              {hadiths.map((item) => (
                 <div key={item.id} className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
@@ -320,7 +332,7 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
           {/* 4. DUA */}
           {activeFeature === 'dua' && (
             <div className="space-y-3">
-              {DUAS.map((dua) => (
+              {duas.map((dua) => (
                 <div key={dua.id} className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                   <span className="text-xs font-bold text-[#1fa38b] bg-emerald-50 px-2 py-0.5 rounded-md">
                     {dua.category}
@@ -362,12 +374,12 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
                   <div>
                     <label className="text-xs font-bold text-gray-700 mb-1.5 block">Select Cause</label>
                     <div className="space-y-2">
-                      {DONATION_PROJECTS.map((proj) => (
+                      {donationProjects.map((proj) => (
                         <div
                           key={proj.id}
                           onClick={() => setSelectedProject(proj.id)}
                           className={`p-3 rounded-2xl border cursor-pointer transition-all ${
-                            selectedProject === proj.id
+                            (selectedProject || donationProjects[0]?.id) === proj.id
                               ? 'border-[#1fa38b] bg-emerald-50/50 ring-1 ring-[#1fa38b]'
                               : 'border-gray-200 hover:bg-gray-50'
                           }`}
@@ -444,7 +456,7 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
             <div className="space-y-3">
               <p className="text-xs text-gray-500 font-medium">Download peaceful 4K Islamic wallpapers for your mobile device.</p>
               <div className="grid grid-cols-2 gap-3">
-                {WALLPAPERS.map((wall) => (
+                {wallpapers.map((wall) => (
                   <div key={wall.id} className="group relative rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-900 aspect-[9/14]">
                     <img
                       src={wall.imageUrl}

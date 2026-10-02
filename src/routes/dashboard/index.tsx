@@ -7,6 +7,7 @@ import {
 import { Student, Teacher, Group, StudentRating } from '../../types';
 import { StudentCard } from '../../components/common/StudentCard';
 import { useAuth } from '../../context/AuthContext';
+import { PLACEHOLDER_IMAGES } from '../../components/mosque/mockData';
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardIndexPage,
@@ -92,21 +93,21 @@ export function DashboardIndexPage() {
     {
       to: '/dashboard/students',
       label: 'الطلاب',
-      image: '/src/assets/images/students_faceless_1790530817292.jpg',
+      image: PLACEHOLDER_IMAGES.dashboardStudents,
       alt: 'دليل الطلاب',
       countLabel: `${counts.students || students.length} طالباً مسجلاً`,
     },
     {
       to: '/dashboard/teachers',
       label: 'المعلمون والمشايخ',
-      image: '/src/assets/images/teachers_faceless_1790530831937.jpg',
+      image: PLACEHOLDER_IMAGES.dashboardTeachers,
       alt: 'المعلمون والتحفيظ',
       countLabel: `${counts.teachers || teachers.length} معلماً ومحفظاً`,
     },
     {
       to: '/dashboard/groups',
       label: 'الحلقات الدراسية',
-      image: '/src/assets/images/halaqat_faceless_1790530844707.jpg',
+      image: PLACEHOLDER_IMAGES.dashboardGroups,
       alt: 'حلقات تحفيظ القرآن',
       countLabel: `${counts.groups || groups.length} حلقة حفظ`,
     },
