@@ -45,3 +45,5 @@ app.route('/api/stats', statsRouter);
 app.route('/api/quran', quranRouter);
 app.route('/api/storage', storageRouter);
 app.route('/api/prayer-times', prayerTimesRouter);
+
+export default app;
