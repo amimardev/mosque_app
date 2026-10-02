@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+body {
+  background-color: #F2F7F5;
+  color: #173832;
+  min-height: 100vh;
+  font-family: "Rethink Sans", system-ui, -apple-system, sans-serif;
+}
+
+.paper-texture-layer {
+  background: 
+    radial-gradient(circle at 15% 10%, rgba(20, 122, 104, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.035) 0%, transparent 40%),
+    radial-gradient(circle at 50% 80%, rgba(26, 163, 141, 0.04) 0%, transparent 50%);
+}
