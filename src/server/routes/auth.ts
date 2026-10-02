@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
 import { eq, inArray } from 'drizzle-orm';
-import { ensureDatabaseInitialized } from '../../db/init';
+import { ensureDatabaseInitialized } from '../../db/init.js';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 
 export const authRouter = new Hono();

@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
 import { eq, and, gte, lte, sql as sqlDrizzle } from 'drizzle-orm';
 import { getCookie } from 'hono/cookie';
-import { getSessionId } from './auth';
-import { calculateAge } from '../../lib/ageUtils';
-import { computeAlgeriaSessionTimes } from './prayerTimes';
+import { getSessionId } from './auth.js';
+import { calculateAge } from '../../lib/ageUtils.js';
+import { computeAlgeriaSessionTimes } from './prayerTimes.js';
 
 export const sessionsRouter = new Hono();
 

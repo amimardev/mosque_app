@@ -1,18 +1,18 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
-import { authRouter } from './routes/auth';
-import { studentsRouter } from './routes/students';
-import { parentsRouter } from './routes/parents';
-import { teachersRouter } from './routes/teachers';
-import { groupsRouter } from './routes/groups';
-import { groupTypesRouter } from './routes/groupTypes';
-import { ratingsRouter } from './routes/ratings';
-import { sessionsRouter } from './routes/sessions';
-import { attendancesRouter } from './routes/attendances';
-import { statsRouter, quranRouter } from './routes/stats';
-import { storageRouter } from './routes/storage';
-import { prayerTimesRouter } from './routes/prayerTimes';
+import { authRouter } from './routes/auth.js';
+import { studentsRouter } from './routes/students.js';
+import { parentsRouter } from './routes/parents.js';
+import { teachersRouter } from './routes/teachers.js';
+import { groupsRouter } from './routes/groups.js';
+import { groupTypesRouter } from './routes/groupTypes.js';
+import { ratingsRouter } from './routes/ratings.js';
+import { sessionsRouter } from './routes/sessions.js';
+import { attendancesRouter } from './routes/attendances.js';
+import { statsRouter, quranRouter } from './routes/stats.js';
+import { storageRouter } from './routes/storage.js';
+import { prayerTimesRouter } from './routes/prayerTimes.js';
 
 export const app = new Hono();
 
@@ -25,6 +25,15 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization', 'Cookie'],
   exposeHeaders: ['Set-Cookie']
 }));
+
+// Global Error Handler
+app.onError((err, c) => {
+  console.error('[UNCAUGHT SERVER ERROR]:', err);
+  return c.json({
+    error: err.message || 'Internal Server Error',
+    details: err.toString()
+  }, 500);
+});
 
 // Health check
 app.get('/api/health', (c) => {

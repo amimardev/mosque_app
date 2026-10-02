@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
 import { eq, desc } from 'drizzle-orm';
-import { ensureDatabaseInitialized } from '../../db/init';
-import { getSurahByNumber } from '../../lib/quranData';
-import { calculateAge } from '../../lib/ageUtils';
+import { ensureDatabaseInitialized } from '../../db/init.js';
+import { getSurahByNumber } from '../../lib/quranData.js';
+import { calculateAge } from '../../lib/ageUtils.js';
 
 export const studentsRouter = new Hono();
 

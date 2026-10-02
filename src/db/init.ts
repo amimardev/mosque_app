@@ -1,5 +1,5 @@
-import { sql, db } from './index';
-import * as schema from './schema';
+import { sql, db } from './index.js';
+import * as schema from './schema.js';
 import { eq } from 'drizzle-orm';
 
 let initialized = false;

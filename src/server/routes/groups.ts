@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
 import { eq, desc, inArray } from 'drizzle-orm';
-import { ensureDatabaseInitialized } from '../../db/init';
-import { getSurahByNumber } from '../../lib/quranData';
+import { ensureDatabaseInitialized } from '../../db/init.js';
+import { getSurahByNumber } from '../../lib/quranData.js';
 
 export const groupsRouter = new Hono();
 

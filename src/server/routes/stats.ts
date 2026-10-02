@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
-import { ensureDatabaseInitialized } from '../../db/init';
-import { QURAN_SURAHS } from '../../lib/quranData';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
+import { ensureDatabaseInitialized } from '../../db/init.js';
+import { QURAN_SURAHS } from '../../lib/quranData.js';
 
 export const statsRouter = new Hono();
 

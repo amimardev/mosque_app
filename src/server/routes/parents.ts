@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
-import { db } from '../../db';
-import * as schema from '../../db/schema';
+import { db } from '../../db/index.js';
+import * as schema from '../../db/schema.js';
 import { eq, desc, like, or } from 'drizzle-orm';
-import { ensureDatabaseInitialized } from '../../db/init';
+import { ensureDatabaseInitialized } from '../../db/init.js';
 import { getCookie } from 'hono/cookie';
-import { getSessionId } from './auth';
-import { calculateAge } from '../../lib/ageUtils';
+import { getSessionId } from './auth.js';
+import { calculateAge } from '../../lib/ageUtils.js';
 
 export const parentsRouter = new Hono();
 
