@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardAttendanceRouteImport } from './routes/dashboard/attendance'
 import { Route as DashboardParentsRouteImport } from './routes/dashboard/parents'
+import { Route as ApiStorageKeyRouteImport } from './routes/api/storage/$key'
 import { Route as DashboardGroupsIndexRouteImport } from './routes/dashboard/groups/index'
 import { Route as DashboardGroupsNewRouteImport } from './routes/dashboard/groups/new'
 import { Route as DashboardRatingsIndexRouteImport } from './routes/dashboard/ratings/index'
@@ -64,6 +65,11 @@ const DashboardParentsRoute = DashboardParentsRouteImport.update({
   id: '/parents',
   path: '/parents',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ApiStorageKeyRoute = ApiStorageKeyRouteImport.update({
+  id: '/api/storage/$key',
+  path: '/api/storage/$key',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardGroupsIndexRoute = DashboardGroupsIndexRouteImport.update({
   id: '/groups/',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/parents': typeof DashboardParentsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
   '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/parents': typeof DashboardParentsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
   '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/dashboard/attendance': typeof DashboardAttendanceRoute
   '/dashboard/parents': typeof DashboardParentsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/storage/$key': typeof ApiStorageKeyRoute
   '/dashboard/groups/new': typeof DashboardGroupsNewRoute
   '/dashboard/ratings/new': typeof DashboardRatingsNewRoute
   '/dashboard/students/new': typeof DashboardStudentsNewRoute
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/parents'
     | '/dashboard/'
+    | '/api/storage/$key'
     | '/dashboard/groups/new'
     | '/dashboard/ratings/new'
     | '/dashboard/students/new'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/parents'
     | '/dashboard'
+    | '/api/storage/$key'
     | '/dashboard/groups/new'
     | '/dashboard/ratings/new'
     | '/dashboard/students/new'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/dashboard/attendance'
     | '/dashboard/parents'
     | '/dashboard/'
+    | '/api/storage/$key'
     | '/dashboard/groups/new'
     | '/dashboard/ratings/new'
     | '/dashboard/students/new'
@@ -337,6 +349,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiStorageKeyRoute: typeof ApiStorageKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -382,6 +395,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/parents'
       preLoaderRoute: typeof DashboardParentsRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/api/storage/$key': {
+      id: '/api/storage/$key'
+      path: '/api/storage/$key'
+      fullPath: '/api/storage/$key'
+      preLoaderRoute: typeof ApiStorageKeyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/groups/': {
       id: '/dashboard/groups/'
@@ -579,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiStorageKeyRoute: ApiStorageKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

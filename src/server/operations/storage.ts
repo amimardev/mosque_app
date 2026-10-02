@@ -18,6 +18,36 @@ const s3Client = hasS3Config ? new S3Client({
 
 const S3_BUCKET = process.env.AWS_S3_BUCKET || 'uploads';
 
+export async function getStorageImageResponse(key: string): Promise<Response> {
+  const safeKey = key.replace(/[^a-zA-Z0-9_.-]/g, '');
+  if (!safeKey || safeKey !== key) {
+    return new Response('Invalid storage key', { status: 400 });
+  }
+  if (!s3Client) {
+    return new Response('Object storage is not configured', { status: 503 });
+  }
+
+  try {
+    const object = await s3Client.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: safeKey }));
+    if (!object.Body) return new Response('Image not found', { status: 404 });
+
+    const headers = new Headers({
+      'Content-Type': object.ContentType || 'application/octet-stream',
+      'Cache-Control': 'private, max-age=300',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    if (object.ContentLength !== undefined) headers.set('Content-Length', String(object.ContentLength));
+    if (object.ETag) headers.set('ETag', object.ETag);
+    if (object.LastModified) headers.set('Last-Modified', object.LastModified.toUTCString());
+
+    return new Response(object.Body.transformToWebStream() as ReadableStream<Uint8Array>, { headers });
+  } catch (error) {
+    if (isMissingObject(error)) return new Response('Image not found', { status: 404 });
+    console.error('Failed to read image from object storage:', error);
+    return new Response('Unable to load image', { status: 502 });
+  }
+}
+
 function detectMimeType(buffer: Buffer): string {
   if (buffer.length > 8) {
     if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
@@ -148,7 +178,7 @@ storageRouter.post('/upload', async (c) => {
       return c.json({ 
         success: true, 
         key: safeKey, 
-        url: `/api/storage/${safeKey}` 
+        url: `/api/storage/${safeKey}?v=${Date.now()}`
       });
     }
 

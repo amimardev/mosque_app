@@ -13,22 +13,6 @@ function isPublicRequest(path: string) {
   return path === '/api/prayer-times' || path === '/api/quran/surahs';
 }
 
-async function inlineStorageUrls(value: unknown): Promise<unknown> {
-  if (value instanceof Date) return value;
-  if (typeof value === 'string') {
-    const match = value.match(/^\/api\/storage\/([^?]+)(?:\?.*)?$/);
-    if (!match) return value;
-    const { getStorageDataUrl } = await import('../operations/storage.js');
-    return getStorageDataUrl(decodeURIComponent(match[1]));
-  }
-  if (Array.isArray(value)) return Promise.all(value.map(inlineStorageUrls));
-  if (value && typeof value === 'object') {
-    const entries = await Promise.all(Object.entries(value).map(async ([key, nested]) => [key, await inlineStorageUrls(nested)] as const));
-    return Object.fromEntries(entries);
-  }
-  return value;
-}
-
 export const apiRequestFn = createServerFn({ method: 'POST' })
   .validator(requestSchema)
   .handler(async ({ data }): Promise<ApiEnvelope> => {
@@ -54,6 +38,5 @@ export const apiRequestFn = createServerFn({ method: 'POST' })
     for (const [name, value] of Object.entries(result.headers)) {
       setResponseHeader(name, value);
     }
-    if (result.status < 400) result.body = await inlineStorageUrls(result.body);
     return result;
   });
