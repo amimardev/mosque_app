@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, BookOpen, AlertCircle } from 'lucide-react';
+import { Mail, Lock, BookOpen, AlertCircle, ShieldCheck, User, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -41,6 +41,24 @@ function LoginPage() {
         setErrorMsg('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       }
     } catch (err) {
+      setErrorMsg('حدث خطأ أثناء تسجيل الدخول');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleQuickLogin = async (quickEmail: string) => {
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const success = await login(quickEmail, 'password123');
+      if (success) {
+        navigate({ to: '/dashboard' });
+      } else {
+        setErrorMsg('تعذر الدخول بالحساب التجريبي. قد لا يكون الحساب موجوداً في قاعدة البيانات.');
+      }
+    } catch {
       setErrorMsg('حدث خطأ أثناء تسجيل الدخول');
     } finally {
       setIsSubmitting(false);
@@ -114,6 +132,71 @@ function LoginPage() {
               {isSubmitting ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </button>
           </form>
+
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-white px-3 text-slate-500 font-bold">الحسابات التجريبية والدخول السريع</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('admin@madrasa.iqra')}
+              disabled={isSubmitting || isLoading}
+              className="w-full p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-2xl flex items-center justify-between text-xs font-bold transition-colors cursor-pointer text-right disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-200/60 text-amber-800 flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[11px] sm:text-xs">مدير المدرسة / المشرف</div>
+                  <div className="text-[10px] text-amber-700 font-mono">admin@madrasa.iqra</div>
+                </div>
+              </div>
+              <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-lg shrink-0">مدير</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('teacher@madrasa.iqra')}
+              disabled={isSubmitting || isLoading}
+              className="w-full p-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 rounded-2xl flex items-center justify-between text-xs font-bold transition-colors cursor-pointer text-right disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-200/60 text-emerald-800 flex items-center justify-center">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[11px] sm:text-xs">الشيخ والمعلم</div>
+                  <div className="text-[10px] text-emerald-700 font-mono">teacher@madrasa.iqra</div>
+                </div>
+              </div>
+              <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-lg shrink-0">معلم</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('parent@madrasa.iqra')}
+              disabled={isSubmitting || isLoading}
+              className="w-full p-3 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 rounded-2xl flex items-center justify-between text-xs font-bold transition-colors cursor-pointer text-right disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-teal-200/60 text-teal-800 flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[11px] sm:text-xs">ولي الأمر والمتابع</div>
+                  <div className="text-[10px] text-teal-700 font-mono">parent@madrasa.iqra</div>
+                </div>
+              </div>
+              <span className="text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded-lg shrink-0">ولي أمر</span>
+            </button>
+          </div>
 
         </div>
       </div>
