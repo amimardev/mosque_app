@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { GroupForm } from '../../../../components/forms/GroupForm';
 import { Teacher, GroupType } from '../../../../types';
 
@@ -21,8 +21,8 @@ function NewGroupUnderTypePage() {
       try {
         setIsLoading(true);
         const [teachersRes, typesRes] = await Promise.all([
-          axios.get('/api/teachers'),
-          axios.get('/api/group-types')
+          api.get('/api/teachers'),
+          api.get('/api/group-types')
         ]);
         const allTeachers = teachersRes.data.teachers || [];
         const allTypes = typesRes.data.groupTypes || [];
@@ -43,7 +43,7 @@ function NewGroupUnderTypePage() {
   }, [groupTypeParam]);
 
   const handleSave = async (groupData: any) => {
-    await axios.post('/api/groups', groupData);
+    await api.post('/api/groups', groupData);
     navigate({ to: `/dashboard/groups/${encodeURIComponent(groupTypeParam)}` as any });
   };
 

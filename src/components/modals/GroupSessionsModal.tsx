@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   X, Calendar, Clock, Filter, ArrowLeft, Search, 
   Sparkles, AlertCircle, RefreshCw, ChevronLeft, CheckCircle2
@@ -58,7 +58,7 @@ export const GroupSessionsModal: React.FC<GroupSessionsModalProps> = ({
       if (endDate) query += `&endDate=${encodeURIComponent(endDate)}`;
       if (statusFilter !== 'all') query += `&status=${encodeURIComponent(statusFilter)}`;
 
-      const res = await axios.get(query);
+      const res = await api.get(query);
       let list = res.data.sessions || [];
 
       // Sort descending (newest / last session first)

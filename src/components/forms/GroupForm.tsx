@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
 import { 
   Users, Clock, Award, Save, ArrowRight, Check, 
@@ -81,7 +81,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
 
     async function loadGroupTypes() {
       try {
-        const res = await axios.get('/api/group-types');
+        const res = await api.get('/api/group-types');
         if (!isMounted) return;
         setAvailableTypes(res.data.groupTypes || []);
       } catch (e) {
@@ -102,7 +102,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
 
     async function loadAllStudents() {
       try {
-        const res = await axios.get('/api/students');
+        const res = await api.get('/api/students');
         if (!isMounted) return;
         setAvailableStudents(res.data.students || []);
       } catch (e) {

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { StudentForm } from '../../../../components/forms/StudentForm';
 import { Student, Group } from '../../../../types';
 
@@ -20,8 +20,8 @@ function EditStudentPage() {
       try {
         setIsLoading(true);
         const [studentRes, groupsRes] = await Promise.all([
-          axios.get(`/api/students/${id}`),
-          axios.get('/api/groups')
+          api.get(`/api/students/${id}`),
+          api.get('/api/groups')
         ]);
         setStudent(studentRes.data.student || null);
         setGroups(groupsRes.data.groups || []);
@@ -35,7 +35,7 @@ function EditStudentPage() {
   }, [id]);
 
   const handleSave = async (studentData: Partial<Student>) => {
-    await axios.put(`/api/students/${id}`, studentData);
+    await api.put(`/api/students/${id}`, studentData);
     navigate({ to: '/dashboard/students/$id', params: { id } });
   };
 

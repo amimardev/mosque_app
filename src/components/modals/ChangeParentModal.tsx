@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
 import { X, Save, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Parent, Student } from '../../types';
@@ -32,7 +32,7 @@ export const ChangeParentModal: React.FC<ChangeParentModalProps> = ({
     async function loadParents() {
       try {
         setIsLoading(true);
-        const res = await axios.get('/api/parents');
+        const res = await api.get('/api/parents');
         setParents(res.data.parents || []);
       } catch (err) {
         console.error('Failed to load parents list:', err);
@@ -53,7 +53,7 @@ export const ChangeParentModal: React.FC<ChangeParentModalProps> = ({
       setSuccessMsg('');
 
       try {
-        await axios.put(`/api/students/${student.id}`, {
+        await api.put(`/api/students/${student.id}`, {
           parentId: value.parentId === 'none' ? null : (value.parentId || null)
         });
 

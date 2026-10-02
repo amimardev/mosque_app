@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   X, Clock, CheckSquare, Square, 
   Save, AlertCircle, CheckCircle2, Layers
@@ -78,7 +78,7 @@ export const BulkTimingModal: React.FC<BulkTimingModalProps> = ({
     setSuccessMsg('');
 
     try {
-      await axios.post('/api/groups/bulk-update-time', {
+      await api.post('/api/groups/bulk-update-time', {
         groupIds: selectedGroupIds,
         sessionTime,
         studyTime: liveFormattedSummary

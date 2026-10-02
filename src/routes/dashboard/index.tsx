@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Sparkles, Clock, Star, ChevronRight 
 } from 'lucide-react';
@@ -30,7 +30,7 @@ export function DashboardIndexPage() {
         setIsLoading(true);
 
         // Fetch counts for fast dashboard cards
-        const countsRes = await axios.get('/api/stats/counts').catch(() => null);
+        const countsRes = await api.get('/api/stats/counts').catch(() => null);
         if (countsRes?.data?.counts) {
           setCounts({
             students: countsRes.data.counts.students || 0,
@@ -41,10 +41,10 @@ export function DashboardIndexPage() {
 
         // Fetch full data in parallel with Promise.allSettled
         const results = await Promise.allSettled([
-          axios.get('/api/students'),
-          axios.get('/api/teachers'),
-          axios.get('/api/groups'),
-          axios.get('/api/ratings')
+          api.get('/api/students'),
+          api.get('/api/teachers'),
+          api.get('/api/groups'),
+          api.get('/api/ratings')
         ]);
 
         let studentList: Student[] = [];

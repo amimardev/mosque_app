@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   ArrowRight, Edit, Clock, Users,
   Plus, Trash2, UserCheck, Calendar, Sun, Moon, Sparkles, MapPin, UserX, CheckCircle2, X
@@ -47,7 +47,7 @@ function ViewGroupByNumberPage() {
   const loadGroupData = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get(
+      const res = await api.get(
         `/api/groups/by-type-and-number/${encodeURIComponent(groupTypeParam)}/${encodeURIComponent(groupNumberParam)}`
       );
       const g = res.data.group;
@@ -73,7 +73,7 @@ function ViewGroupByNumberPage() {
 
   const handleDelete = async () => {
     if (group && window.confirm(`هل أنت متأكد من حذف الحلقة رقم ${group.number}؟`)) {
-      await axios.delete(`/api/groups/${group.id}`);
+      await api.delete(`/api/groups/${group.id}`);
       navigate({ to: `/dashboard/groups/${encodeURIComponent(groupTypeParam)}` as any });
     }
   };
@@ -327,7 +327,7 @@ function ViewGroupByNumberPage() {
               e.preventDefault();
               setIsCreatingSession(true);
               try {
-                await axios.post('/api/sessions/exception', {
+                await api.post('/api/sessions/exception', {
                   groupId: group.id,
                   date: exceptionDate,
                   notes: exceptionNotes

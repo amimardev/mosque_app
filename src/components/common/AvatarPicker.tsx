@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, CheckCircle2, User, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 
 interface AvatarPickerProps {
   id?: string;
@@ -20,7 +20,6 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
   const [localPreview, setLocalPreview] = useState<string | null>(null);
 
   const storageKey = `${type}-${id}`;
-  const baseStorageUrl = `/api/storage/${storageKey}`;
 
   // Clean up object URL on unmount or new selection
   useEffect(() => {
@@ -47,12 +46,12 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
       formData.append('key', storageKey);
       formData.append('file', file);
 
-      const res = await axios.post('/api/storage/upload', formData, {
+      const res = await api.post('/api/storage/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       // Add cache buster timestamp to ensure all components immediately show the new photo
-      const timestampedUrl = `${res.data.url}?t=${Date.now()}`;
+      const timestampedUrl = res.data.url;
       if (onChange) {
         onChange(timestampedUrl);
       }
@@ -65,7 +64,8 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
     }
   };
 
-  const imageSrc = localPreview || value || baseStorageUrl;
+  const fallbackAvatar = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(storageKey)}`;
+  const imageSrc = localPreview || value || fallbackAvatar;
 
   return (
     <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-right" dir="rtl">
@@ -96,7 +96,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
             alt="معاينة الصورة"
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = baseStorageUrl;
+              (e.target as HTMLImageElement).src = fallbackAvatar;
             }}
           />
         </div>

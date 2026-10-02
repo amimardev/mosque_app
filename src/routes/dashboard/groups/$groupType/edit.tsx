@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams, Link } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { ArrowRight, Save, Trash2, Edit3 } from 'lucide-react';
 import { GroupType } from '../../../../types';
 
@@ -23,7 +23,7 @@ function EditGroupTypePage() {
     async function loadType() {
       try {
         setIsLoading(true);
-        const res = await axios.get(`/api/group-types/${encodeURIComponent(groupTypeParam)}`);
+        const res = await api.get(`/api/group-types/${encodeURIComponent(groupTypeParam)}`);
         const gt = res.data.groupType;
         setGroupType(gt);
         if (gt) {
@@ -54,7 +54,7 @@ function EditGroupTypePage() {
     setError('');
 
     try {
-      const res = await axios.put(`/api/group-types/${encodeURIComponent(groupType.id)}`, {
+      const res = await api.put(`/api/group-types/${encodeURIComponent(groupType.id)}`, {
         name: name.trim(),
         slug: slug.trim() || undefined,
         description: description.trim() || undefined,
@@ -75,7 +75,7 @@ function EditGroupTypePage() {
     if (!groupType) return;
     if (window.confirm(`هل أنت متأكد من حذف المسار الدراسي "${groupType.name}"؟`)) {
       try {
-        await axios.delete(`/api/group-types/${encodeURIComponent(groupType.id)}`);
+        await api.delete(`/api/group-types/${encodeURIComponent(groupType.id)}`);
         navigate({ to: '/dashboard/groups' });
       } catch (err: any) {
         alert(err.response?.data?.error || 'فشل في حذف المسار');

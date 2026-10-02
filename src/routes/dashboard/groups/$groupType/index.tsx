@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Users, Clock, Plus, Edit, Trash2, 
   ChevronRight, UserCheck, ArrowRight,
@@ -36,7 +36,7 @@ function GroupTypeGroupsPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get(`/api/group-types/${encodeURIComponent(groupTypeParam)}`);
+      const res = await api.get(`/api/group-types/${encodeURIComponent(groupTypeParam)}`);
       const gt = res.data.groupType;
       setGroupTypeData(gt);
       setGroups(gt?.groups || []);
@@ -57,7 +57,7 @@ function GroupTypeGroupsPage() {
     if (window.confirm(`هل أنت متأكد من رغبتك في حذف الحلقة رقم ${group.number}؟`)) {
       setDeletingId(group.id);
       try {
-        await axios.delete(`/api/groups/${group.id}`);
+        await api.delete(`/api/groups/${group.id}`);
         await loadData();
       } finally {
         setDeletingId(null);

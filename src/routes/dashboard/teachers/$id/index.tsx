@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   ArrowRight, Edit, Phone, Mail, Clock, 
   Award, Users, Trash2, CheckCircle2 
@@ -22,7 +22,7 @@ function TeacherDetailsPage() {
     async function loadTeacher() {
       try {
         setIsLoading(true);
-        const res = await axios.get(`/api/teachers/${id}`);
+        const res = await api.get(`/api/teachers/${id}`);
         setTeacher(res.data.teacher || null);
       } catch (err: any) {
         setError(err.message || 'Failed to load teacher');
@@ -35,7 +35,7 @@ function TeacherDetailsPage() {
 
   const handleDelete = async () => {
     if (teacher && window.confirm(`هل أنت متأكد من حذف حساب المعلم "${teacher.name}"؟`)) {
-      await axios.delete(`/api/teachers/${teacher.id}`);
+      await api.delete(`/api/teachers/${teacher.id}`);
       navigate({ to: '/dashboard/teachers' });
     }
   };

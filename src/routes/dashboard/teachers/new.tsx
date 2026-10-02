@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { TeacherForm } from '../../../components/forms/TeacherForm';
 import { Group } from '../../../types';
 
@@ -16,7 +16,7 @@ function NewTeacherPage() {
   useEffect(() => {
     async function loadGroups() {
       try {
-        const res = await axios.get('/api/groups');
+        const res = await api.get('/api/groups');
         setGroups(res.data.groups || []);
       } catch (e) {
         console.error('Failed to load groups:', e);
@@ -28,7 +28,7 @@ function NewTeacherPage() {
   }, []);
 
   const handleSave = async (teacherData: any) => {
-    await axios.post('/api/teachers', teacherData);
+    await api.post('/api/teachers', teacherData);
     navigate({ to: '/dashboard/teachers' });
   };
 

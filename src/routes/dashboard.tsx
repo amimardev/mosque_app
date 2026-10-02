@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useLocation, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   PanelLeft, RefreshCw, BookOpen, LayoutDashboard, 
   User, UserCheck, Clock, Award, ChevronLeft, ChevronRight, 
@@ -54,7 +54,7 @@ function DashboardLayout() {
   const fetchCounts = useCallback(async () => {
     try {
       setIsRefreshing(true);
-      const res = await axios.get('/api/stats/counts');
+      const res = await api.get('/api/stats/counts');
       if (res.data && res.data.counts) {
         setCounts(res.data.counts);
       }
@@ -62,7 +62,7 @@ function DashboardLayout() {
       console.warn('Failed to fetch counts from /api/stats/counts:', err?.message || err);
       // Optional fallback if /counts fails
       try {
-        const statsRes = await axios.get('/api/stats');
+        const statsRes = await api.get('/api/stats');
         if (statsRes.data?.stats) {
           setCounts({
             students: statsRes.data.stats.totalStudents || 0,

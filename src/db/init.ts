@@ -1,6 +1,7 @@
 import { sql, db } from './index.js';
 import * as schema from './schema.js';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 let initialized = false;
 let initializingPromise: Promise<void> | null = null;
@@ -245,6 +246,15 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           password TEXT,
           role TEXT DEFAULT 'admin' NOT NULL,
           avatar TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS auth_sessions (
+          token_hash TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          expires_at TIMESTAMP NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
       `;
@@ -843,7 +853,7 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           id: 'usr_admin',
           name: 'المشرف العام للمدرسة',
           email: 'director@madrasa.org',
-          password: 'admin',
+          password: await bcrypt.hash('admin', 12),
           role: 'admin',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
         }).onConflictDoNothing();
@@ -853,24 +863,25 @@ export async function ensureDatabaseInitialized(): Promise<void> {
 
       // Ensure the three main test users always exist in the 'users' table
       // 1. Admin: admin@madrasa.iqra / password123
+      const demoPasswordHash = await bcrypt.hash('password123', 12);
       await sql`
         INSERT INTO users (id, name, email, password, role, avatar)
-        VALUES ('usr_admin_new', 'المشرف العام (مدير)', 'admin@madrasa.iqra', 'password123', 'admin', 'https://api.dicebear.com/7.x/micah/svg?seed=admin')
-        ON CONFLICT (email) DO UPDATE SET password = 'password123', role = 'admin';
+        VALUES ('usr_admin_new', 'المشرف العام (مدير)', 'admin@madrasa.iqra', ${demoPasswordHash}, 'admin', 'https://api.dicebear.com/7.x/micah/svg?seed=admin')
+        ON CONFLICT (email) DO UPDATE SET password = ${demoPasswordHash}, role = 'admin';
       `;
 
       // 2. Teacher: teacher@madrasa.iqra / password123
       await sql`
         INSERT INTO users (id, name, email, password, role, avatar)
-        VALUES ('usr_teacher_new', 'الأستاذ بلال طارق', 'teacher@madrasa.iqra', 'password123', 'teacher', 'https://api.dicebear.com/7.x/micah/svg?seed=teacher')
-        ON CONFLICT (email) DO UPDATE SET password = 'password123', role = 'teacher';
+        VALUES ('usr_teacher_new', 'الأستاذ بلال طارق', 'teacher@madrasa.iqra', ${demoPasswordHash}, 'teacher', 'https://api.dicebear.com/7.x/micah/svg?seed=teacher')
+        ON CONFLICT (email) DO UPDATE SET password = ${demoPasswordHash}, role = 'teacher';
       `;
 
       // 3. Parent: parent@madrasa.iqra / password123
       await sql`
         INSERT INTO users (id, name, email, password, role, avatar)
-        VALUES ('usr_parent_new', 'كريم بن علي', 'parent@madrasa.iqra', 'password123', 'parent', 'https://api.dicebear.com/7.x/micah/svg?seed=parent')
-        ON CONFLICT (email) DO UPDATE SET password = 'password123', role = 'parent';
+        VALUES ('usr_parent_new', 'كريم بن علي', 'parent@madrasa.iqra', ${demoPasswordHash}, 'parent', 'https://api.dicebear.com/7.x/micah/svg?seed=parent')
+        ON CONFLICT (email) DO UPDATE SET password = ${demoPasswordHash}, role = 'parent';
       `;
 
       // Get user ids for mapping

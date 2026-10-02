@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { z } from 'zod';
 import { RatingForm } from '../../../components/forms/RatingForm';
 import { Student, Teacher } from '../../../types';
@@ -32,8 +32,8 @@ function NewRatingPage() {
       try {
         setIsLoading(true);
         const [studentsRes, teachersRes] = await Promise.all([
-          axios.get('/api/students'),
-          axios.get('/api/teachers')
+          api.get('/api/students'),
+          api.get('/api/teachers')
         ]);
         setStudents(studentsRes.data.students || []);
         setTeachers(teachersRes.data.teachers || []);
@@ -47,7 +47,7 @@ function NewRatingPage() {
   }, []);
 
   const handleSave = async (ratingData: any) => {
-    await axios.post('/api/ratings', ratingData);
+    await api.post('/api/ratings', ratingData);
     navigate({ to: '/dashboard/ratings' });
   };
 

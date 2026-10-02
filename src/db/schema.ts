@@ -158,3 +158,10 @@ export const sessionStudentRecords = pgTable('session_student_records', {
   isAssessed: boolean('is_assessed').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const authSessions = pgTable('auth_sessions', {
+  tokenHash: text('token_hash').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

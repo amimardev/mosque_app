@@ -1,0 +1,920 @@
+//#region node_modules/.nitro/vite/services/ssr/assets/quranData-CM-Mrj3O.js
+var QURAN_SURAHS = [
+	{
+		number: 1,
+		nameArabic: "الفاتحة",
+		nameEnglish: "Al-Fatihah",
+		englishTranslation: "The Opener",
+		totalAyahs: 7,
+		type: "Meccan"
+	},
+	{
+		number: 2,
+		nameArabic: "البقرة",
+		nameEnglish: "Al-Baqarah",
+		englishTranslation: "The Cow",
+		totalAyahs: 286,
+		type: "Medinan"
+	},
+	{
+		number: 3,
+		nameArabic: "آل عمران",
+		nameEnglish: "Ali 'Imran",
+		englishTranslation: "Family of Imran",
+		totalAyahs: 200,
+		type: "Medinan"
+	},
+	{
+		number: 4,
+		nameArabic: "النساء",
+		nameEnglish: "An-Nisa",
+		englishTranslation: "The Women",
+		totalAyahs: 176,
+		type: "Medinan"
+	},
+	{
+		number: 5,
+		nameArabic: "المائدة",
+		nameEnglish: "Al-Ma'idah",
+		englishTranslation: "The Table Spread",
+		totalAyahs: 120,
+		type: "Medinan"
+	},
+	{
+		number: 6,
+		nameArabic: "الأنعام",
+		nameEnglish: "Al-An'am",
+		englishTranslation: "The Cattle",
+		totalAyahs: 165,
+		type: "Meccan"
+	},
+	{
+		number: 7,
+		nameArabic: "الأعراف",
+		nameEnglish: "Al-A'raf",
+		englishTranslation: "The Heights",
+		totalAyahs: 206,
+		type: "Meccan"
+	},
+	{
+		number: 8,
+		nameArabic: "الأنفال",
+		nameEnglish: "Al-Anfal",
+		englishTranslation: "The Spoils of War",
+		totalAyahs: 75,
+		type: "Medinan"
+	},
+	{
+		number: 9,
+		nameArabic: "التوبة",
+		nameEnglish: "At-Tawbah",
+		englishTranslation: "The Repentance",
+		totalAyahs: 129,
+		type: "Medinan"
+	},
+	{
+		number: 10,
+		nameArabic: "يونس",
+		nameEnglish: "Yunus",
+		englishTranslation: "Jonah",
+		totalAyahs: 109,
+		type: "Meccan"
+	},
+	{
+		number: 11,
+		nameArabic: "هود",
+		nameEnglish: "Hud",
+		englishTranslation: "Hud",
+		totalAyahs: 123,
+		type: "Meccan"
+	},
+	{
+		number: 12,
+		nameArabic: "يوسف",
+		nameEnglish: "Yusuf",
+		englishTranslation: "Joseph",
+		totalAyahs: 111,
+		type: "Meccan"
+	},
+	{
+		number: 13,
+		nameArabic: "الرعد",
+		nameEnglish: "Ar-Ra'd",
+		englishTranslation: "The Thunder",
+		totalAyahs: 43,
+		type: "Medinan"
+	},
+	{
+		number: 14,
+		nameArabic: "إبراهيم",
+		nameEnglish: "Ibrahim",
+		englishTranslation: "Abraham",
+		totalAyahs: 52,
+		type: "Meccan"
+	},
+	{
+		number: 15,
+		nameArabic: "الحجر",
+		nameEnglish: "Al-Hijr",
+		englishTranslation: "The Rocky Tract",
+		totalAyahs: 99,
+		type: "Meccan"
+	},
+	{
+		number: 16,
+		nameArabic: "النحل",
+		nameEnglish: "An-Nahl",
+		englishTranslation: "The Bee",
+		totalAyahs: 128,
+		type: "Meccan"
+	},
+	{
+		number: 17,
+		nameArabic: "الإسراء",
+		nameEnglish: "Al-Isra",
+		englishTranslation: "The Night Journey",
+		totalAyahs: 111,
+		type: "Meccan"
+	},
+	{
+		number: 18,
+		nameArabic: "الكهف",
+		nameEnglish: "Al-Kahf",
+		englishTranslation: "The Cave",
+		totalAyahs: 110,
+		type: "Meccan"
+	},
+	{
+		number: 19,
+		nameArabic: "مريم",
+		nameEnglish: "Maryam",
+		englishTranslation: "Mary",
+		totalAyahs: 98,
+		type: "Meccan"
+	},
+	{
+		number: 20,
+		nameArabic: "طه",
+		nameEnglish: "Taha",
+		englishTranslation: "Ta-Ha",
+		totalAyahs: 135,
+		type: "Meccan"
+	},
+	{
+		number: 21,
+		nameArabic: "الأنبياء",
+		nameEnglish: "Al-Anbiya",
+		englishTranslation: "The Prophets",
+		totalAyahs: 112,
+		type: "Meccan"
+	},
+	{
+		number: 22,
+		nameArabic: "الحج",
+		nameEnglish: "Al-Hajj",
+		englishTranslation: "The Pilgrimage",
+		totalAyahs: 78,
+		type: "Medinan"
+	},
+	{
+		number: 23,
+		nameArabic: "المؤمنون",
+		nameEnglish: "Al-Mu'minun",
+		englishTranslation: "The Believers",
+		totalAyahs: 118,
+		type: "Meccan"
+	},
+	{
+		number: 24,
+		nameArabic: "النور",
+		nameEnglish: "An-Nur",
+		englishTranslation: "The Light",
+		totalAyahs: 64,
+		type: "Medinan"
+	},
+	{
+		number: 25,
+		nameArabic: "الفرقان",
+		nameEnglish: "Al-Furqan",
+		englishTranslation: "The Criterion",
+		totalAyahs: 77,
+		type: "Meccan"
+	},
+	{
+		number: 26,
+		nameArabic: "الشعراء",
+		nameEnglish: "Ash-Shu'ara",
+		englishTranslation: "The Poets",
+		totalAyahs: 227,
+		type: "Meccan"
+	},
+	{
+		number: 27,
+		nameArabic: "النمل",
+		nameEnglish: "An-Naml",
+		englishTranslation: "The Ant",
+		totalAyahs: 93,
+		type: "Meccan"
+	},
+	{
+		number: 28,
+		nameArabic: "القصص",
+		nameEnglish: "Al-Qasas",
+		englishTranslation: "The Stories",
+		totalAyahs: 88,
+		type: "Meccan"
+	},
+	{
+		number: 29,
+		nameArabic: "العنكبوت",
+		nameEnglish: "Al-'Ankabut",
+		englishTranslation: "The Spider",
+		totalAyahs: 69,
+		type: "Meccan"
+	},
+	{
+		number: 30,
+		nameArabic: "الروم",
+		nameEnglish: "Ar-Rum",
+		englishTranslation: "The Romans",
+		totalAyahs: 60,
+		type: "Meccan"
+	},
+	{
+		number: 31,
+		nameArabic: "لقمان",
+		nameEnglish: "Luqman",
+		englishTranslation: "Luqman",
+		totalAyahs: 34,
+		type: "Meccan"
+	},
+	{
+		number: 32,
+		nameArabic: "السجدة",
+		nameEnglish: "As-Sajdah",
+		englishTranslation: "The Prostration",
+		totalAyahs: 30,
+		type: "Meccan"
+	},
+	{
+		number: 33,
+		nameArabic: "الأحزاب",
+		nameEnglish: "Al-Ahzab",
+		englishTranslation: "The Combined Forces",
+		totalAyahs: 73,
+		type: "Medinan"
+	},
+	{
+		number: 34,
+		nameArabic: "سبأ",
+		nameEnglish: "Saba",
+		englishTranslation: "Sheba",
+		totalAyahs: 54,
+		type: "Meccan"
+	},
+	{
+		number: 35,
+		nameArabic: "فاطر",
+		nameEnglish: "Fatir",
+		englishTranslation: "Originator",
+		totalAyahs: 45,
+		type: "Meccan"
+	},
+	{
+		number: 36,
+		nameArabic: "يس",
+		nameEnglish: "Ya-Sin",
+		englishTranslation: "Ya Sin",
+		totalAyahs: 83,
+		type: "Meccan"
+	},
+	{
+		number: 37,
+		nameArabic: "الصافات",
+		nameEnglish: "As-Saffat",
+		englishTranslation: "Those who set the Ranks",
+		totalAyahs: 182,
+		type: "Meccan"
+	},
+	{
+		number: 38,
+		nameArabic: "ص",
+		nameEnglish: "Sad",
+		englishTranslation: "The Letter \"Saad\"",
+		totalAyahs: 88,
+		type: "Meccan"
+	},
+	{
+		number: 39,
+		nameArabic: "الزمر",
+		nameEnglish: "Az-Zumar",
+		englishTranslation: "The Troops",
+		totalAyahs: 75,
+		type: "Meccan"
+	},
+	{
+		number: 40,
+		nameArabic: "غافر",
+		nameEnglish: "Ghafir",
+		englishTranslation: "The Forgiver",
+		totalAyahs: 85,
+		type: "Meccan"
+	},
+	{
+		number: 41,
+		nameArabic: "فصلت",
+		nameEnglish: "Fussilat",
+		englishTranslation: "Explained in Detail",
+		totalAyahs: 54,
+		type: "Meccan"
+	},
+	{
+		number: 42,
+		nameArabic: "الشورى",
+		nameEnglish: "Ash-Shura",
+		englishTranslation: "The Consultation",
+		totalAyahs: 53,
+		type: "Meccan"
+	},
+	{
+		number: 43,
+		nameArabic: "الزخرف",
+		nameEnglish: "Az-Zukhruf",
+		englishTranslation: "The Ornaments of Gold",
+		totalAyahs: 89,
+		type: "Meccan"
+	},
+	{
+		number: 44,
+		nameArabic: "الدخان",
+		nameEnglish: "Ad-Dukhan",
+		englishTranslation: "The Smoke",
+		totalAyahs: 59,
+		type: "Meccan"
+	},
+	{
+		number: 45,
+		nameArabic: "الجاثية",
+		nameEnglish: "Al-Jathiyah",
+		englishTranslation: "The Crouching",
+		totalAyahs: 37,
+		type: "Meccan"
+	},
+	{
+		number: 46,
+		nameArabic: "الأحقاف",
+		nameEnglish: "Al-Ahqaf",
+		englishTranslation: "The Wind-Curved Sandhills",
+		totalAyahs: 35,
+		type: "Meccan"
+	},
+	{
+		number: 47,
+		nameArabic: "محمد",
+		nameEnglish: "Muhammad",
+		englishTranslation: "Muhammad",
+		totalAyahs: 38,
+		type: "Medinan"
+	},
+	{
+		number: 48,
+		nameArabic: "الفتح",
+		nameEnglish: "Al-Fath",
+		englishTranslation: "The Victory",
+		totalAyahs: 29,
+		type: "Medinan"
+	},
+	{
+		number: 49,
+		nameArabic: "الحجرات",
+		nameEnglish: "Al-Hujurat",
+		englishTranslation: "The Rooms",
+		totalAyahs: 18,
+		type: "Medinan"
+	},
+	{
+		number: 50,
+		nameArabic: "ق",
+		nameEnglish: "Qaf",
+		englishTranslation: "The Letter \"Qaf\"",
+		totalAyahs: 45,
+		type: "Meccan"
+	},
+	{
+		number: 51,
+		nameArabic: "الذاريات",
+		nameEnglish: "Adh-Dhariyat",
+		englishTranslation: "The Winnowing Winds",
+		totalAyahs: 60,
+		type: "Meccan"
+	},
+	{
+		number: 52,
+		nameArabic: "الطور",
+		nameEnglish: "At-Tur",
+		englishTranslation: "The Mount",
+		totalAyahs: 49,
+		type: "Meccan"
+	},
+	{
+		number: 53,
+		nameArabic: "النجم",
+		nameEnglish: "An-Najm",
+		englishTranslation: "The Star",
+		totalAyahs: 62,
+		type: "Meccan"
+	},
+	{
+		number: 54,
+		nameArabic: "القمر",
+		nameEnglish: "Al-Qamar",
+		englishTranslation: "The Moon",
+		totalAyahs: 55,
+		type: "Meccan"
+	},
+	{
+		number: 55,
+		nameArabic: "الرحمن",
+		nameEnglish: "Ar-Rahman",
+		englishTranslation: "The Beneficent",
+		totalAyahs: 78,
+		type: "Medinan"
+	},
+	{
+		number: 56,
+		nameArabic: "الواقعة",
+		nameEnglish: "Al-Waqi'ah",
+		englishTranslation: "The Inevitable",
+		totalAyahs: 96,
+		type: "Meccan"
+	},
+	{
+		number: 57,
+		nameArabic: "الحديد",
+		nameEnglish: "Al-Hadid",
+		englishTranslation: "The Iron",
+		totalAyahs: 29,
+		type: "Medinan"
+	},
+	{
+		number: 58,
+		nameArabic: "المجادلة",
+		nameEnglish: "Al-Mujadila",
+		englishTranslation: "The Pleading Woman",
+		totalAyahs: 22,
+		type: "Medinan"
+	},
+	{
+		number: 59,
+		nameArabic: "الحشر",
+		nameEnglish: "Al-Hashr",
+		englishTranslation: "The Exile",
+		totalAyahs: 24,
+		type: "Medinan"
+	},
+	{
+		number: 60,
+		nameArabic: "الممتحنة",
+		nameEnglish: "Al-Mumtahanah",
+		englishTranslation: "She that is to be examined",
+		totalAyahs: 13,
+		type: "Medinan"
+	},
+	{
+		number: 61,
+		nameArabic: "الصف",
+		nameEnglish: "As-Saff",
+		englishTranslation: "The Ranks",
+		totalAyahs: 14,
+		type: "Medinan"
+	},
+	{
+		number: 62,
+		nameArabic: "الجمعة",
+		nameEnglish: "Al-Jumu'ah",
+		englishTranslation: "The Congregation",
+		totalAyahs: 11,
+		type: "Medinan"
+	},
+	{
+		number: 63,
+		nameArabic: "المنافقون",
+		nameEnglish: "Al-Munafiqun",
+		englishTranslation: "The Hypocrites",
+		totalAyahs: 11,
+		type: "Medinan"
+	},
+	{
+		number: 64,
+		nameArabic: "التغابن",
+		nameEnglish: "At-Taghabun",
+		englishTranslation: "The Mutual Disillusion",
+		totalAyahs: 18,
+		type: "Medinan"
+	},
+	{
+		number: 65,
+		nameArabic: "الطلاق",
+		nameEnglish: "At-Talaq",
+		englishTranslation: "The Divorce",
+		totalAyahs: 12,
+		type: "Medinan"
+	},
+	{
+		number: 66,
+		nameArabic: "التحريم",
+		nameEnglish: "At-Tahrim",
+		englishTranslation: "The Prohibition",
+		totalAyahs: 12,
+		type: "Medinan"
+	},
+	{
+		number: 67,
+		nameArabic: "الملك",
+		nameEnglish: "Al-Mulk",
+		englishTranslation: "The Sovereignty",
+		totalAyahs: 30,
+		type: "Meccan"
+	},
+	{
+		number: 68,
+		nameArabic: "القلم",
+		nameEnglish: "Al-Qalam",
+		englishTranslation: "The Pen",
+		totalAyahs: 52,
+		type: "Meccan"
+	},
+	{
+		number: 69,
+		nameArabic: "الحاقة",
+		nameEnglish: "Al-Haqqah",
+		englishTranslation: "The Reality",
+		totalAyahs: 52,
+		type: "Meccan"
+	},
+	{
+		number: 70,
+		nameArabic: "المعارج",
+		nameEnglish: "Al-Ma'arij",
+		englishTranslation: "The Ascending Stairways",
+		totalAyahs: 44,
+		type: "Meccan"
+	},
+	{
+		number: 71,
+		nameArabic: "نوح",
+		nameEnglish: "Nuh",
+		englishTranslation: "Noah",
+		totalAyahs: 28,
+		type: "Meccan"
+	},
+	{
+		number: 72,
+		nameArabic: "الجن",
+		nameEnglish: "Al-Jinn",
+		englishTranslation: "The Jinn",
+		totalAyahs: 28,
+		type: "Meccan"
+	},
+	{
+		number: 73,
+		nameArabic: "المزمل",
+		nameEnglish: "Al-Muzzammil",
+		englishTranslation: "The Enshrouded One",
+		totalAyahs: 20,
+		type: "Meccan"
+	},
+	{
+		number: 74,
+		nameArabic: "المدثر",
+		nameEnglish: "Al-Muddaththir",
+		englishTranslation: "The Cloaked One",
+		totalAyahs: 56,
+		type: "Meccan"
+	},
+	{
+		number: 75,
+		nameArabic: "القيامة",
+		nameEnglish: "Al-Qiyamah",
+		englishTranslation: "The Resurrection",
+		totalAyahs: 40,
+		type: "Meccan"
+	},
+	{
+		number: 76,
+		nameArabic: "الإنسان",
+		nameEnglish: "Al-Insan",
+		englishTranslation: "The Man",
+		totalAyahs: 31,
+		type: "Medinan"
+	},
+	{
+		number: 77,
+		nameArabic: "المرسلات",
+		nameEnglish: "Al-Mursalat",
+		englishTranslation: "The Emissaries",
+		totalAyahs: 50,
+		type: "Meccan"
+	},
+	{
+		number: 78,
+		nameArabic: "النبأ",
+		nameEnglish: "An-Naba",
+		englishTranslation: "The Tidings",
+		totalAyahs: 40,
+		type: "Meccan"
+	},
+	{
+		number: 79,
+		nameArabic: "النازعات",
+		nameEnglish: "An-Nazi'at",
+		englishTranslation: "Those who drag forth",
+		totalAyahs: 46,
+		type: "Meccan"
+	},
+	{
+		number: 80,
+		nameArabic: "عبس",
+		nameEnglish: "'Abasa",
+		englishTranslation: "He Frowned",
+		totalAyahs: 42,
+		type: "Meccan"
+	},
+	{
+		number: 81,
+		nameArabic: "التكوير",
+		nameEnglish: "At-Takwir",
+		englishTranslation: "The Overthrowing",
+		totalAyahs: 29,
+		type: "Meccan"
+	},
+	{
+		number: 82,
+		nameArabic: "الانفطار",
+		nameEnglish: "Al-Infitar",
+		englishTranslation: "The Cleaving",
+		totalAyahs: 19,
+		type: "Meccan"
+	},
+	{
+		number: 83,
+		nameArabic: "المطففين",
+		nameEnglish: "Al-Mutaffifin",
+		englishTranslation: "The Defrauding",
+		totalAyahs: 36,
+		type: "Meccan"
+	},
+	{
+		number: 84,
+		nameArabic: "الانشقاق",
+		nameEnglish: "Al-Inshiqaq",
+		englishTranslation: "The Splitting Open",
+		totalAyahs: 25,
+		type: "Meccan"
+	},
+	{
+		number: 85,
+		nameArabic: "البروج",
+		nameEnglish: "Al-Buruj",
+		englishTranslation: "The Mansions of the Stars",
+		totalAyahs: 22,
+		type: "Meccan"
+	},
+	{
+		number: 86,
+		nameArabic: "الطارق",
+		nameEnglish: "At-Tariq",
+		englishTranslation: "The Morning Star",
+		totalAyahs: 17,
+		type: "Meccan"
+	},
+	{
+		number: 87,
+		nameArabic: "الأعلى",
+		nameEnglish: "Al-A'la",
+		englishTranslation: "The Most High",
+		totalAyahs: 19,
+		type: "Meccan"
+	},
+	{
+		number: 88,
+		nameArabic: "الغاشية",
+		nameEnglish: "Al-Ghashiyah",
+		englishTranslation: "The Overwhelming",
+		totalAyahs: 26,
+		type: "Meccan"
+	},
+	{
+		number: 89,
+		nameArabic: "الفجر",
+		nameEnglish: "Al-Fajr",
+		englishTranslation: "The Dawn",
+		totalAyahs: 30,
+		type: "Meccan"
+	},
+	{
+		number: 90,
+		nameArabic: "البلد",
+		nameEnglish: "Al-Balad",
+		englishTranslation: "The City",
+		totalAyahs: 20,
+		type: "Meccan"
+	},
+	{
+		number: 91,
+		nameArabic: "الشمس",
+		nameEnglish: "Ash-Shams",
+		englishTranslation: "The Sun",
+		totalAyahs: 15,
+		type: "Meccan"
+	},
+	{
+		number: 92,
+		nameArabic: "الليل",
+		nameEnglish: "Al-Layl",
+		englishTranslation: "The Night",
+		totalAyahs: 21,
+		type: "Meccan"
+	},
+	{
+		number: 93,
+		nameArabic: "الضحى",
+		nameEnglish: "Ad-Duha",
+		englishTranslation: "The Morning Hours",
+		totalAyahs: 11,
+		type: "Meccan"
+	},
+	{
+		number: 94,
+		nameArabic: "الشرح",
+		nameEnglish: "Ash-Sharh",
+		englishTranslation: "The Relief",
+		totalAyahs: 8,
+		type: "Meccan"
+	},
+	{
+		number: 95,
+		nameArabic: "التين",
+		nameEnglish: "At-Tin",
+		englishTranslation: "The Fig",
+		totalAyahs: 8,
+		type: "Meccan"
+	},
+	{
+		number: 96,
+		nameArabic: "العلق",
+		nameEnglish: "Al-'Alaq",
+		englishTranslation: "The Clot",
+		totalAyahs: 19,
+		type: "Meccan"
+	},
+	{
+		number: 97,
+		nameArabic: "القدر",
+		nameEnglish: "Al-Qadr",
+		englishTranslation: "The Power",
+		totalAyahs: 5,
+		type: "Meccan"
+	},
+	{
+		number: 98,
+		nameArabic: "البينة",
+		nameEnglish: "Al-Bayyinah",
+		englishTranslation: "The Clear Proof",
+		totalAyahs: 8,
+		type: "Medinan"
+	},
+	{
+		number: 99,
+		nameArabic: "الزلزلة",
+		nameEnglish: "Az-Zalzalah",
+		englishTranslation: "The Earthquake",
+		totalAyahs: 8,
+		type: "Medinan"
+	},
+	{
+		number: 100,
+		nameArabic: "العاديات",
+		nameEnglish: "Al-'Adiyat",
+		englishTranslation: "The Courser",
+		totalAyahs: 11,
+		type: "Meccan"
+	},
+	{
+		number: 101,
+		nameArabic: "القارعة",
+		nameEnglish: "Al-Qari'ah",
+		englishTranslation: "The Calamity",
+		totalAyahs: 11,
+		type: "Meccan"
+	},
+	{
+		number: 102,
+		nameArabic: "التكاثر",
+		nameEnglish: "At-Takathur",
+		englishTranslation: "The Rivalry in World Increase",
+		totalAyahs: 8,
+		type: "Meccan"
+	},
+	{
+		number: 103,
+		nameArabic: "العصر",
+		nameEnglish: "Al-'Asr",
+		englishTranslation: "The Declining Day",
+		totalAyahs: 3,
+		type: "Meccan"
+	},
+	{
+		number: 104,
+		nameArabic: "الهمزة",
+		nameEnglish: "Al-Humazah",
+		englishTranslation: "The Traducer",
+		totalAyahs: 9,
+		type: "Meccan"
+	},
+	{
+		number: 105,
+		nameArabic: "الفيل",
+		nameEnglish: "Al-Fil",
+		englishTranslation: "The Elephant",
+		totalAyahs: 5,
+		type: "Meccan"
+	},
+	{
+		number: 106,
+		nameArabic: "قريش",
+		nameEnglish: "Quraysh",
+		englishTranslation: "Quraysh",
+		totalAyahs: 4,
+		type: "Meccan"
+	},
+	{
+		number: 107,
+		nameArabic: "الماعون",
+		nameEnglish: "Al-Ma'un",
+		englishTranslation: "The Small Kindness",
+		totalAyahs: 7,
+		type: "Meccan"
+	},
+	{
+		number: 108,
+		nameArabic: "الكوثر",
+		nameEnglish: "Al-Kawthar",
+		englishTranslation: "The Abundance",
+		totalAyahs: 3,
+		type: "Meccan"
+	},
+	{
+		number: 109,
+		nameArabic: "الكافرون",
+		nameEnglish: "Al-Kafirun",
+		englishTranslation: "The Disbelievers",
+		totalAyahs: 6,
+		type: "Meccan"
+	},
+	{
+		number: 110,
+		nameArabic: "النصر",
+		nameEnglish: "An-Nasr",
+		englishTranslation: "The Divine Support",
+		totalAyahs: 3,
+		type: "Medinan"
+	},
+	{
+		number: 111,
+		nameArabic: "المسد",
+		nameEnglish: "Al-Masad",
+		englishTranslation: "The Palm Fiber",
+		totalAyahs: 5,
+		type: "Meccan"
+	},
+	{
+		number: 112,
+		nameArabic: "الإخلاص",
+		nameEnglish: "Al-Ikhlas",
+		englishTranslation: "The Sincerity",
+		totalAyahs: 4,
+		type: "Meccan"
+	},
+	{
+		number: 113,
+		nameArabic: "الفلق",
+		nameEnglish: "Al-Falaq",
+		englishTranslation: "The Daybreak",
+		totalAyahs: 5,
+		type: "Meccan"
+	},
+	{
+		number: 114,
+		nameArabic: "الناس",
+		nameEnglish: "An-Nas",
+		englishTranslation: "Mankind",
+		totalAyahs: 6,
+		type: "Meccan"
+	}
+];
+function getSurahByNumber(num) {
+	return QURAN_SURAHS.find((s) => s.number === num);
+}
+//#endregion
+export { getSurahByNumber as n, QURAN_SURAHS as t };

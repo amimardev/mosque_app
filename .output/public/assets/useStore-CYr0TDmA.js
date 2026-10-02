@@ -1,0 +1,1 @@
+import{t as e}from"./useSelector-CsJw-erN.js";var t=(t,n=e=>e,r)=>e(t,n,{compare:r});export{t};

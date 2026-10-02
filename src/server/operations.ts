@@ -1,0 +1,26 @@
+import { OperationRegistry } from './operationRegistry.js';
+import { studentsRouter } from './operations/students.js';
+import { parentsRouter } from './operations/parents.js';
+import { teachersRouter } from './operations/teachers.js';
+import { groupsRouter } from './operations/groups.js';
+import { groupTypesRouter } from './operations/groupTypes.js';
+import { ratingsRouter } from './operations/ratings.js';
+import { sessionsRouter } from './operations/sessions.js';
+import { attendancesRouter } from './operations/attendances.js';
+import { statsRouter, quranRouter } from './operations/stats.js';
+import { storageRouter } from './operations/storage.js';
+import { prayerTimesRouter } from './operations/prayerTimes.js';
+
+export const apiRouter = new OperationRegistry();
+apiRouter.route('/api/students', studentsRouter);
+apiRouter.route('/api/parents', parentsRouter);
+apiRouter.route('/api/teachers', teachersRouter);
+apiRouter.route('/api/groups', groupsRouter);
+apiRouter.route('/api/group-types', groupTypesRouter);
+apiRouter.route('/api/ratings', ratingsRouter);
+apiRouter.route('/api/sessions', sessionsRouter);
+apiRouter.route('/api/attendances', attendancesRouter);
+apiRouter.route('/api/stats', statsRouter);
+apiRouter.route('/api/quran', quranRouter);
+apiRouter.route('/api/storage', storageRouter);
+apiRouter.route('/api/prayer-times', prayerTimesRouter);

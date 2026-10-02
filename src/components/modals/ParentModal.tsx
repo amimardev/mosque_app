@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
 import { X, Save, User, Phone, Mail, MapPin, FileText, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react';
 import { Parent } from '../../types';
@@ -65,10 +65,10 @@ export const ParentModal: React.FC<ParentModalProps> = ({
         };
 
         if (isEditing && parentToEdit) {
-          await axios.put(`/api/parents/${parentToEdit.id}`, payload);
+          await api.put(`/api/parents/${parentToEdit.id}`, payload);
           setSuccessMsg('تم تعديل بيانات ولي الأمر بنجاح');
         } else {
-          await axios.post('/api/parents', payload);
+          await api.post('/api/parents', payload);
           setSuccessMsg('تمت إضافة ولي الأمر بنجاح');
         }
 

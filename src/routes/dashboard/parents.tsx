@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Users, UserPlus, Search, Phone, Mail, MapPin, 
   Edit, Trash2, GraduationCap, MessageSquare, AlertCircle, CheckCircle2, User, X
@@ -30,7 +30,7 @@ function MasterParentsDirectoryPage() {
     try {
       setIsLoading(true);
       const params = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
-      const res = await axios.get(`/api/parents${params}`);
+      const res = await api.get(`/api/parents${params}`);
       setParents(res.data.parents || []);
     } catch (err) {
       console.error('Failed to load parents:', err);
@@ -63,7 +63,7 @@ function MasterParentsDirectoryPage() {
     try {
       setIsDeleting(true);
       setDeleteError('');
-      await axios.delete(`/api/parents/${parentToDelete.id}`);
+      await api.delete(`/api/parents/${parentToDelete.id}`);
       setParentToDelete(null);
       await loadParents();
     } catch (err: any) {

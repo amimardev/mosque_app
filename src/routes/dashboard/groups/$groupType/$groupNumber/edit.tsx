@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { GroupForm } from '../../../../../components/forms/GroupForm';
 import { Group, Teacher, GroupType } from '../../../../../types';
 
@@ -24,9 +24,9 @@ function EditGroupUnderTypePage() {
       try {
         setIsLoading(true);
         const [groupRes, teachersRes, typesRes] = await Promise.all([
-          axios.get(`/api/groups/by-type-and-number/${encodeURIComponent(groupTypeParam)}/${encodeURIComponent(groupNumberParam)}`),
-          axios.get('/api/teachers'),
-          axios.get('/api/group-types')
+          api.get(`/api/groups/by-type-and-number/${encodeURIComponent(groupTypeParam)}/${encodeURIComponent(groupNumberParam)}`),
+          api.get('/api/teachers'),
+          api.get('/api/group-types')
         ]);
         setGroup(groupRes.data.group || null);
         setTeachers(teachersRes.data.teachers || []);
@@ -43,7 +43,7 @@ function EditGroupUnderTypePage() {
 
   const handleSave = async (updatedData: any) => {
     if (!group) return;
-    const res = await axios.put(`/api/groups/${group.id}`, updatedData);
+    const res = await api.put(`/api/groups/${group.id}`, updatedData);
     const updatedGroup = res.data.group || group;
     const targetTypeSlug = updatedData.typeId 
       ? (groupTypes.find(t => t.id === updatedData.typeId)?.slug || groupTypeParam)

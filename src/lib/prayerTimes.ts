@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { PrayerName } from '../types';
 
 export interface PrayerTimings {
@@ -51,7 +51,7 @@ export async function getAlgeriaPrayerTimes(dateStr?: string): Promise<PrayerTim
   }
 
   try {
-    const res = await axios.get('/api/prayer-times', {
+    const res = await api.get('/api/prayer-times', {
       params: dateStr ? { date: dateStr } : {}
     });
 
@@ -71,7 +71,7 @@ export async function getAlgeriaPrayerTimes(dateStr?: string): Promise<PrayerTim
     const y = today.getFullYear();
     const formatted = dateStr || `${d}-${m}-${y}`;
 
-    const res = await axios.get(`https://api.aladhan.com/v1/timingsByCity/${formatted}?city=Algiers&country=Algeria&method=19`);
+    const res = await api.get(`https://api.aladhan.com/v1/timingsByCity/${formatted}?city=Algiers&country=Algeria&method=19`);
     if (res.data?.data) {
       clientPrayerCache.set(cacheKey, res.data.data);
       return res.data.data;

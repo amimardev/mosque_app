@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Calendar as CalendarIcon, List, Clock, Filter, X, Search, 
   ChevronRight, ChevronLeft, AlertCircle, RefreshCw, CalendarRange,
@@ -114,7 +114,7 @@ function SessionsListPage() {
     try {
       setIsLoading(true);
       setError('');
-      const res = await axios.get('/api/sessions', {
+      const res = await api.get('/api/sessions', {
         params: {
           startDate: currentWeekRange.startDate,
           endDate: currentWeekRange.endDate
@@ -145,7 +145,7 @@ function SessionsListPage() {
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (statusFilter !== 'all') params.status = statusFilter;
 
-      const res = await axios.get('/api/sessions', { params });
+      const res = await api.get('/api/sessions', { params });
       setSessions(res.data.sessions || []);
       if (res.data.pagination) {
         setPagination(res.data.pagination);

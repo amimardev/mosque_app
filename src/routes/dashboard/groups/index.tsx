@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Users, Clock, Plus, ChevronRight, FolderOpen,
   LayoutGrid, Layers
@@ -19,7 +19,7 @@ function GroupTypesCatalogPage() {
   const fetchTypes = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('/api/group-types');
+      const res = await api.get('/api/group-types');
       setGroupTypes(res.data.groupTypes || []);
     } catch (err) {
       console.error('Failed to load group types:', err);

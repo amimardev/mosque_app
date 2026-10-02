@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { useForm, useStore } from '@tanstack/react-form';
 import { 
   Search, Plus, UserCheck
@@ -32,8 +32,8 @@ function TeachersDirectoryPage() {
     try {
       setIsLoading(true);
       const [teachersRes, groupsRes] = await Promise.all([
-        axios.get('/api/teachers'),
-        axios.get('/api/groups')
+        api.get('/api/teachers'),
+        api.get('/api/groups')
       ]);
       setTeachers(teachersRes.data.teachers || []);
       setGroups(groupsRes.data.groups || []);

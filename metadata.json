@@ -1,8 +1,0 @@
-{
-  "name": "Quran Madrasa Portal",
-  "description": "Comprehensive Mosque & Halaqa Quran school management system for students, teachers, groups, study times, monthly ratings, and Surah & Ayah progress tracking.",
-  "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
-}

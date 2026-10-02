@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   X, Calendar, Clock, UserCheck, AlertCircle, 
   CheckCircle2, Save
@@ -71,7 +71,7 @@ export const RecordAttendanceModal: React.FC<RecordAttendanceModalProps> = ({
         // Get group students if not passed
         let groupStudents = students;
         if (!groupStudents || groupStudents.length === 0) {
-          const res = await axios.get('/api/students');
+          const res = await api.get('/api/students');
           const allStudents: Student[] = res.data.students || [];
           groupStudents = allStudents.filter(s => 
             s.groupId && s.groupId.split(',').map(item => item.trim()).includes(group.id)
@@ -83,7 +83,7 @@ export const RecordAttendanceModal: React.FC<RecordAttendanceModalProps> = ({
         }
 
         // Fetch existing attendance records for this group & date
-        const attRes = await axios.get(`/api/attendances?groupId=${group.id}&date=${date}`).catch(() => ({ data: { attendances: [] } }));
+        const attRes = await api.get(`/api/attendances?groupId=${group.id}&date=${date}`).catch(() => ({ data: { attendances: [] } }));
         const existingAtts = attRes.data.attendances || [];
         const attMap = new Map<string, any>(existingAtts.map((a: any) => [a.studentId, a]));
 
@@ -141,7 +141,7 @@ export const RecordAttendanceModal: React.FC<RecordAttendanceModalProps> = ({
     setSuccessMsg('');
 
     try {
-      await axios.post('/api/attendances/bulk', {
+      await api.post('/api/attendances/bulk', {
         groupId: group.id,
         date,
         sessionTimeText,

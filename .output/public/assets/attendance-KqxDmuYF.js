@@ -1,0 +1,1 @@
+import{a as e,t}from"./useNavigate-cKRKrHp2.js";var n=e();function r(){return(0,n.jsx)(t,{to:`/dashboard/sessions`,replace:!0})}export{r as component};

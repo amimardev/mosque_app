@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { ArrowRight, Save, FolderPlus, Layers } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard/groups/new')({
@@ -26,7 +26,7 @@ function NewGroupTypePage() {
     setError('');
 
     try {
-      const res = await axios.post('/api/group-types', {
+      const res = await api.post('/api/group-types', {
         name: name.trim(),
         slug: slug.trim() || undefined,
         description: description.trim() || undefined,

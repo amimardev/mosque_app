@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   ArrowRight, Clock, User, Check, X, Search, 
   Award, AlertCircle, Save, BookOpen, MessageSquare,
@@ -116,7 +116,7 @@ function SessionAssessmentPage() {
     try {
       setIsLoading(true);
       setError('');
-      const res = await axios.get(`/api/sessions/${sessionId}`);
+      const res = await api.get(`/api/sessions/${sessionId}`);
       const sessionData = res.data.session;
       const recordsData = res.data.records || [];
 
@@ -154,7 +154,7 @@ function SessionAssessmentPage() {
     setHistoryData(null);
 
     try {
-      const res = await axios.get(`/api/students/${studentId}/history`);
+      const res = await api.get(`/api/students/${studentId}/history`);
       setHistoryData(res.data);
     } catch (err: any) {
       console.error('Failed to load student history:', err);
@@ -194,7 +194,7 @@ function SessionAssessmentPage() {
 
     // Persist immediately to the database
     try {
-      await axios.post(`/api/sessions/${session.id}/records/${selectedRecord.id}`, updatedRecord);
+      await api.post(`/api/sessions/${session.id}/records/${selectedRecord.id}`, updatedRecord);
     } catch (err) {
       console.error('Failed to save student assessment to DB:', err);
     }
@@ -206,7 +206,7 @@ function SessionAssessmentPage() {
     setError('');
     setSuccessMsg('');
     try {
-      await axios.post(`/api/sessions/${session.id}/records`, {
+      await api.post(`/api/sessions/${session.id}/records`, {
         records,
         notes: sessionNotes.trim(),
         status: sessionStatus

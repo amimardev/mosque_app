@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
 import { User, Phone, BookOpen, Users, Save, ArrowRight, UserCheck } from 'lucide-react';
 import { Student, Group, Parent } from '../../types';
@@ -38,7 +38,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   useEffect(() => {
     async function loadParents() {
       try {
-        const res = await axios.get('/api/parents');
+        const res = await api.get('/api/parents');
         setParents(res.data.parents || []);
       } catch (err) {
         console.error('Failed to load parents:', err);
@@ -50,7 +50,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   const form = useForm({
     defaultValues: {
       name: initialData?.name || '',
-      avatar: initialData?.avatar || `/api/storage/student-${initialData?.id || studentId}`,
+      avatar: initialData?.avatar || `https://api.dicebear.com/7.x/micah/svg?seed=${initialData?.id || studentId}`,
       gender: (initialData?.gender || 'male') as 'male' | 'female',
       dateOfBirth: initialData?.dateOfBirth || (typeof initialData?.age === 'string' && initialData.age.includes('-') ? initialData.age : ''),
       parentId: initialData?.parentId || '',

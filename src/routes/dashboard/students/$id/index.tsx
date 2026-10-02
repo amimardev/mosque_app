@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   ArrowRight, Edit, Award, BookOpen, Clock, Phone, 
   Users, Star, Plus, Trash2, X, Check, Calendar 
@@ -47,8 +47,8 @@ function StudentDetailsPage() {
     try {
       setIsLoading(true);
       const [studentRes, teachersRes] = await Promise.all([
-        axios.get(`/api/students/${id}`),
-        axios.get('/api/teachers')
+        api.get(`/api/students/${id}`),
+        api.get('/api/teachers')
       ]);
       const stData = studentRes.data.student || null;
       setStudent(stData);
@@ -71,7 +71,7 @@ function StudentDetailsPage() {
 
   const handleDeleteStudent = async () => {
     if (student && window.confirm(`Are you sure you want to delete "${student.name}"?`)) {
-      await axios.delete(`/api/students/${student.id}`);
+      await api.delete(`/api/students/${student.id}`);
       navigate({ to: '/dashboard/students' });
     }
   };
@@ -149,9 +149,9 @@ function StudentDetailsPage() {
       };
 
       if (editingRating) {
-        await axios.put(`/api/ratings/${editingRating.id}`, payload);
+        await api.put(`/api/ratings/${editingRating.id}`, payload);
       } else {
-        await axios.post('/api/ratings', payload);
+        await api.post('/api/ratings', payload);
       }
 
       setIsRatingModalOpen(false);
@@ -166,7 +166,7 @@ function StudentDetailsPage() {
 
   const handleDeleteRating = async (ratingId: string) => {
     if (window.confirm('Delete this evaluation entry?')) {
-      await axios.delete(`/api/ratings/${ratingId}`);
+      await api.delete(`/api/ratings/${ratingId}`);
       await loadStudent();
     }
   };

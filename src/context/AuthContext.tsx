@@ -1,17 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-
-// Set up global Axios request interceptor for iframe compatibility and fallback token header
-axios.interceptors.request.use(config => {
-  const localSessionId = localStorage.getItem('madrasa_session_id');
-  if (localSessionId) {
-    config.headers['X-Session-ID'] = localSessionId;
-    config.headers['Authorization'] = `Bearer ${localSessionId}`;
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+import { getCurrentUserFn, loginFn, logoutFn } from '../server/functions/auth';
 
 interface UserProfile {
   id: string;
@@ -41,14 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     try {
-      const res = await axios.get('/api/auth/me');
-      if (res.data && res.data.user) {
-        setUser(res.data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      console.warn('Not authenticated');
+      const result = await getCurrentUserFn();
+      setUser(result.user);
+    } catch (error) {
+      console.warn('Unable to load the current user', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -56,26 +40,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    refreshUser();
+    void refreshUser();
   }, []);
 
   const login = async (email: string, password?: string) => {
     try {
       setIsLoading(true);
-      const res = await axios.post('/api/auth/login', {
-        email,
-        password: password || 'password123'
-      });
-      if (res.data && res.data.success && res.data.user) {
-        if (res.data.sessionId) {
-          localStorage.setItem('madrasa_session_id', res.data.sessionId);
-        }
-        setUser(res.data.user);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Login request failed', err);
+      const result = await loginFn({ data: { email, password: password || 'password123' } });
+      setUser(result.user);
+      return result.success && !!result.user;
+    } catch (error) {
+      console.error('Login request failed', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -85,25 +60,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setIsLoading(true);
-      await axios.post('/api/auth/logout');
-      localStorage.removeItem('madrasa_session_id');
+      await logoutFn();
       setUser(null);
-    } catch (err) {
-      console.error('Logout failed', err);
+    } catch (error) {
+      console.error('Logout failed', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      role: user ? user.role : null,
-      isLoading,
-      login,
-      logout,
-      refreshUser
-    }}>
+    <AuthContext.Provider value={{ user, role: user ? user.role : null, isLoading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -111,8 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

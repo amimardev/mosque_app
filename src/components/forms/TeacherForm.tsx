@@ -35,7 +35,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
   const form = useForm({
     defaultValues: {
       name: initialData?.name || '',
-      avatar: initialData?.avatar || `/api/storage/teacher-${initialData?.id || teacherId}`,
+      avatar: initialData?.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${initialData?.id || teacherId}`,
       specialization: initialData?.specialization || 'حفظ القرآن والتجويد',
       phone: initialData?.phone || '',
       email: initialData?.email || '',

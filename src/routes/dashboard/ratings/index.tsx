@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/apiClient';
 import { 
   Award, Plus, Search, Star, Trash2, 
   BookOpen, User, Calendar, ChevronRight 
@@ -25,9 +25,9 @@ function RatingsHubPage() {
     try {
       setIsLoading(true);
       const [ratingsRes, studentsRes, teachersRes] = await Promise.all([
-        axios.get('/api/ratings'),
-        axios.get('/api/students'),
-        axios.get('/api/teachers')
+        api.get('/api/ratings'),
+        api.get('/api/students'),
+        api.get('/api/teachers')
       ]);
       setRatings(ratingsRes.data.ratings || []);
       setStudents(studentsRes.data.students || []);
@@ -65,7 +65,7 @@ function RatingsHubPage() {
     if (window.confirm(`هل أنت متأكد من حذف سجل التقييم للطالب "${r.student?.name || 'الطالب'}"؟`)) {
       setDeletingId(r.id);
       try {
-        await axios.delete(`/api/ratings/${r.id}`);
+        await api.delete(`/api/ratings/${r.id}`);
         await fetchData();
       } finally {
         setDeletingId(null);
