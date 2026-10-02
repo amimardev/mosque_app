@@ -353,7 +353,7 @@ function StudentDetailsPage() {
             </h3>
             {student.surahDetails && (
               <span className="text-xs text-slate-500 block">
-                سورة رقم {student.surahDetails.number} • {student.surahDetails.revelationType === 'Meccan' ? 'مكية' : 'مدنية'}
+                سورة رقم {student.surahDetails.number} • {student.surahDetails.type === 'Meccan' ? 'مكية' : 'مدنية'}
               </span>
             )}
           </div>

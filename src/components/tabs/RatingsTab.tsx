@@ -3,7 +3,7 @@ import {
   Award, Star, Plus, Filter, Search, BookOpen, 
   Calendar, User, Trash2, Edit, CheckCircle2, ChevronDown 
 } from 'lucide-react';
-import { StudentRating, Student, Teacher, Group } from '../../types';
+import { StudentRating, Student, Teacher, Group, getGroupDisplayName } from '../../types';
 
 interface RatingsTabProps {
   ratings: StudentRating[];
@@ -128,7 +128,7 @@ export const RatingsTab: React.FC<RatingsTabProps> = ({
             <option value="all">All Halaqat</option>
             {groups.map((grp) => (
               <option key={grp.id} value={grp.id}>
-                {grp.name}
+                {getGroupDisplayName(grp)}
               </option>
             ))}
           </select>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, User, Phone, Mail, Calendar, BookOpen, Users, Clock, Award, Star, Edit, Plus, CheckCircle2 } from 'lucide-react';
-import { Student } from '../../types';
+import { Student, getGroupDisplayName } from '../../types';
 import { QURAN_SURAHS, getSurahByNumber } from '../../lib/quranData';
 import { calculateAge } from '../../lib/ageUtils';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
@@ -163,7 +163,7 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900 text-sm">
-                      {student.group.name}
+                      {getGroupDisplayName(student.group)}
                     </span>
                     <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
                       {student.group.level || 'Intermediate'}

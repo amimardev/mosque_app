@@ -3,16 +3,22 @@ import bcrypt from 'bcryptjs';
 import { db } from '../db/index.js';
 import * as schema from '../db/schema.js';
 import { ensureDatabaseInitialized } from '../db/init.js';
+import type { UserRole } from '../types.js';
+
+function isUserRole(role: string): role is UserRole {
+  return role === 'admin' || role === 'teacher' || role === 'parent';
+}
 
 export async function getFullUserProfile(userId: string) {
   await ensureDatabaseInitialized();
   const user = await db.select().from(schema.users).where(eq(schema.users.id, userId)).then((rows) => rows[0]);
   if (!user) return null;
+  if (!isUserRole(user.role)) return null;
 
   let teacherProfile: any = null;
   let parentProfile: any = null;
   let children: any[] = [];
-  let role = user.role;
+  let role: UserRole = user.role;
 
   if (user.role === 'admin' || user.role === 'teacher') {
     teacherProfile = await db.select().from(schema.teachers).where(eq(schema.teachers.userId, user.id)).then((rows) => rows[0]);

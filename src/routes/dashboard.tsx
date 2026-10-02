@@ -66,6 +66,7 @@ function DashboardLayout() {
         if (statsRes.data?.stats) {
           setCounts({
             students: statsRes.data.stats.totalStudents || 0,
+            parents: 0,
             teachers: statsRes.data.stats.totalTeachers || 0,
             groups: statsRes.data.stats.totalGroups || 0,
             ratings: 0

@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, UserCheck, Phone, Mail, Award, BookOpen, Clock, Users, Edit } from 'lucide-react';
-import { Teacher } from '../../types';
+import { Teacher, getGroupDisplayName } from '../../types';
 
 interface TeacherViewModalProps {
   isOpen: boolean;
@@ -113,7 +113,7 @@ export const TeacherViewModal: React.FC<TeacherViewModalProps> = ({
                 {teacher.assignedGroups.map((grp) => (
                   <div key={grp.id} className="p-4 bg-white border border-slate-200/80 rounded-2xl hover:border-emerald-200 transition-colors shadow-xs">
                     <span className="font-bold text-slate-900 text-sm block mb-1">
-                      {grp.name}
+                      {getGroupDisplayName(grp)}
                     </span>
                     <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
                       <Clock className="w-3.5 h-3.5 shrink-0" />

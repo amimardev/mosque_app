@@ -3,7 +3,7 @@ import {
   Search, Plus, Eye, Edit, Trash2, UserCheck, 
   Phone, Mail, BookOpen, Clock, Users, ChevronRight, Award
 } from 'lucide-react';
-import { Teacher, Group } from '../../types';
+import { Teacher, Group, getGroupDisplayName } from '../../types';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
 interface TeachersTabProps {
@@ -161,7 +161,7 @@ export const TeachersTab: React.FC<TeachersTabProps> = ({
                           className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl space-y-0.5"
                         >
                           <span className="font-bold text-slate-800 text-xs block truncate">
-                            {g.name}
+                            {getGroupDisplayName(g)}
                           </span>
                           <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
                             <Clock className="w-3 h-3 text-emerald-600 shrink-0" />

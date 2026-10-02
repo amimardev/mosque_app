@@ -4,7 +4,7 @@ import {
   BookOpen, Clock, Phone, User, Star, ChevronRight,
   Sparkles, MessageSquare
 } from 'lucide-react';
-import { Student, Group } from '../../types';
+import { Student, Group, getGroupDisplayName } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
@@ -116,7 +116,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             <option value="all">All Groups / Halaqat</option>
             {groups.map((grp) => (
               <option key={grp.id} value={grp.id}>
-                {grp.name}
+                {getGroupDisplayName(grp)}
               </option>
             ))}
           </select>
@@ -211,7 +211,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                     {student.group ? (
                       <div className="p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl space-y-1">
                         <span className="font-bold text-slate-800 text-xs block truncate">
-                          {student.group.name}
+                          {getGroupDisplayName(student.group)}
                         </span>
                         <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
                           <Clock className="w-3 h-3 text-emerald-600 shrink-0" />

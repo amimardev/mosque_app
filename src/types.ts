@@ -139,11 +139,13 @@ export interface Teacher {
   specialization: string;
   bio?: string | null;
   status: 'active' | 'on_leave';
+  isAdmin?: boolean;
   assignedGroups?: {
     id: string;
     number: number;
     type: string;
     studyTime: string;
+    name?: string;
     role?: string;
   }[];
   studentsCount?: number;
@@ -240,6 +242,7 @@ export interface Group {
   typeId: string;
   typeSlug?: string;
   type?: string;
+  description?: string | null;
   groupType?: GroupType | null;
   gender: 'male' | 'female';
   sessionTime?: GroupSessionTime | null;
@@ -303,6 +306,7 @@ export interface Student {
     id: string;
     number: number;
     type: string;
+    name?: string;
     studyTime: string;
     room?: string;
     level?: string;
@@ -310,9 +314,29 @@ export interface Student {
   } | null;
   latestRating?: StudentRating | null;
   ratings?: StudentRating[];
+  sessions?: StudentSessionSummary[];
   surahDetails?: SurahInfo | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface StudentSessionSummary {
+  id: string;
+  date: string;
+  sessionType: 'main' | 'exception';
+  sessionTimeText?: string | null;
+  attendanceStatus: AttendanceStatus;
+  surahName?: string | null;
+  ayahStart?: number | null;
+  ayahEnd?: number | null;
+  teacherRemarque?: string | null;
+  teacherName?: string | null;
+}
+
+export function getGroupDisplayName(group: { name?: string | null; type?: string | null; number?: number | null }): string {
+  if (group.name?.trim()) return group.name;
+  const type = group.type?.trim() || 'حلقة قرآنية';
+  return group.number == null ? type : `${type} ${group.number}`;
 }
 
 export interface MadrasaStats {

@@ -118,7 +118,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-D7YVoFOb.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-Ry2jTVvz.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -140,19 +140,19 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"34a078b9ab06754cb1314ccee2a0b7029ae93c7a80283a8624ba47ae43695a9c": {
 		functionName: "apiRequestFn_createServerFn_handler",
-		importer: () => import("./api-wHZVJPrm.mjs").then((n) => n.t)
+		importer: () => import("./api-BMC9z_aV.mjs").then((n) => n.t)
 	},
 	"400d0ebda25e268fae04a488ac1560b98c4d67527f9bd9e0f94da9940683d0e0": {
 		functionName: "loginFn_createServerFn_handler",
-		importer: () => import("./auth-Dd842mWe.mjs")
+		importer: () => import("./auth-DnycC-bL.mjs")
 	},
 	"afe1d2a803886564f98daff63e8424e1b53fe830e93496792cdbbf97ce1b93e3": {
 		functionName: "logoutFn_createServerFn_handler",
-		importer: () => import("./auth-Dd842mWe.mjs")
+		importer: () => import("./auth-DnycC-bL.mjs")
 	},
 	"e3fe404ee0b8e721efa01daf601517ee9e623b866309fd4b561c2a1b8684aa3a": {
 		functionName: "getCurrentUserFn_createServerFn_handler",
-		importer: () => import("./auth-Dd842mWe.mjs")
+		importer: () => import("./auth-DnycC-bL.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1557,7 +1557,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-DHZqPWB-.mjs").then((n) => n.t),
+		import("./router-D9XCqWvD.mjs").then((n) => n.t),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);

@@ -5,6 +5,7 @@ export interface SurahInfo {
   englishTranslation: string;
   totalAyahs: number;
   type: 'Meccan' | 'Medinan';
+  revelationType?: 'Meccan' | 'Medinan';
 }
 
 export const QURAN_SURAHS: SurahInfo[] = [

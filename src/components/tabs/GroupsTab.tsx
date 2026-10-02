@@ -61,7 +61,7 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
       const lower = searchQuery.toLowerCase();
       return (
         String(g.number).includes(lower) ||
-        g.type.toLowerCase().includes(lower) ||
+      g.type?.toLowerCase().includes(lower) ||
         g.studyTime.toLowerCase().includes(lower) ||
         (g.room && g.room.toLowerCase().includes(lower)) ||
         (g.level && g.level.toLowerCase().includes(lower))

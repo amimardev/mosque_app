@@ -3,7 +3,7 @@ import {
   Users, UserCheck, BookOpen, Clock, Award, Star, 
   ArrowUpRight, Plus, Sparkles, TrendingUp, ChevronRight 
 } from 'lucide-react';
-import { Student, Teacher, Group, StudentRating, MadrasaStats } from '../../types';
+import { Student, Teacher, Group, StudentRating, MadrasaStats, getGroupDisplayName } from '../../types';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
 interface OverviewTabProps {
@@ -213,7 +213,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm hover:text-emerald-700 transition-colors">
-                      {grp.name}
+                      {getGroupDisplayName(grp)}
                     </h3>
                     <span className="text-[11px] font-semibold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md mt-1 inline-block">
                       {grp.level}
