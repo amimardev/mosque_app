@@ -1,16 +1,7 @@
 import { OperationRegistry } from '../operationRegistry.js';
-import fs from 'fs';
-import path from 'path';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
 export const storageRouter = new OperationRegistry();
-
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-
-// Ensure local uploads folder exists as cache / fallback
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
 
 // Initialize S3 client if AWS / Neon Object Storage credentials exist in environment
 const hasS3Config = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET);
@@ -46,7 +37,6 @@ function detectMimeType(buffer: Buffer): string {
 
 export async function getStorageDataUrl(key: string): Promise<string> {
   const safeKey = key.replace(/[^a-zA-Z0-9_\-.]/g, '');
-  const localFilePath = path.join(UPLOADS_DIR, safeKey);
   let buffer: Buffer | null = null;
   let mimeType = 'image/svg+xml';
 
@@ -56,16 +46,10 @@ export async function getStorageDataUrl(key: string): Promise<string> {
       if (response.Body) {
         buffer = Buffer.from(await response.Body.transformToByteArray());
         mimeType = response.ContentType || detectMimeType(buffer);
-        fs.writeFile(localFilePath, buffer, () => {});
       }
-    } catch {
-      // Use the local cache or generated placeholder below.
+    } catch (error) {
+      if (!isMissingObject(error)) throw error;
     }
-  }
-
-  if (!buffer && fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
-    buffer = fs.readFileSync(localFilePath);
-    mimeType = detectMimeType(buffer);
   }
 
   if (!buffer) {
@@ -86,9 +70,8 @@ storageRouter.get('/:key', async (c) => {
   
   // Sanitization
   const safeKey = key.replace(/[^a-zA-Z0-9_\-.]/g, '');
-  const localFilePath = path.join(UPLOADS_DIR, safeKey);
 
-  // 1. Try fetching from Neon S3 Object Storage bucket
+  // Read stored images from object storage only.
   if (s3Client) {
     try {
       const s3Res = await s3Client.send(new GetObjectCommand({
@@ -101,33 +84,18 @@ storageRouter.get('/:key', async (c) => {
         const buffer = Buffer.from(bytes);
         const mimeType = s3Res.ContentType || detectMimeType(buffer);
 
-        // Cache locally for fast subsequent reads
-        fs.writeFile(localFilePath, buffer, () => {});
-
         c.header('Content-Type', mimeType);
         c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
         c.header('Pragma', 'no-cache');
         c.header('Expires', '0');
         return c.body(buffer);
       }
-    } catch {
-      // Fall through to local cache or fallback SVG
+    } catch (error) {
+      if (!isMissingObject(error)) throw error;
     }
   }
 
-  // 2. Check local uploads cache
-  if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
-    const fileBuffer = fs.readFileSync(localFilePath);
-    const mimeType = detectMimeType(fileBuffer);
-    
-    c.header('Content-Type', mimeType);
-    c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    c.header('Pragma', 'no-cache');
-    c.header('Expires', '0');
-    return c.body(fileBuffer);
-  }
-
-  // 3. Fallback SVG badge representing student-{id} or teacher-{id}
+  // Fallback SVG badge for objects that have not been uploaded.
   const isTeacher = safeKey.startsWith('teacher-') || safeKey.startsWith('tch_');
   const label = safeKey.replace(/^(student-|teacher-|std_|tch_)/, '').substring(0, 6).toUpperCase();
   
@@ -150,6 +118,10 @@ storageRouter.get('/:key', async (c) => {
 // POST upload object: /api/storage/upload (key = student-{id} or teacher-{id})
 storageRouter.post('/upload', async (c) => {
   try {
+    if (!s3Client) {
+      return c.json({ error: 'Object storage is not configured' }, 503);
+    }
+
     const body = await c.req.parseBody();
     const key = body.key as string;
     const file = body.file as File | { base64?: string };
@@ -159,7 +131,6 @@ storageRouter.post('/upload', async (c) => {
     }
 
     const safeKey = key.replace(/[^a-zA-Z0-9_\-.]/g, '');
-    const localFilePath = path.join(UPLOADS_DIR, safeKey);
 
     if (file && (typeof (file as File).arrayBuffer === 'function' || typeof (file as { base64?: string }).base64 === 'string')) {
       const buffer = typeof (file as { base64?: string }).base64 === 'string'
@@ -167,22 +138,12 @@ storageRouter.post('/upload', async (c) => {
         : Buffer.from(await (file as File).arrayBuffer());
       const mimeType = detectMimeType(buffer);
 
-      // 1. Upload to Neon S3 Object Storage bucket
-      if (s3Client) {
-        try {
-          await s3Client.send(new PutObjectCommand({
-            Bucket: S3_BUCKET,
-            Key: safeKey,
-            Body: buffer,
-            ContentType: mimeType,
-          }));
-        } catch (s3Err) {
-          console.error('Failed to upload to S3 bucket, saving locally:', s3Err);
-        }
-      }
-
-      // 2. Also save to local uploads directory
-      fs.writeFileSync(localFilePath, buffer);
+      await s3Client.send(new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: safeKey,
+        Body: buffer,
+        ContentType: mimeType,
+      }));
 
       return c.json({ 
         success: true, 
@@ -196,3 +157,9 @@ storageRouter.post('/upload', async (c) => {
     return c.json({ error: err.message || 'Failed to upload object' }, 500);
   }
 });
+
+function isMissingObject(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as { name?: string; Code?: string; $metadata?: { httpStatusCode?: number } };
+  return candidate.name === 'NoSuchKey' || candidate.name === 'NotFound' || candidate.Code === 'NoSuchKey' || candidate.$metadata?.httpStatusCode === 404;
+}

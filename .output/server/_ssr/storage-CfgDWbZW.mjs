@@ -1,11 +1,7 @@
-import { n as OperationRegistry } from "./api-BMC9z_aV.mjs";
+import { n as OperationRegistry } from "./api-NL0D1xOe.mjs";
 import { n as GetObjectCommand, r as S3Client, t as PutObjectCommand } from "../_libs/@aws-sdk/client-s3+[...].mjs";
-import fs from "fs";
-import path from "path";
-//#region node_modules/.nitro/vite/services/ssr/assets/storage-BrQCXXmm.js
+//#region node_modules/.nitro/vite/services/ssr/assets/storage-CfgDWbZW.js
 var storageRouter = new OperationRegistry();
-var UPLOADS_DIR = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 var s3Client = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET) ? new S3Client({
 	region: process.env.AWS_REGION || "eu-central-1",
 	endpoint: process.env.AWS_ENDPOINT_URL_S3 || void 0,
@@ -28,7 +24,6 @@ function detectMimeType(buffer) {
 }
 async function getStorageDataUrl(key) {
 	const safeKey = key.replace(/[^a-zA-Z0-9_\-.]/g, "");
-	const localFilePath = path.join(UPLOADS_DIR, safeKey);
 	let buffer = null;
 	let mimeType = "image/svg+xml";
 	if (s3Client) try {
@@ -39,12 +34,9 @@ async function getStorageDataUrl(key) {
 		if (response.Body) {
 			buffer = Buffer.from(await response.Body.transformToByteArray());
 			mimeType = response.ContentType || detectMimeType(buffer);
-			fs.writeFile(localFilePath, buffer, () => {});
 		}
-	} catch {}
-	if (!buffer && fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
-		buffer = fs.readFileSync(localFilePath);
-		mimeType = detectMimeType(buffer);
+	} catch (error) {
+		if (!isMissingObject(error)) throw error;
 	}
 	if (!buffer) {
 		const isTeacher = safeKey.startsWith("teacher-") || safeKey.startsWith("tch_");
@@ -56,7 +48,6 @@ async function getStorageDataUrl(key) {
 }
 storageRouter.get("/:key", async (c) => {
 	const safeKey = c.req.param("key").replace(/[^a-zA-Z0-9_\-.]/g, "");
-	const localFilePath = path.join(UPLOADS_DIR, safeKey);
 	if (s3Client) try {
 		const s3Res = await s3Client.send(new GetObjectCommand({
 			Bucket: S3_BUCKET,
@@ -66,22 +57,14 @@ storageRouter.get("/:key", async (c) => {
 			const bytes = await s3Res.Body.transformToByteArray();
 			const buffer = Buffer.from(bytes);
 			const mimeType = s3Res.ContentType || detectMimeType(buffer);
-			fs.writeFile(localFilePath, buffer, () => {});
 			c.header("Content-Type", mimeType);
 			c.header("Cache-Control", "no-cache, no-store, must-revalidate");
 			c.header("Pragma", "no-cache");
 			c.header("Expires", "0");
 			return c.body(buffer);
 		}
-	} catch {}
-	if (fs.existsSync(localFilePath) && fs.statSync(localFilePath).isFile()) {
-		const fileBuffer = fs.readFileSync(localFilePath);
-		const mimeType = detectMimeType(fileBuffer);
-		c.header("Content-Type", mimeType);
-		c.header("Cache-Control", "no-cache, no-store, must-revalidate");
-		c.header("Pragma", "no-cache");
-		c.header("Expires", "0");
-		return c.body(fileBuffer);
+	} catch (error) {
+		if (!isMissingObject(error)) throw error;
 	}
 	const isTeacher = safeKey.startsWith("teacher-") || safeKey.startsWith("tch_");
 	const label = safeKey.replace(/^(student-|teacher-|std_|tch_)/, "").substring(0, 6).toUpperCase();
@@ -98,26 +81,21 @@ storageRouter.get("/:key", async (c) => {
 });
 storageRouter.post("/upload", async (c) => {
 	try {
+		if (!s3Client) return c.json({ error: "Object storage is not configured" }, 503);
 		const body = await c.req.parseBody();
 		const key = body.key;
 		const file = body.file;
 		if (!key) return c.json({ error: "Storage key is required (e.g., student-id or teacher-id)" }, 400);
 		const safeKey = key.replace(/[^a-zA-Z0-9_\-.]/g, "");
-		const localFilePath = path.join(UPLOADS_DIR, safeKey);
 		if (file && (typeof file.arrayBuffer === "function" || typeof file.base64 === "string")) {
 			const buffer = typeof file.base64 === "string" ? Buffer.from(file.base64, "base64") : Buffer.from(await file.arrayBuffer());
 			const mimeType = detectMimeType(buffer);
-			if (s3Client) try {
-				await s3Client.send(new PutObjectCommand({
-					Bucket: S3_BUCKET,
-					Key: safeKey,
-					Body: buffer,
-					ContentType: mimeType
-				}));
-			} catch (s3Err) {
-				console.error("Failed to upload to S3 bucket, saving locally:", s3Err);
-			}
-			fs.writeFileSync(localFilePath, buffer);
+			await s3Client.send(new PutObjectCommand({
+				Bucket: S3_BUCKET,
+				Key: safeKey,
+				Body: buffer,
+				ContentType: mimeType
+			}));
 			return c.json({
 				success: true,
 				key: safeKey,
@@ -129,5 +107,10 @@ storageRouter.post("/upload", async (c) => {
 		return c.json({ error: err.message || "Failed to upload object" }, 500);
 	}
 });
+function isMissingObject(error) {
+	if (!error || typeof error !== "object") return false;
+	const candidate = error;
+	return candidate.name === "NoSuchKey" || candidate.name === "NotFound" || candidate.Code === "NoSuchKey" || candidate.$metadata?.httpStatusCode === 404;
+}
 //#endregion
 export { getStorageDataUrl, storageRouter };

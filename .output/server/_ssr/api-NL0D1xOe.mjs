@@ -2,7 +2,7 @@ import { t as __exportAll } from "./init-3ToIrUem.mjs";
 import { n as createServerFn } from "./ssr.mjs";
 import { a as string, i as record, n as any, r as object, t as _enum } from "../_libs/zod.mjs";
 import { t as createServerRpc } from "./createServerRpc-CN-evIEF.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/api-BMC9z_aV.js
+//#region node_modules/.nitro/vite/services/ssr/assets/api-NL0D1xOe.js
 var OperationRegistry = class {
 	constructor() {
 		this.routes = [];
@@ -127,7 +127,7 @@ async function inlineStorageUrls(value) {
 	if (typeof value === "string") {
 		const match = value.match(/^\/api\/storage\/([^?]+)(?:\?.*)?$/);
 		if (!match) return value;
-		const { getStorageDataUrl } = await import("./storage-BrQCXXmm.mjs");
+		const { getStorageDataUrl } = await import("./storage-CfgDWbZW.mjs");
 		return getStorageDataUrl(decodeURIComponent(match[1]));
 	}
 	if (Array.isArray(value)) return Promise.all(value.map(inlineStorageUrls));
@@ -148,7 +148,7 @@ var apiRequestFn = createServerFn({ method: "POST" }).validator(requestSchema).h
 	const cookieHeader = getRequestHeader("cookie");
 	const sessionId = await getSessionUserId(cookieHeader);
 	if (!isPublicRequest(data.path) && !sessionId) return envelope(401, { error: "غير مصرح بالدخول، يرجى تسجيل الدخول أولاً" }, {});
-	const { apiRouter } = await import("./operations-D-Q9z6Ea.mjs");
+	const { apiRouter } = await import("./operations-Ccjh6F9d.mjs");
 	const result = await apiRouter.dispatch({
 		method: data.method,
 		path: data.path,

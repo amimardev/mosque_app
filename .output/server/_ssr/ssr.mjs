@@ -140,7 +140,7 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"34a078b9ab06754cb1314ccee2a0b7029ae93c7a80283a8624ba47ae43695a9c": {
 		functionName: "apiRequestFn_createServerFn_handler",
-		importer: () => import("./api-BMC9z_aV.mjs").then((n) => n.t)
+		importer: () => import("./api-NL0D1xOe.mjs").then((n) => n.t)
 	},
 	"400d0ebda25e268fae04a488ac1560b98c4d67527f9bd9e0f94da9940683d0e0": {
 		functionName: "loginFn_createServerFn_handler",
