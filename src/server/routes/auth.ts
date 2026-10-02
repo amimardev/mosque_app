@@ -83,7 +83,7 @@ authRouter.post('/login', async (c) => {
     setCookie(c, 'madrasa_session', user.id, {
       path: '/',
       httpOnly: true,
-      secure: false, // Vite Dev server is http
+      secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7 // 7 days
     });
 
