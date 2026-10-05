@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { BellRing, Download, X } from 'lucide-react';
-import { getOneSignal } from '@/lib/onesignal';
-
-type InstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-};
+import { BellRing, Download, LogOut, X } from 'lucide-react';
+import { getInitializedOneSignal, getOneSignal } from '@/lib/onesignal';
+import {
+  consumeInstallPrompt,
+  subscribeAppInstalled,
+  subscribeInstallPrompt,
+  type InstallPromptEvent,
+} from '@/lib/pwaInstall';
 
 function isIosDevice() {
   return typeof navigator !== 'undefined' && (
@@ -21,7 +22,7 @@ function isStandalone() {
   );
 }
 
-export function ParentPushOnboarding({ userId }: { userId: string }) {
+export function ParentPushOnboarding({ userId, onLogout }: { userId: string; onLogout: () => void }) {
   const [open, setOpen] = useState(false);
   const [ios, setIos] = useState(false);
   const [standalone, setStandalone] = useState(false);
@@ -37,16 +38,8 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
     if (!('Notification' in window)) setPermission('unsupported');
     else setPermission(Notification.permission);
 
-    const onInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as InstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setInstallPrompt(null);
-      setStandalone(true);
-    };
-    window.addEventListener('beforeinstallprompt', onInstallPrompt);
-    window.addEventListener('appinstalled', onInstalled);
+    const unsubscribeInstallPrompt = subscribeInstallPrompt(setInstallPrompt);
+    const unsubscribeAppInstalled = subscribeAppInstalled(() => setStandalone(true));
 
     let active = true;
     void (async () => {
@@ -71,17 +64,22 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
 
     return () => {
       active = false;
-      window.removeEventListener('beforeinstallprompt', onInstallPrompt);
-      window.removeEventListener('appinstalled', onInstalled);
+      unsubscribeInstallPrompt();
+      unsubscribeAppInstalled();
     };
   }, [appIdConfigured, userId]);
 
   const installApp = async () => {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
+    const promptEvent = consumeInstallPrompt();
+    if (!promptEvent) {
+      setMessage(requiresIosInstall
+        ? 'على iPhone أو iPad، افتح قائمة المشاركة في Safari واختر «إضافة إلى الشاشة الرئيسية». بعد التثبيت، افتح التطبيق من الأيقونة.'
+        : 'لا يمكن لهذا المتصفح فتح نافذة التثبيت الآن. استخدم قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».');
+      return;
+    }
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
     if (choice.outcome === 'accepted') setMessage('بعد اكتمال التثبيت، افتح التطبيق من الشاشة الرئيسية لتفعيل التنبيهات.');
-    setInstallPrompt(null);
   };
 
   const enableNotifications = async () => {
@@ -89,16 +87,29 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
       setOpen(false);
       return;
     }
+    // Initialization and OneSignal.login complete before this dialog is shown.
+    // Call requestPermission synchronously in the click handler so the browser
+    // sees the user's gesture and can display its native permission prompt.
+    const OneSignal = getInitializedOneSignal();
+    if (!OneSignal) {
+      setMessage('تعذّر تجهيز خدمة التنبيهات. أعد تحميل الصفحة ثم حاول مرة أخرى.');
+      return;
+    }
+
+    let permissionRequest: Promise<unknown>;
+    try {
+      permissionRequest = OneSignal.Notifications.requestPermission();
+    } catch (error) {
+      console.error('Unable to request push notification permission:', error);
+      setMessage('تعذّر فتح طلب الإذن. تحقق من إعداد المتصفح ثم حاول مرة أخرى.');
+      return;
+    }
+
     setBusy(true);
     setMessage('');
     try {
-      const OneSignal = await getOneSignal();
-      if (!OneSignal) {
-        setMessage('إعداد OneSignal غير مكتمل. يلزم ضبط معرّف التطبيق في إعدادات النشر.');
-        return;
-      }
-      await OneSignal.login(userId);
-      const granted = await OneSignal.Notifications.requestPermission();
+      await permissionRequest;
+      const granted = OneSignal.Notifications.permission;
       setPermission(granted ? 'granted' : Notification.permission);
       if (granted) {
         setMessage('تم تفعيل تنبيهات الحضور لهذا الجهاز.');
@@ -151,7 +162,7 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
         {message && <p className="mt-3 text-xs font-semibold text-emerald-700" role="status">{message}</p>}
 
         <div className="mt-5 flex flex-col gap-2">
-          {installPrompt && !standalone && (
+          {!standalone && (
             <button type="button" onClick={() => void installApp()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
               <Download className="h-4 w-4" /> تثبيت التطبيق
             </button>
@@ -160,6 +171,9 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
             {busy ? 'جارٍ التفعيل…' : permission === 'granted' ? 'التنبيهات مفعّلة' : 'تفعيل تنبيهات الحضور'}
           </button>
           <button type="button" onClick={() => setOpen(false)} className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-50">لاحقاً</button>
+          <button type="button" onClick={onLogout} className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50">
+            <LogOut className="h-4 w-4" /> تسجيل الخروج
+          </button>
         </div>
       </section>
     </div>

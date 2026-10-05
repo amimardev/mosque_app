@@ -1,4 +1,10 @@
 let initialization: Promise<typeof import('react-onesignal').default> | null = null;
+let initializedOneSignal: typeof import('react-onesignal').default | null = null;
+
+/** Returns the SDK only after initialization has completed. */
+export function getInitializedOneSignal() {
+  return initializedOneSignal;
+}
 
 export async function getOneSignal() {
   const appId = import.meta.env.ONESIGNAL_APP_ID;
@@ -12,7 +18,12 @@ export async function getOneSignal() {
         serviceWorkerPath: '/onesignal/OneSignalSDKWorker.js',
         serviceWorkerParam: { scope: '/onesignal/' },
       });
+      initializedOneSignal = OneSignal;
       return OneSignal;
+    }).catch((error) => {
+      // Let a later, user-initiated attempt retry after a transient SDK failure.
+      initialization = null;
+      throw error;
     });
   }
 

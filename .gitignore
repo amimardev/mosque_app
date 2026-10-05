@@ -8,3 +8,6 @@ coverage/
 !.env.example
 
 .vite-cache/
+.output/
+test-results/
+playwright-report/

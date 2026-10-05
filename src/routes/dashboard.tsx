@@ -385,7 +385,7 @@ function DashboardLayout() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 flex font-sans antialiased" dir="rtl">
-      {user?.role === 'parent' && <ParentPushOnboarding userId={user.id} />}
+      {user?.role === 'parent' && <ParentPushOnboarding userId={user.id} onLogout={() => void logout()} />}
       {/* 1. Desktop Persistent Sidebar */}
       <aside
         className={`hidden lg:flex flex-col shrink-0 border-l border-slate-200/80 transition-all duration-300 ${

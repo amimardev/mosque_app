@@ -6,7 +6,9 @@ import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const oneSignalAppId = process.env.ONESIGNAL_APP_ID || env.ONESIGNAL_APP_ID || '';
+  const oneSignalAppId = process.env.PLAYWRIGHT_TEST === 'true'
+    ? ''
+    : process.env.ONESIGNAL_APP_ID || env.ONESIGNAL_APP_ID || '';
 
   return {
     cacheDir: './.vite-cache',

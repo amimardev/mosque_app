@@ -1,5 +1,6 @@
 import { createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
+import './lib/pwaInstall';
 
 export function getRouter() {
   return createRouter({
