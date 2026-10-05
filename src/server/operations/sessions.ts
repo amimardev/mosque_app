@@ -1,12 +1,52 @@
 import { OperationRegistry } from '../operationRegistry.js';
+import { randomUUID } from 'node:crypto';
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
 import { eq, and, gte, lte, sql as sqlDrizzle } from 'drizzle-orm';
 import { getSessionId } from '../session.js';
 import { calculateAge } from '../../lib/ageUtils.js';
 import { computeAlgeriaSessionTimes } from './prayerTimes.js';
+import { sendAttendancePush } from '../onesignal.js';
 
 export const sessionsRouter = new OperationRegistry();
+
+async function notifyParentOfAttendanceChange(sessionId: string, studentId: string, status: string, previousStatus?: string | null) {
+  if ((status !== 'absent' && status !== 'late') || status === previousStatus) return;
+
+  const student = await db.select({
+    name: schema.students.name,
+    parentUserId: schema.parents.userId,
+  }).from(schema.students)
+    .leftJoin(schema.parents, eq(schema.students.parentId, schema.parents.id))
+    .where(eq(schema.students.id, studentId))
+    .then(rows => rows[0]);
+  if (!student?.parentUserId) return;
+
+  const session = await db.select({ date: schema.sessions.date, groupNumber: schema.groups.number })
+    .from(schema.sessions)
+    .innerJoin(schema.groups, eq(schema.sessions.groupId, schema.groups.id))
+    .where(eq(schema.sessions.id, sessionId))
+    .then(rows => rows[0]);
+  if (!session) return;
+
+  const late = status === 'late';
+  await db.insert(schema.notifications).values({
+    id: `ntf_${randomUUID()}`,
+    userId: student.parentUserId,
+    studentId,
+    sessionId,
+    type: late ? 'attendance_late' : 'attendance_absent',
+    title: late ? 'تأخر الطالب عن الحصة' : 'غياب الطالب عن الحصة',
+    message: `${student.name} — الحلقة رقم ${session.groupNumber}، ${session.date}`,
+    href: `/dashboard/sessions/${sessionId}`,
+  });
+  await sendAttendancePush({
+    externalId: student.parentUserId,
+    title: late ? 'تأخر الطالب عن الحصة' : 'غياب الطالب عن الحصة',
+    message: `${student.name} — الحلقة رقم ${session.groupNumber}، ${session.date}`,
+    href: `/dashboard/sessions/${sessionId}`,
+  });
+}
 
 // Middleware helper to check current logged in user and role
 async function getAuthenticatedUser(c: any) {
@@ -412,9 +452,15 @@ sessionsRouter.post('/:id/records', async (c) => {
 
     // Save student records inside session
     for (const rec of records) {
+      const recordId = rec.id || `rec_${sessionId}_${rec.studentId}`;
+      const previous = await db.select({ attendanceStatus: schema.sessionStudentRecords.attendanceStatus })
+        .from(schema.sessionStudentRecords)
+        .where(eq(schema.sessionStudentRecords.id, recordId))
+        .then(rows => rows[0]);
+
       // Upsert record
       await db.insert(schema.sessionStudentRecords).values({
-        id: rec.id || `rec_${sessionId}_${rec.studentId}`,
+        id: recordId,
         sessionId,
         studentId: rec.studentId,
         attendanceStatus: rec.attendanceStatus || 'present',
@@ -438,6 +484,8 @@ sessionsRouter.post('/:id/records', async (c) => {
           isAssessed: rec.isAssessed !== undefined ? Boolean(rec.isAssessed) : false
         }
       });
+
+      await notifyParentOfAttendanceChange(sessionId, rec.studentId, rec.attendanceStatus || 'present', previous?.attendanceStatus);
 
       // Synchronize latest Quran surah and ayah progress to student table directly!
       if (rec.attendanceStatus === 'present' && rec.surahName) {
@@ -480,6 +528,10 @@ sessionsRouter.post('/:id/records/:recordId', async (c) => {
 
     const rec = await c.req.json();
     const isAssessed = rec.isAssessed !== undefined ? Boolean(rec.isAssessed) : true;
+    const previous = await db.select({ attendanceStatus: schema.sessionStudentRecords.attendanceStatus })
+      .from(schema.sessionStudentRecords)
+      .where(eq(schema.sessionStudentRecords.id, recordId))
+      .then(rows => rows[0]);
 
     await db.insert(schema.sessionStudentRecords).values({
       id: recordId,
@@ -506,6 +558,10 @@ sessionsRouter.post('/:id/records/:recordId', async (c) => {
         isAssessed: isAssessed
       }
     });
+
+    if (rec.studentId) {
+      await notifyParentOfAttendanceChange(sessionId, rec.studentId, rec.attendanceStatus || 'present', previous?.attendanceStatus);
+    }
 
     // Synchronize latest Quran surah and ayah progress to student table directly if present
     if (rec.attendanceStatus === 'present' && rec.surahName && rec.studentId) {

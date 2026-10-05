@@ -63,6 +63,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
+      { name: 'theme-color', content: '#047857' },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'apple-mobile-web-app-title', content: 'البوابة القرآنية' },
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
       { title: 'بوابة المدرسة القرآنية - إدارة الطلاب والمعلمين والحلقات' },
       { name: 'description', content: 'نظام شامل لإدارة مدرسة تحفيظ القرآن الكريم وحلقات المسجد للطلاب والمعلمين ومتابعة حفظ السور والآيات والتقييمات الشهرية.' },
       { property: 'og:title', content: 'بوابة المدرسة القرآنية - إدارة الطلاب والمعلمين والحلقات' },
@@ -74,6 +78,8 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'manifest', href: '/manifest.webmanifest' },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
       { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap' },

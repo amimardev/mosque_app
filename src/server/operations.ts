@@ -10,6 +10,7 @@ import { attendancesRouter } from './operations/attendances.js';
 import { statsRouter, quranRouter } from './operations/stats.js';
 import { storageRouter } from './operations/storage.js';
 import { prayerTimesRouter } from './operations/prayerTimes.js';
+import { notificationsRouter } from './operations/notifications.js';
 
 export const apiRouter = new OperationRegistry();
 apiRouter.route('/api/students', studentsRouter);
@@ -24,3 +25,4 @@ apiRouter.route('/api/stats', statsRouter);
 apiRouter.route('/api/quran', quranRouter);
 apiRouter.route('/api/storage', storageRouter);
 apiRouter.route('/api/prayer-times', prayerTimesRouter);
+apiRouter.route('/api/notifications', notificationsRouter);

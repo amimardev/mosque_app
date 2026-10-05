@@ -1,10 +1,44 @@
 import { OperationRegistry } from '../operationRegistry.js';
+import { randomUUID } from 'node:crypto';
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
 import { eq, and, desc, like } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
+import { sendAttendancePush } from '../onesignal.js';
 
 export const attendancesRouter = new OperationRegistry();
+
+async function notifyParentOfAttendanceChange(studentId: string, groupId: string, date: string, status: string, previousStatus?: string | null) {
+  if ((status !== 'absent' && status !== 'late') || status === previousStatus) return;
+
+  const student = await db.select({ name: schema.students.name, parentUserId: schema.parents.userId })
+    .from(schema.students)
+    .leftJoin(schema.parents, eq(schema.students.parentId, schema.parents.id))
+    .where(eq(schema.students.id, studentId))
+    .then(rows => rows[0]);
+  if (!student?.parentUserId) return;
+
+  const group = await db.select({ number: schema.groups.number })
+    .from(schema.groups).where(eq(schema.groups.id, groupId)).then(rows => rows[0]);
+  if (!group) return;
+
+  const late = status === 'late';
+  await db.insert(schema.notifications).values({
+    id: `ntf_${randomUUID()}`,
+    userId: student.parentUserId,
+    studentId,
+    type: late ? 'attendance_late' : 'attendance_absent',
+    title: late ? 'تأخر الطالب عن الحصة' : 'غياب الطالب عن الحصة',
+    message: `${student.name} — الحلقة رقم ${group.number}، ${date}`,
+    href: '/dashboard/attendance',
+  });
+  await sendAttendancePush({
+    externalId: student.parentUserId,
+    title: late ? 'تأخر الطالب عن الحصة' : 'غياب الطالب عن الحصة',
+    message: `${student.name} — الحلقة رقم ${group.number}، ${date}`,
+    href: '/dashboard/sessions',
+  });
+}
 
 // GET all attendance records with rich filters
 attendancesRouter.get('/', async (c) => {
@@ -128,6 +162,7 @@ attendancesRouter.post('/bulk', async (c) => {
             updatedAt: new Date()
           })
           .where(eq(schema.attendances.id, existingRecord.id));
+        await notifyParentOfAttendanceChange(studentId, groupId, date, status, existingRecord.status);
       } else {
         const id = `att_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         await db.insert(schema.attendances).values({
@@ -144,6 +179,7 @@ attendancesRouter.post('/bulk', async (c) => {
           createdAt: new Date(),
           updatedAt: new Date()
         });
+        await notifyParentOfAttendanceChange(studentId, groupId, date, status);
       }
     }
 
@@ -178,6 +214,7 @@ attendancesRouter.put('/:id', async (c) => {
     };
 
     await db.update(schema.attendances).set(updated).where(eq(schema.attendances.id, id));
+    await notifyParentOfAttendanceChange(existing.studentId, existing.groupId, existing.date, updated.status, existing.status);
     return c.json({ success: true, attendance: { ...existing, ...updated } });
   } catch (err: any) {
     return c.json({ error: err.message || 'فشل في تعديل سجل الغياب' }, 500);

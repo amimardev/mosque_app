@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
-import { User, Phone, BookOpen, Users, Save, ArrowRight, UserCheck } from 'lucide-react';
-import { Student, Group, Parent } from '../../types';
+import { User, Phone, BookOpen, Save, ArrowRight, UserCheck } from 'lucide-react';
+import { Student, Parent } from '../../types';
 import { AvatarPicker } from '../common/AvatarPicker';
 import { SurahAyahPicker } from '../common/SurahAyahPicker';
 import { DatePicker } from '../ui/date-picker';
@@ -15,7 +15,6 @@ import { Button } from '../ui/button';
 
 interface StudentFormProps {
   initialData?: Student | null;
-  groups: Group[];
   onSave: (studentData: Partial<Student>) => Promise<void>;
   onCancel: () => void;
   title: string;
@@ -24,7 +23,6 @@ interface StudentFormProps {
 
 export const StudentForm: React.FC<StudentFormProps> = ({
   initialData,
-  groups,
   onSave,
   onCancel,
   title,
@@ -55,7 +53,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       dateOfBirth: initialData?.dateOfBirth || (typeof initialData?.age === 'string' && initialData.age.includes('-') ? initialData.age : ''),
       parentId: initialData?.parentId || '',
       email: initialData?.email || '',
-      groupIds: initialData?.groupId ? initialData.groupId.split(',').map(id => id.trim()).filter(Boolean) : [] as string[],
       currentSurahNumber: initialData?.currentSurahNumber || 1,
       currentSurahName: initialData?.currentSurahName || 'Al-Fatihah',
       currentAyah: initialData?.currentAyah || 1,
@@ -83,7 +80,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           age: value.dateOfBirth || undefined,
           parentId: value.parentId || undefined,
           email: value.email.trim() || undefined,
-          groupId: value.groupIds.join(',') || undefined,
           currentSurahNumber: Number(value.currentSurahNumber),
           currentSurahName: value.currentSurahName,
           currentAyah: Number(value.currentAyah),
@@ -192,16 +188,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                     <FormLabel htmlFor={field.name}>جنس الطالب / الطالبة</FormLabel>
                     <Select
                       value={field.state.value}
-                      onValueChange={(val: 'male' | 'female') => {
-                        field.handleChange(val);
-                        // Filter groupIds to match gender
-                        const currentGroups = form.getFieldValue('groupIds');
-                        const validGroupIds = currentGroups.filter(gid => {
-                          const grp = groups.find(g => g.id === gid);
-                          return grp && grp.gender === val;
-                        });
-                        form.setFieldValue('groupIds', validGroupIds);
-                      }}
+                      onValueChange={(val: 'male' | 'female') => field.handleChange(val)}
                     >
                       <SelectTrigger id={field.name} className="text-right">
                         <SelectValue placeholder="اختر الجنس" />
@@ -436,65 +423,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                 />
               </FormItem>
             )}
-          />
-        </div>
-
-        {/* 4. Group Assignment */}
-        <div className="space-y-4 pt-4 border-t border-slate-100">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 flex-row-reverse justify-end">
-            <Users className="w-4 h-4 text-emerald-600" />
-            <span>4. الحلقات القرآنية المسندة للطالب</span>
-          </h2>
-
-          <form.Subscribe
-            selector={(state) => [state.values.gender, state.values.groupIds]}
-            children={([studentGender, groupIds]) => {
-              const currentGender = studentGender as 'male' | 'female';
-              const selectedIds = (groupIds as string[]) || [];
-
-              return (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {groups
-                      .filter(g => g.gender === currentGender)
-                      .map((grp) => {
-                        const isSelected = selectedIds.includes(grp.id);
-                        return (
-                          <div
-                            key={grp.id}
-                            onClick={() => {
-                              if (isSelected) {
-                                form.setFieldValue('groupIds', selectedIds.filter(id => id !== grp.id));
-                              } else {
-                                form.setFieldValue('groupIds', [...selectedIds, grp.id]);
-                              }
-                            }}
-                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between text-right ${
-                              isSelected
-                                ? 'bg-emerald-50/70 border-emerald-400 ring-2 ring-emerald-500/20 shadow-2xs'
-                                : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100/60'
-                            }`}
-                          >
-                            <div className="space-y-0.5">
-                              <div className="font-extrabold text-xs sm:text-sm text-slate-900">
-                                حلقة رقم {grp.number} ({grp.type})
-                              </div>
-                              <div className="text-[11px] text-slate-500">
-                                {grp.studyTime}
-                              </div>
-                            </div>
-                            <span className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-colors shrink-0 ${
-                              isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
-                            }`}>
-                              {isSelected && '✓'}
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              );
-            }}
           />
         </div>
 

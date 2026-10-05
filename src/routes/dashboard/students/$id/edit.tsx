@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { StudentForm } from '../../../../components/forms/StudentForm';
-import { Student, Group } from '../../../../types';
+import { Student } from '../../../../types';
 
 export const Route = createFileRoute('/dashboard/students/$id/edit')({
   component: EditStudentPage,
@@ -12,19 +12,14 @@ function EditStudentPage() {
   const { id } = useParams({ from: '/dashboard/students/$id/edit' });
   const navigate = useNavigate();
   const [student, setStudent] = useState<Student | null>(null);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
         setIsLoading(true);
-        const [studentRes, groupsRes] = await Promise.all([
-          api.get(`/api/students/${id}`),
-          api.get('/api/groups')
-        ]);
+        const studentRes = await api.get(`/api/students/${id}`);
         setStudent(studentRes.data.student || null);
-        setGroups(groupsRes.data.groups || []);
       } catch (err) {
         console.error('Failed to load edit student data:', err);
       } finally {
@@ -50,11 +45,10 @@ function EditStudentPage() {
   return (
     <StudentForm
       initialData={student}
-      groups={groups}
       onSave={handleSave}
       onCancel={() => navigate({ to: '/dashboard/students/$id', params: { id } })}
       title={`تعديل ملف الطالب: ${student.name}`}
-      subtitle="تحديث البيانات الشخصية للطالب، الحلقة الدراسية، أو مستوى الحفظ القرآني الحالي."
+      subtitle="تحديث البيانات الشخصية للطالب أو مستوى الحفظ القرآني الحالي. تتم إدارة الحلقة من صفحة الحلقة."
     />
   );
 }

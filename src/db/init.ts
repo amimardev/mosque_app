@@ -296,6 +296,21 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         );
       `;
 
+      await sql`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          student_id TEXT REFERENCES students(id) ON DELETE CASCADE,
+          session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          href TEXT,
+          read_at TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+      `;
+
       // Column alterations for users association and sessions
       await sql`
         DO $$

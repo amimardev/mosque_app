@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUserFn, loginFn, logoutFn } from '../server/functions/auth';
+import { logoutOneSignalUser } from '../lib/onesignal';
 
 interface UserProfile {
   id: string;
@@ -60,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setIsLoading(true);
+      await logoutOneSignalUser();
       await logoutFn();
       setUser(null);
     } catch (error) {

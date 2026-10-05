@@ -4,10 +4,11 @@ import api from '@/lib/apiClient';
 import { 
   PanelLeft, RefreshCw, BookOpen, LayoutDashboard, 
   User, UserCheck, Clock, ChevronLeft, ChevronRight, 
-  ShieldCheck, X, UserX, Users, LogOut
+  ShieldCheck, X, UserX, Users, LogOut, Bell, CheckCheck
 } from 'lucide-react';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { useAuth } from '../context/AuthContext';
+import { ParentPushOnboarding } from '../components/common/ParentPushOnboarding';
 import { 
   Sheet, 
   SheetContent, 
@@ -32,9 +33,64 @@ function DashboardLayout() {
     groups: 0,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    message: string;
+    href: string | null;
+    readAt: string | Date | null;
+    createdAt: string | Date;
+  }>>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const fetchNotifications = useCallback(async () => {
+    if (user?.role !== 'parent') return;
+    try {
+      const response = await api.get('/api/notifications');
+      setNotifications(response.data.notifications || []);
+      setUnreadNotifications(response.data.unreadCount || 0);
+    } catch (err) {
+      console.warn('Failed to load parent notifications:', err);
+    }
+  }, [user?.role]);
+
+  useEffect(() => {
+    if (user?.role !== 'parent') return;
+    void fetchNotifications();
+    const intervalId = window.setInterval(() => void fetchNotifications(), 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [fetchNotifications, user?.role]);
+
+  const openNotification = async (notification: (typeof notifications)[number]) => {
+    if (!notification.readAt) {
+      try {
+        await api.put(`/api/notifications/${notification.id}/read`);
+        setNotifications(current => current.map(item => item.id === notification.id
+          ? { ...item, readAt: new Date().toISOString() }
+          : item));
+        setUnreadNotifications(count => Math.max(0, count - 1));
+      } catch (err) {
+        console.warn('Failed to mark notification as read:', err);
+      }
+    }
+    setNotificationsOpen(false);
+    if (notification.href) navigate({ to: notification.href as any });
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await api.post('/api/notifications/read-all');
+      const readAt = new Date().toISOString();
+      setNotifications(current => current.map(item => ({ ...item, readAt: item.readAt || readAt })));
+      setUnreadNotifications(0);
+    } catch (err) {
+      console.warn('Failed to mark notifications as read:', err);
+    }
+  };
 
   // Protect dashboard routes
   useEffect(() => {
@@ -329,6 +385,7 @@ function DashboardLayout() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 flex font-sans antialiased" dir="rtl">
+      {user?.role === 'parent' && <ParentPushOnboarding userId={user.id} />}
       {/* 1. Desktop Persistent Sidebar */}
       <aside
         className={`hidden lg:flex flex-col shrink-0 border-l border-slate-200/80 transition-all duration-300 ${
@@ -378,6 +435,80 @@ function DashboardLayout() {
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-2">
+            {user?.role === 'parent' && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const opening = !notificationsOpen;
+                    setNotificationsOpen(opening);
+                    if (opening) void fetchNotifications();
+                  }}
+                  aria-label={unreadNotifications ? `الإشعارات، ${unreadNotifications} غير مقروءة` : 'الإشعارات'}
+                  aria-expanded={notificationsOpen}
+                  className="relative p-2 text-slate-500 hover:text-emerald-700 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200/60 cursor-pointer"
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -left-1 min-w-4 h-4 px-1 rounded-full bg-rose-600 text-white text-[9px] font-extrabold flex items-center justify-center">
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="إغلاق قائمة الإشعارات"
+                      className="fixed inset-0 z-20 cursor-default"
+                      onClick={() => setNotificationsOpen(false)}
+                    />
+                    <section className="absolute left-0 top-full mt-2 z-30 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl text-right" dir="rtl" aria-label="الإشعارات">
+                      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                        <div>
+                          <h3 className="text-sm font-extrabold text-slate-900">الإشعارات</h3>
+                          <p className="text-[11px] text-slate-500">تنبيهات الحضور الخاصة بأبنائك</p>
+                        </div>
+                        {unreadNotifications > 0 && (
+                          <button
+                            type="button"
+                            onClick={markAllNotificationsRead}
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            قراءة الكل
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <p className="px-4 py-8 text-center text-xs font-medium text-slate-400">لا توجد إشعارات حتى الآن</p>
+                        ) : notifications.map(notification => (
+                          <button
+                            key={notification.id}
+                            type="button"
+                            onClick={() => void openNotification(notification)}
+                            className={`w-full border-b border-slate-100 px-4 py-3 text-right transition-colors hover:bg-slate-50 ${notification.readAt ? '' : 'bg-emerald-50/70'}`}
+                          >
+                            <span className="flex items-start gap-2">
+                              {!notification.readAt && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-600" />}
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-xs font-extrabold text-slate-900">{notification.title}</span>
+                                <span className="mt-1 block text-[11px] leading-5 text-slate-600">{notification.message}</span>
+                                <time className="mt-1 block text-[10px] text-slate-400">
+                                  {new Intl.DateTimeFormat('ar-DZ', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(notification.createdAt))}
+                                </time>
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  </>
+                )}
+              </div>
+            )}
             <button
               onClick={fetchCounts}
               title="تحديث بيانات البوابة"

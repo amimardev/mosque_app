@@ -1,44 +1,47 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
+import { handleGetCurrentUser, handleLogin, handleLogout } from './handlers.js';
 
 export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(async () => {
   const { getRequestHeader, setResponseHeader } = await import('@tanstack/react-start/server');
   const { getSessionUserId, readSessionToken, clearedSessionCookie } = await import('../session.js');
   const cookieHeader = getRequestHeader('cookie');
-  const token = readSessionToken(cookieHeader);
-  const userId = await getSessionUserId(cookieHeader);
-  if (!userId) {
-    if (token) setResponseHeader('Set-Cookie', clearedSessionCookie());
-    return { user: null };
-  }
-
-  const { getFullUserProfile } = await import('../authService.js');
-  const user = await getFullUserProfile(userId);
-  if (!user) {
-    setResponseHeader('Set-Cookie', clearedSessionCookie());
-    return { user: null };
-  }
-  return { user };
+  return handleGetCurrentUser(cookieHeader, {
+    getSessionUserId,
+    readSessionToken,
+    getFullUserProfile: async (userId) => {
+      const { getFullUserProfile } = await import('../authService.js');
+      return getFullUserProfile(userId);
+    },
+    clearedSessionCookie,
+    setResponseHeader,
+  });
 });
 
+export const loginSchema = z.object({ email: z.string().trim().email(), password: z.string().min(1) });
+
 export const loginFn = createServerFn({ method: 'POST' })
-  .validator(z.object({ email: z.string().trim().email(), password: z.string().min(1) }))
+  .validator(loginSchema)
   .handler(async ({ data }) => {
     const { setResponseHeader } = await import('@tanstack/react-start/server');
-    const { authenticateUser, getFullUserProfile } = await import('../authService.js');
     const { createAuthSession, sessionCookie } = await import('../session.js');
-    const user = await authenticateUser(data.email, data.password);
-    if (!user) return { success: false, user: null };
-
-    const token = await createAuthSession(user.id);
-    setResponseHeader('Set-Cookie', sessionCookie(token));
-    return { success: true, user: await getFullUserProfile(user.id) };
+    const { authenticateUser, getFullUserProfile } = await import('../authService.js');
+    return handleLogin(data, {
+      authenticateUser,
+      createAuthSession,
+      sessionCookie,
+      getFullUserProfile,
+      setResponseHeader,
+    });
   });
 
 export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
   const { getRequestHeader, setResponseHeader } = await import('@tanstack/react-start/server');
   const { destroyAuthSession, readSessionToken, clearedSessionCookie } = await import('../session.js');
-  await destroyAuthSession(readSessionToken(getRequestHeader('cookie')));
-  setResponseHeader('Set-Cookie', clearedSessionCookie());
-  return { success: true };
+  return handleLogout(getRequestHeader('cookie'), {
+    destroyAuthSession,
+    readSessionToken,
+    clearedSessionCookie,
+    setResponseHeader,
+  });
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Student, Group } from '../../types';
+import { Student } from '../../types';
 import { StudentForm } from '../forms/StudentForm';
 
 interface StudentModalProps {
@@ -7,15 +7,13 @@ interface StudentModalProps {
   onClose: () => void;
   onSave: (studentData: Partial<Student>) => Promise<void>;
   student?: Student | null; // if provided -> edit mode, else add mode
-  groups: Group[];
 }
 
 export const StudentModal: React.FC<StudentModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  student,
-  groups
+  student
 }) => {
   if (!isOpen) return null;
 
@@ -26,7 +24,6 @@ export const StudentModal: React.FC<StudentModalProps> = ({
           title={student ? 'تعديل بيانات الطالب' : 'تسجيل طالب جديد'}
           subtitle="تعديل أو إدخال البيانات الشخصية والقرآنية ومستوى الطالب"
           initialData={student}
-          groups={groups}
           onSave={async (data) => {
             await onSave(data);
             onClose();
