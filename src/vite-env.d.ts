@@ -1,5 +1,9 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  readonly ONESIGNAL_APP_ID: string;
+}
+
 declare module '*.jpg' {
   const content: string;
   export default content;

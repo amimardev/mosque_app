@@ -1,7 +1,7 @@
 let initialization: Promise<typeof import('react-onesignal').default> | null = null;
 
 export async function getOneSignal() {
-  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+  const appId = import.meta.env.ONESIGNAL_APP_ID;
   if (!appId || typeof window === 'undefined') return null;
 
   if (!initialization) {

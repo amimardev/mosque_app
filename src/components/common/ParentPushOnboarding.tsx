@@ -29,7 +29,7 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const appIdConfigured = Boolean(import.meta.env.VITE_ONESIGNAL_APP_ID);
+  const appIdConfigured = Boolean(import.meta.env.ONESIGNAL_APP_ID);
 
   useEffect(() => {
     setIos(isIosDevice());
@@ -146,7 +146,7 @@ export function ParentPushOnboarding({ userId }: { userId: string }) {
           </div>
         )}
 
-        {!appIdConfigured && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-xs leading-5 text-rose-800">يلزم ضبط VITE_ONESIGNAL_APP_ID في إعدادات Vercel وربط النطاق في لوحة OneSignal قبل تفعيل الاشتراك.</p>}
+        {!appIdConfigured && <p className="mt-4 rounded-xl bg-rose-50 p-3 text-xs leading-5 text-rose-800">يلزم ضبط ONESIGNAL_APP_ID في إعدادات Vercel وربط النطاق في لوحة OneSignal قبل تفعيل الاشتراك.</p>}
         {permission === 'denied' && <p className="mt-3 text-xs text-amber-700">سبق رفض الإذن. غيّر إذن التنبيهات من إعدادات المتصفح ثم أعد المحاولة.</p>}
         {message && <p className="mt-3 text-xs font-semibold text-emerald-700" role="status">{message}</p>}
 
