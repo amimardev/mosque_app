@@ -56,6 +56,8 @@ studentsRouter.get('/', async (c) => {
 
   const q = c.req.query('q')?.trim() || '';
   const groupId = c.req.query('groupId')?.trim() || '';
+  const level = c.req.query('level')?.trim() || '';
+  const gender = c.req.query('gender')?.trim() || '';
 
   let allStudents = await db.select().from(schema.students);
 
@@ -80,6 +82,12 @@ studentsRouter.get('/', async (c) => {
     }
   }
   // 3. Admin: sees all students
+  if (level) {
+    allStudents = allStudents.filter(student => student.level === level);
+  }
+  if (gender) {
+    allStudents = allStudents.filter(student => student.gender === gender);
+  }
 
   const allGroups = await db.select().from(schema.groups);
   const allGroupTypes = await db.select().from(schema.groupTypes);
@@ -318,6 +326,7 @@ studentsRouter.post('/', async (c) => {
 
     const birthDate = body.dateOfBirth || (typeof body.age === 'string' && body.age.includes('-') ? body.age : null);
 
+    const level = body.level || 'middle';
     const newStudent = {
       id,
       name: body.name?.trim(),
@@ -333,8 +342,7 @@ studentsRouter.post('/', async (c) => {
       currentAyah: parseInt(body.currentAyah, 10) || 1,
       targetJuz: parseInt(body.targetJuz, 10) || 30,
       memorizedJuzCount: parseInt(body.memorizedJuzCount, 10) || 1,
-      status: body.status || 'active',
-      enrollmentDate: body.enrollmentDate || new Date().toISOString().split('T')[0],
+      level,
       notes: body.notes || null,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -344,6 +352,9 @@ studentsRouter.post('/', async (c) => {
       return c.json({ error: 'Student full name is required' }, 400);
     }
 
+    if (!['primary', 'middle', 'secondary'].includes(level)) {
+      return c.json({ error: 'المستوى التعليمي غير صالح' }, 400);
+    }
     await db.insert(schema.students).values(newStudent);
     const parentObj = await getParentWithPhone(newStudent.parentId);
     const computedAge = calculateAge(newStudent.dateOfBirth || newStudent.age);
@@ -391,6 +402,7 @@ studentsRouter.put('/:id', async (c) => {
     const avatar = body.avatar || existing.avatar || `/api/storage/student-${id}`;
 
     const targetGender = body.gender ?? existing.gender;
+    const targetLevel = body.level ?? existing.level;
     const targetGroupId = body.groupId !== undefined ? (body.groupId === '' ? null : body.groupId) : existing.groupId;
 
     // Validate gender matching across all assigned groups
@@ -429,8 +441,7 @@ studentsRouter.put('/:id', async (c) => {
       currentAyah: body.currentAyah !== undefined ? parseInt(body.currentAyah, 10) : existing.currentAyah,
       targetJuz: body.targetJuz !== undefined ? parseInt(body.targetJuz, 10) : existing.targetJuz,
       memorizedJuzCount: body.memorizedJuzCount !== undefined ? parseInt(body.memorizedJuzCount, 10) : existing.memorizedJuzCount,
-      status: body.status ?? existing.status,
-      enrollmentDate: body.enrollmentDate ?? existing.enrollmentDate,
+      level: targetLevel,
       notes: body.notes !== undefined ? body.notes : existing.notes,
       updatedAt: new Date()
     };

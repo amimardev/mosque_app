@@ -503,6 +503,8 @@ test('GET /api/students returns only own children for parent and only group stud
 
   const teacherUserId = `test_tch_u_${id}`;
   const teacherProfileId = `test_tch_p_${id}`;
+  const adminUserId = `test_admin_u_${id}`;
+  const adminProfileId = `test_admin_p_${id}`;
 
   const groupTypeId = `test_gt_${id}`;
   const group1Id = `test_grp1_${id}`;
@@ -514,6 +516,7 @@ test('GET /api/students returns only own children for parent and only group stud
 
   let parentCookieHeader = '';
   let teacherCookieHeader = '';
+  let adminCookieHeader = '';
   let seeded = false;
 
   try {
@@ -560,6 +563,20 @@ test('GET /api/students returns only own children for parent and only group stud
       userId: teacherUserId,
       isAdmin: false,
     });
+    await database.db.insert(schema.users).values({
+      id: adminUserId,
+      name: 'Test Admin',
+      email: `admin-${id}@example.test`,
+      phone: `+100000006${id.slice(-2)}`,
+      role: 'teacher',
+    });
+    await database.db.insert(schema.teachers).values({
+      id: adminProfileId,
+      name: 'Test Admin',
+      avatar: '/logo.png',
+      userId: adminUserId,
+      isAdmin: true,
+    });
 
     // 4. Create Groups
     await database.db.insert(schema.groupTypes).values({
@@ -568,8 +585,8 @@ test('GET /api/students returns only own children for parent and only group stud
       slug: `type-${id}`,
     });
     await database.db.insert(schema.groups).values([
-      { id: group1Id, number: 111, typeId: groupTypeId, studyTime: 'Time 1' },
-      { id: group2Id, number: 222, typeId: groupTypeId, studyTime: 'Time 2' },
+      { id: group1Id, number: 111, typeId: groupTypeId, studyTime: 'Time 1', gender: 'male', level: 'middle' },
+      { id: group2Id, number: 222, typeId: groupTypeId, studyTime: 'Time 2', gender: 'female', level: 'primary' },
     ]);
 
     // Teacher is assigned ONLY to group1Id
@@ -588,6 +605,8 @@ test('GET /api/students returns only own children for parent and only group stud
       avatar: '/logo.png',
       parentId: parent1ProfileId,
       groupId: group1Id,
+      gender: 'male',
+      level: 'middle',
     });
     // Student Other belongs to Parent 2 and is in Group 2 (teacher not assigned to Group 2)
     await database.db.insert(schema.students).values({
@@ -596,6 +615,8 @@ test('GET /api/students returns only own children for parent and only group stud
       avatar: '/logo.png',
       parentId: parent2ProfileId,
       groupId: group2Id,
+      gender: 'female',
+      level: 'primary',
     });
 
     seeded = true;
@@ -606,6 +627,8 @@ test('GET /api/students returns only own children for parent and only group stud
 
     const teacherToken = await session.createAuthSession(teacherUserId);
     teacherCookieHeader = session.sessionCookie(teacherToken);
+    const adminToken = await session.createAuthSession(adminUserId);
+    adminCookieHeader = session.sessionCookie(adminToken);
 
     // --- TEST 1: Parent fetches students ---
     const parentReq = await handleApiRequest({ method: 'GET', path: '/api/students' }, {
@@ -665,12 +688,42 @@ test('GET /api/students returns only own children for parent and only group stud
       setResponseHeader: () => {},
     });
     assert.equal(teacherPostReq.status, 403, 'Non-admin teacher cannot create students');
+
+    const adminSearch = async (query: Record<string, string>) => {
+      const result = await handleApiRequest({
+        method: 'GET',
+        path: '/api/students',
+        query,
+      }, {
+        cookieHeader: adminCookieHeader,
+        getSessionUserId: session.getSessionUserId,
+        dispatch: (request) => operations.apiRouter.dispatch(request),
+        setResponseHeader: () => {},
+      });
+      assert.equal(result.status, 200);
+      return result.body.students as any[];
+    };
+
+    const textMatches = await adminSearch({ q: 'Child 1' });
+    assert.deepEqual(textMatches.map(student => student.id), [studentChild1Id]);
+
+    const levelMatches = await adminSearch({ level: 'primary' });
+    assert.deepEqual(levelMatches.map(student => student.id), [studentOtherId]);
+
+    const genderMatches = await adminSearch({ gender: 'female' });
+    assert.deepEqual(genderMatches.map(student => student.id), [studentOtherId]);
+
+    const groupMatches = await adminSearch({ groupId: group1Id });
+    assert.deepEqual(groupMatches.map(student => student.id), [studentChild1Id]);
   } finally {
     if (parentCookieHeader) {
       await session.destroyAuthSession(session.readSessionToken(parentCookieHeader));
     }
     if (teacherCookieHeader) {
       await session.destroyAuthSession(session.readSessionToken(teacherCookieHeader));
+    }
+    if (adminCookieHeader) {
+      await session.destroyAuthSession(session.readSessionToken(adminCookieHeader));
     }
     if (seeded) {
       await database.db.delete(schema.students).where(eq(schema.students.id, studentChild1Id));
@@ -680,9 +733,11 @@ test('GET /api/students returns only own children for parent and only group stud
       await database.db.delete(schema.groups).where(eq(schema.groups.id, group2Id));
       await database.db.delete(schema.groupTypes).where(eq(schema.groupTypes.id, groupTypeId));
       await database.db.delete(schema.teachers).where(eq(schema.teachers.id, teacherProfileId));
+      await database.db.delete(schema.teachers).where(eq(schema.teachers.id, adminProfileId));
       await database.db.delete(schema.parents).where(eq(schema.parents.id, parent1ProfileId));
       await database.db.delete(schema.parents).where(eq(schema.parents.id, parent2ProfileId));
       await database.db.delete(schema.users).where(eq(schema.users.id, teacherUserId));
+      await database.db.delete(schema.users).where(eq(schema.users.id, adminUserId));
       await database.db.delete(schema.users).where(eq(schema.users.id, parent1UserId));
       await database.db.delete(schema.users).where(eq(schema.users.id, parent2UserId));
     }

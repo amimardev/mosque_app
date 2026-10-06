@@ -55,10 +55,8 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
                 <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
                   {student.name}
                 </h1>
-                <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-                  student.status === 'active' ? 'bg-emerald-900 text-emerald-200 border border-emerald-700' : 'bg-slate-800 text-slate-200'
-                }`}>
-                  {student.status === 'active' ? 'Active Student' : student.status}
+                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-900 text-emerald-200 border border-emerald-700">
+                  المستوى: {student.level === 'primary' ? 'ابتدائي' : student.level === 'secondary' ? 'ثانوي' : 'متوسط'}
                 </span>
                 <span className="text-[11px] font-medium bg-slate-800 text-slate-200 px-2 py-0.5 rounded-full border border-slate-700">
                   {student.gender === 'male' ? 'Male (طالب)' : 'Female (طالبة)'}

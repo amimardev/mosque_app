@@ -13,18 +13,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
   const memorized = student.memorizedJuzCount || 0;
   const progressPercent = Math.min(100, Math.round((memorized / targetJuz) * 100));
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'نشط';
-      case 'graduated':
-        return 'متخرج';
-      case 'paused':
-        return 'موقوف مؤقتاً';
-      default:
-        return status;
-    }
-  };
+  const levelLabel = student.level === 'primary' ? 'ابتدائي' : student.level === 'secondary' ? 'ثانوي' : 'متوسط';
 
   return (
     <div
@@ -40,12 +29,8 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
               <h3 className="font-extrabold text-slate-900 text-base truncate group-hover:text-emerald-700 transition-colors">
                 {student.name}
               </h3>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                student.status === 'active'
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-slate-100 text-slate-700'
-              }`}>
-                {getStatusLabel(student.status)}
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 bg-emerald-100 text-emerald-800">
+                {levelLabel}
               </span>
             </div>
 

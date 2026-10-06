@@ -259,11 +259,11 @@ function StudentDetailsPage() {
 
           {/* Student Details - Clean Unboxed Layout */}
           <div className="flex-1 w-full text-right space-y-4">
-            {/* Header: Name and Status Badges */}
+            {/* Header: Name and education level badges */}
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold">
-                  {student.status === 'active' ? 'طالب نشط ومنتظم' : student.status === 'graduated' ? 'متخرج' : 'موقوف مؤقتاً'}
+                  المستوى: {student.level === 'primary' ? 'ابتدائي' : student.level === 'secondary' ? 'ثانوي' : 'متوسط'}
                 </span>
                 <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold">
                   الجنس: {student.gender === 'male' ? 'طالب (ذكر)' : 'طالبة (أنثى)'}

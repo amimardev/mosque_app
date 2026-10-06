@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { 
   Users, Clock, Award, Save, ArrowRight, Check, 
   Search, X, UserMinus, Plus, ShieldCheck, UserCheck,
@@ -16,6 +16,7 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Button } from '../ui/button';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface GroupFormProps {
   initialData?: Group | null;
@@ -48,6 +49,11 @@ const DAY_TRANSLATIONS: Record<string, string> = {
 
 const DEFAULT_STUDENTS: Student[] = [];
 const DEFAULT_GROUP_TYPES: GroupType[] = [];
+const LEVEL_LABELS: Record<string, string> = {
+  primary: 'ابتدائي',
+  middle: 'متوسط',
+  secondary: 'ثانوي',
+};
 
 export const GroupForm: React.FC<GroupFormProps> = ({
   initialData,
@@ -70,6 +76,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
   const [teacherQuery, setTeacherQuery] = useState('');
   const [showStudentSearch, setShowStudentSearch] = useState(false);
   const [studentQuery, setStudentQuery] = useState('');
+  const debouncedStudentQuery = useDebounce(studentQuery);
 
   // Sync group types once or when prop changes
   useEffect(() => {
@@ -92,26 +99,10 @@ export const GroupForm: React.FC<GroupFormProps> = ({
     return () => { isMounted = false; };
   }, [groupTypes.length]);
 
-  // Load students for search if not passed
+  // Keep assigned students from the parent screen, but search candidates on the server.
   useEffect(() => {
-    let isMounted = true;
-    if (students && students.length > 0) {
-      setAvailableStudents(students);
-      return;
-    }
-
-    async function loadAllStudents() {
-      try {
-        const res = await api.get('/api/students');
-        if (!isMounted) return;
-        setAvailableStudents(res.data.students || []);
-      } catch (e) {
-        console.error('Failed to load students for group form:', e);
-      }
-    }
-    loadAllStudents();
-    return () => { isMounted = false; };
-  }, [students.length]);
+    if (students.length > 0) setAvailableStudents(students);
+  }, [students]);
 
   // Initial values setup
   const initialTypeId = preselectedTypeId || initialData?.typeId || (availableTypes[0]?.id || '');
@@ -184,6 +175,33 @@ export const GroupForm: React.FC<GroupFormProps> = ({
       }
     }
   });
+  const groupGender = useStore(form.store, (state) => state.values.gender);
+  const groupLevel = useStore(form.store, (state) => state.values.level);
+
+  useEffect(() => {
+    if (!showStudentSearch) return;
+    let isMounted = true;
+    async function searchStudents() {
+      try {
+        const params = new URLSearchParams({ gender: groupGender });
+        if (debouncedStudentQuery.trim()) params.set('q', debouncedStudentQuery.trim());
+        const currentUrl = new URL(window.location.href);
+        if (debouncedStudentQuery.trim()) currentUrl.searchParams.set('studentSearch', debouncedStudentQuery.trim());
+        else currentUrl.searchParams.delete('studentSearch');
+        currentUrl.searchParams.set('studentGender', groupGender);
+        window.history.replaceState(null, '', currentUrl);
+        const res = await api.get(`/api/students?${params.toString()}`);
+        if (!isMounted) return;
+        setAvailableStudents(res.data.students || []);
+      } catch (e) {
+        if (isMounted) console.error('Failed to search students for group form:', e);
+      }
+    }
+    searchStudents();
+    return () => {
+      isMounted = false;
+    };
+  }, [showStudentSearch, debouncedStudentQuery, groupGender, groupLevel]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-right pb-16" dir="rtl">
@@ -679,7 +697,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                 </h2>
                 <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>تصفية الأمان: يتم إظهار {form.getFieldValue('gender') === 'male' ? 'الطلاب الذكور' : 'الطالبات الإناث'} فقط تلقائياً.</span>
+                  <span>يتم إظهار الطلاب من نفس جنس الحلقة. المستوى ظاهر بجانب كل طالب للمراجعة.</span>
                 </p>
               </div>
               <button
@@ -708,11 +726,8 @@ export const GroupForm: React.FC<GroupFormProps> = ({
               {(() => {
                 const currentStudentIds = form.getFieldValue('studentIds');
                 const currentGender = form.getFieldValue('gender');
-                const matchedStudents = availableStudents.filter(s => 
-                  s.gender === currentGender &&
-                  s.name.toLowerCase().includes(studentQuery.toLowerCase()) &&
-                  !currentStudentIds.includes(s.id)
-                );
+                const currentLevel = form.getFieldValue('level');
+                const matchedStudents = availableStudents.filter(s => !currentStudentIds.includes(s.id));
 
                 if (matchedStudents.length === 0) {
                   return (
@@ -739,9 +754,12 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                       />
                       <div className="text-right min-w-0">
                         <span className="block text-xs font-bold text-slate-800 group-hover:text-emerald-900 transition-colors truncate">{student.name}</span>
-                        <span className="block text-[10px] text-slate-500 font-medium truncate">سورة {student.currentSurahName} (آية {student.currentAyah})</span>
+                        <span className="block text-[10px] text-slate-500 font-medium truncate">المستوى: {LEVEL_LABELS[student.level] || student.level} · سورة {student.currentSurahName} (آية {student.currentAyah})</span>
                       </div>
                     </div>
+                    <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-1 rounded-lg shrink-0">
+                      مستوى الحلقة: {LEVEL_LABELS[currentLevel] || currentLevel}
+                    </span>
                     <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       تسجيل في الحلقة +
                     </span>

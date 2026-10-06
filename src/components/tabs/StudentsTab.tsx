@@ -29,7 +29,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [levelFilter, setLevelFilter] = useState('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Filter students based on full name search, parent name, group, status
@@ -43,11 +43,11 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
 
       const matchesGroup = selectedGroupFilter === 'all' || 
         (student.groupId && student.groupId.split(',').map(id => id.trim()).includes(selectedGroupFilter));
-      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+      const matchesLevel = levelFilter === 'all' || student.level === levelFilter;
 
-      return matchesSearch && matchesGroup && matchesStatus;
+      return matchesSearch && matchesGroup && matchesLevel;
     });
-  }, [students, searchQuery, selectedGroupFilter, statusFilter]);
+  }, [students, searchQuery, selectedGroupFilter, levelFilter]);
 
   const handleDelete = async (student: Student, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -121,16 +121,16 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             ))}
           </select>
 
-          {/* Status Filter */}
+          {/* Education level filter */}
           <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
             className="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-700"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="graduated">Graduated</option>
-            <option value="paused">Paused</option>
+            <option value="all">All Education Levels</option>
+            <option value="primary">ابتدائي</option>
+            <option value="middle">متوسط</option>
+            <option value="secondary">ثانوي</option>
           </select>
         </div>
       </div>

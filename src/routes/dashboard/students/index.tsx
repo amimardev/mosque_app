@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { useForm, useStore } from '@tanstack/react-form';
 import { 
@@ -8,6 +8,7 @@ import {
 import { Student, Group } from '../../../types';
 import { StudentCard } from '../../../components/common/StudentCard';
 import { useAuth } from '../../../context/AuthContext';
+import { useDebounce } from '../../../hooks/useDebounce';
 import {
   Select,
   SelectContent,
@@ -34,19 +35,34 @@ function StudentsDirectoryPage() {
     defaultValues: {
       searchQuery: '',
       groupFilter: 'all',
-      statusFilter: 'all',
+      levelFilter: 'all',
     },
   });
 
   const searchQuery = useStore(filterForm.store, (state) => state.values.searchQuery);
   const selectedGroupFilter = useStore(filterForm.store, (state) => state.values.groupFilter);
-  const statusFilter = useStore(filterForm.store, (state) => state.values.statusFilter);
+  const levelFilter = useStore(filterForm.store, (state) => state.values.levelFilter);
+  const debouncedSearchQuery = useDebounce(searchQuery);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const querySearch = params.get('q') || '';
+    const queryGroup = params.get('groupId') || 'all';
+    const queryLevel = params.get('level') || 'all';
+    filterForm.setFieldValue('searchQuery', querySearch);
+    filterForm.setFieldValue('groupFilter', queryGroup);
+    filterForm.setFieldValue('levelFilter', queryLevel);
+  }, []);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery.trim()) params.set('q', debouncedSearchQuery.trim());
+      if (selectedGroupFilter !== 'all') params.set('groupId', selectedGroupFilter);
+      if (levelFilter !== 'all') params.set('level', levelFilter);
       const [studentsRes, groupsRes] = await Promise.all([
-        api.get('/api/students'),
+        api.get(`/api/students?${params.toString()}`),
         api.get('/api/groups')
       ]);
       setStudents(studentsRes.data.students || []);
@@ -59,24 +75,13 @@ function StudentsDirectoryPage() {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearchQuery.trim()) params.set('q', debouncedSearchQuery.trim());
+    if (selectedGroupFilter !== 'all') params.set('groupId', selectedGroupFilter);
+    if (levelFilter !== 'all') params.set('level', levelFilter);
+    window.history.replaceState(null, '', `${window.location.pathname}${params.toString() ? `?${params}` : ''}`);
     fetchData();
-  }, []);
-
-  const filteredStudents = useMemo(() => {
-    return students.filter((student) => {
-      const matchesSearch = searchQuery === '' || 
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (student.parentName && student.parentName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (student.currentSurahName && student.currentSurahName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (student.parentPhone && student.parentPhone.includes(searchQuery));
-
-      const matchesGroup = selectedGroupFilter === 'all' || 
-        (student.groupId && student.groupId.split(',').map(id => id.trim()).includes(selectedGroupFilter));
-      const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
-
-      return matchesSearch && matchesGroup && matchesStatus;
-    });
-  }, [students, searchQuery, selectedGroupFilter, statusFilter]);
+  }, [debouncedSearchQuery, selectedGroupFilter, levelFilter]);
 
   return (
     <div className="space-y-6 pb-16 text-right" dir="rtl">
@@ -159,23 +164,23 @@ function StudentsDirectoryPage() {
             />
           </div>
 
-          {/* Status Filter using Shadcn Select */}
+          {/* Education level filter */}
           <div className="w-full sm:w-40 text-right">
             <filterForm.Field
-              name="statusFilter"
+              name="levelFilter"
               children={(field) => (
                 <Select
                   value={field.state.value}
                   onValueChange={(val) => field.handleChange(val)}
                 >
                   <SelectTrigger className="w-full text-right text-xs bg-slate-50 border-slate-200 text-slate-700 rounded-xl h-10 px-3 flex items-center justify-between">
-                    <SelectValue placeholder="حالة الطالب" />
+                    <SelectValue placeholder="المستوى التعليمي" />
                   </SelectTrigger>
                   <SelectContent className="text-right">
-                    <SelectItem value="all">جميع الحالات</SelectItem>
-                    <SelectItem value="active">نشط</SelectItem>
-                    <SelectItem value="graduated">متخرج</SelectItem>
-                    <SelectItem value="paused">موقوف مؤقتاً</SelectItem>
+                    <SelectItem value="all">جميع المستويات</SelectItem>
+                    <SelectItem value="primary">ابتدائي</SelectItem>
+                    <SelectItem value="middle">متوسط</SelectItem>
+                    <SelectItem value="secondary">ثانوي</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -187,9 +192,9 @@ function StudentsDirectoryPage() {
       {/* STUDENT CARDS GRID */}
       {isLoading ? (
         <div className="py-16 text-center text-slate-400 text-xs font-semibold">جاري تحميل سجل الطلاب...</div>
-      ) : filteredStudents.length > 0 ? (
+      ) : students.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredStudents.map((student) => (
+          {students.map((student) => (
             <StudentCard
               key={student.id}
               student={student}

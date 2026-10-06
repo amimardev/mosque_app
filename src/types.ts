@@ -299,8 +299,7 @@ export interface Student {
   currentAyah: number;
   targetJuz: number;
   memorizedJuzCount: number;
-  status: 'active' | 'graduated' | 'paused';
-  enrollmentDate?: string | null;
+  level: 'primary' | 'middle' | 'secondary';
   notes?: string | null;
   group?: {
     id: string;

@@ -210,6 +210,22 @@ groupsRouter.post('/', async (c) => {
 
     await db.insert(schema.groups).values(newGroup);
 
+    if (Array.isArray(body.studentIds) && body.studentIds.length > 0) {
+      const students = await db.select().from(schema.students);
+      const selectedStudents = students.filter(student => body.studentIds.includes(student.id));
+      const incompatible = selectedStudents.find(student =>
+        student.gender !== newGroup.gender
+      );
+      if (incompatible) {
+        await db.delete(schema.groups).where(eq(schema.groups.id, id));
+        return c.json({ error: 'لا يمكن تسجيل طالب لا يطابق جنس الحلقة' }, 400);
+      }
+      for (const student of selectedStudents) {
+        const groupIds = student.groupId ? student.groupId.split(',').map(item => item.trim()).filter(Boolean) : [];
+        await db.update(schema.students).set({ groupId: [...groupIds, id].join(',') }).where(eq(schema.students.id, student.id));
+      }
+    }
+
     // Assign teachers if array provided
     if (Array.isArray(body.teacherIds) && body.teacherIds.length > 0) {
       for (const [idx, tid] of body.teacherIds.entries()) {
@@ -257,6 +273,17 @@ groupsRouter.put('/:id', async (c) => {
       status: body.status ?? existing.status,
       updatedAt: new Date()
     };
+
+    if (Array.isArray(body.studentIds)) {
+      const allStudents = await db.select().from(schema.students);
+      const selectedStudents = allStudents.filter(student => body.studentIds.includes(student.id));
+      const incompatible = selectedStudents.find(student =>
+        student.gender !== updatedData.gender
+      );
+      if (incompatible) {
+        return c.json({ error: 'لا يمكن تسجيل طالب لا يطابق جنس الحلقة' }, 400);
+      }
+    }
 
     await db.update(schema.groups).set(updatedData).where(eq(schema.groups.id, id));
 

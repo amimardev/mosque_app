@@ -58,7 +58,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       currentAyah: initialData?.currentAyah || 1,
       targetJuz: initialData?.targetJuz ?? 30,
       memorizedJuzCount: initialData?.memorizedJuzCount ?? 1,
-      status: (initialData?.status || 'active') as 'active' | 'graduated' | 'paused',
+      level: (initialData?.level || 'middle') as 'primary' | 'middle' | 'secondary',
       notes: initialData?.notes || ''
     },
     onSubmit: async ({ value }) => {
@@ -85,7 +85,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           currentAyah: Number(value.currentAyah),
           targetJuz: Number(value.targetJuz) || 30,
           memorizedJuzCount: Number(value.memorizedJuzCount) || 0,
-          status: value.status,
+          level: value.level,
           notes: value.notes.trim() || undefined
         });
       } catch (err: any) {
@@ -227,21 +227,21 @@ export const StudentForm: React.FC<StudentFormProps> = ({
             </div>
 
             <form.Field
-              name="status"
+              name="level"
               children={(field) => (
                 <FormItem>
-                  <FormLabel htmlFor={field.name}>حالة القبول والانتظام</FormLabel>
+                  <FormLabel htmlFor={field.name}>المستوى التعليمي</FormLabel>
                   <Select
                     value={field.state.value}
-                    onValueChange={(val: 'active' | 'graduated' | 'paused') => field.handleChange(val)}
+                    onValueChange={(val: 'primary' | 'middle' | 'secondary') => field.handleChange(val)}
                   >
                     <SelectTrigger id={field.name} className="text-right">
-                      <SelectValue placeholder="اختر الحالة" />
+                      <SelectValue placeholder="اختر المستوى" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">طالب نشط ومنتظم</SelectItem>
-                      <SelectItem value="graduated">متخرج</SelectItem>
-                      <SelectItem value="paused">موقوف مؤقتاً</SelectItem>
+                      <SelectItem value="primary">ابتدائي</SelectItem>
+                      <SelectItem value="middle">متوسط</SelectItem>
+                      <SelectItem value="secondary">ثانوي</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

@@ -74,8 +74,7 @@ export const students = pgTable('students', {
   currentAyah: integer('current_ayah').default(1).notNull(),
   targetJuz: integer('target_juz').default(30),
   memorizedJuzCount: integer('memorized_juz_count').default(1).notNull(),
-  status: text('status').default('active').notNull(), // 'active' | 'graduated' | 'paused'
-  enrollmentDate: text('enrollment_date'),
+  level: text('level').default('middle').notNull(), // 'primary' | 'middle' | 'secondary'
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

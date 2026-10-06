@@ -131,8 +131,7 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           current_ayah INTEGER DEFAULT 1 NOT NULL,
           target_juz INTEGER DEFAULT 30,
           memorized_juz_count INTEGER DEFAULT 1 NOT NULL,
-          status TEXT DEFAULT 'active' NOT NULL,
-          enrollment_date TEXT,
+          level TEXT DEFAULT 'middle' NOT NULL,
           notes TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -148,6 +147,15 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           -- Migrate age column from INTEGER to TEXT to store birth date string
           IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='age' AND data_type='integer') THEN
             ALTER TABLE students ALTER COLUMN age TYPE TEXT USING age::TEXT;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='level') THEN
+            ALTER TABLE students ADD COLUMN level TEXT DEFAULT 'middle' NOT NULL;
+          END IF;
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='status') THEN
+            ALTER TABLE students DROP COLUMN status;
+          END IF;
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='enrollment_date') THEN
+            ALTER TABLE students DROP COLUMN enrollment_date;
           END IF;
         END $$;
       `;
