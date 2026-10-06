@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Clock, Phone } from 'lucide-react';
+import { BookOpen, Clock, Phone, UserRound } from 'lucide-react';
 import { Student } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
 
@@ -104,24 +104,27 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
             </span>
           </div>
 
-          {/* Phone Contact Button */}
+          {/* Parent and student phone contacts */}
           <div className="flex items-center justify-between text-slate-700">
             <span className="text-slate-400 text-[11px] flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-emerald-600" />
-              الهاتف:
+              هواتف التواصل:
             </span>
-            {student.parentPhone ? (
-              <a
-                href={`tel:${student.parentPhone}`}
-                onClick={(e) => e.stopPropagation()}
-                className="font-mono text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200/60 transition-colors flex items-center gap-1"
-              >
-                <Phone className="w-3 h-3 text-emerald-600" />
-                <span>{student.parentPhone}</span>
-              </a>
-            ) : (
-              <span className="text-slate-400 text-[11px] italic">غير متوفر</span>
-            )}
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {student.phone && (
+                <a href={`tel:${student.phone}`} onClick={(e) => e.stopPropagation()} className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60 flex items-center gap-1">
+                  <UserRound className="w-3 h-3" />
+                  الطالب: {student.phone}
+                </a>
+              )}
+              {student.parentPhone && (
+                <a href={`tel:${student.parentPhone}`} onClick={(e) => e.stopPropagation()} className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60 flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  الولي: {student.parentPhone}
+                </a>
+              )}
+              {!student.phone && !student.parentPhone && <span className="text-slate-400 text-[11px] italic">غير متوفر</span>}
+            </div>
           </div>
         </div>
       </div>

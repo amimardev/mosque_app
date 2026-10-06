@@ -30,7 +30,6 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         CREATE TABLE IF NOT EXISTS teachers (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
-          email TEXT,
           avatar TEXT NOT NULL,
           bio TEXT,
           status TEXT NOT NULL DEFAULT 'active',
@@ -107,7 +106,6 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         CREATE TABLE IF NOT EXISTS parents (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
-          email TEXT,
           address TEXT,
           notes TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -124,7 +122,7 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           date_of_birth TEXT,
           age TEXT,
           parent_id TEXT REFERENCES parents(id) ON DELETE SET NULL,
-          email TEXT,
+          phone TEXT,
           group_id TEXT REFERENCES groups(id) ON DELETE SET NULL,
           current_surah_number INTEGER DEFAULT 1 NOT NULL,
           current_surah_name TEXT DEFAULT 'Al-Fatihah' NOT NULL,
@@ -150,6 +148,9 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           END IF;
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='level') THEN
             ALTER TABLE students ADD COLUMN level TEXT DEFAULT 'middle' NOT NULL;
+          END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='phone') THEN
+            ALTER TABLE students ADD COLUMN phone TEXT;
           END IF;
           IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='status') THEN
             ALTER TABLE students DROP COLUMN status;
@@ -247,7 +248,6 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
-          email TEXT NOT NULL UNIQUE,
           phone TEXT UNIQUE,
           password TEXT,
           role TEXT DEFAULT 'admin' NOT NULL,
@@ -264,6 +264,10 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='phone') THEN
             ALTER TABLE users ADD COLUMN phone TEXT UNIQUE;
           END IF;
+          ALTER TABLE users DROP COLUMN IF EXISTS email;
+          ALTER TABLE teachers DROP COLUMN IF EXISTS email;
+          ALTER TABLE parents DROP COLUMN IF EXISTS email;
+          ALTER TABLE students DROP COLUMN IF EXISTS email;
 
           IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='parents' AND column_name='phone') THEN
             EXECUTE 'UPDATE users u SET phone = p.phone FROM parents p WHERE p.user_id = u.id AND u.phone IS NULL AND p.phone IS NOT NULL';

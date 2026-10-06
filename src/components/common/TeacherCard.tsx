@@ -33,7 +33,6 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, onClick }) =>
             </div>
 
             <div className="text-[11px] text-slate-500 pt-1 text-right">
-              البريد: {teacher.email || 'غير متوفر'}
             </div>
           </div>
           <img

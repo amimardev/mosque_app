@@ -75,7 +75,6 @@ teachersRouter.get('/', async (c) => {
     const lower = q.toLowerCase();
     result = result.filter(t => 
       t.name.toLowerCase().includes(lower) ||
-      (t.email && t.email.toLowerCase().includes(lower)) ||
       (t.phone && t.phone.toLowerCase().includes(lower))
     );
   }
@@ -143,17 +142,15 @@ teachersRouter.post('/', async (c) => {
     const avatar = body.avatar || `/api/storage/teacher-${id}`;
 
     const phoneValue = body.phone?.trim() || null;
-    const emailLower = body.email?.trim().toLowerCase() || `${id}@phone.local`;
     const existingUser = phoneValue
       ? await db.select().from(schema.users)
-        .where(or(eq(schema.users.phone, phoneValue), eq(schema.users.email, emailLower))).then(r => r[0])
-      : await db.select().from(schema.users).where(eq(schema.users.email, emailLower)).then(r => r[0]);
+      .where(eq(schema.users.phone, phoneValue)).then(r => r[0])
+    : undefined;
     let userId: string | null = existingUser?.id || `usr_tch_${id}`;
     if (!existingUser) {
       await db.insert(schema.users).values({
         id: userId,
         name: body.name?.trim() || 'معلم جديد',
-        email: emailLower,
         phone: phoneValue,
         password: await hashPassword(body.password || 'password123'),
         role: body.isAdmin ? 'admin' : 'teacher',
@@ -166,7 +163,6 @@ teachersRouter.post('/', async (c) => {
     const newTeacher = {
       id,
       name: body.name?.trim(),
-      email: body.email?.trim() || null,
       avatar,
       bio: body.bio?.trim() || null,
       status: body.status || 'active',
@@ -225,8 +221,7 @@ teachersRouter.put('/:id', async (c) => {
 
     // 2. Manage Associated User record
     let userId = existing.userId;
-    if ((body.email && body.email.trim()) || body.phone !== undefined) {
-      const emailLower = body.email?.trim().toLowerCase() || `${id}@phone.local`;
+    if (body.phone !== undefined || body.password) {
       const phoneValue = body.phone !== undefined ? body.phone.trim() : undefined;
       
       if (!userId) {
@@ -235,7 +230,6 @@ teachersRouter.put('/:id', async (c) => {
         await db.insert(schema.users).values({
           id: userId,
           name: body.name?.trim() || existing.name,
-          email: emailLower,
           phone: phoneValue || null,
           password: await hashPassword(body.password || 'password123'),
           role: body.isAdmin ? 'admin' : 'teacher',
@@ -245,7 +239,6 @@ teachersRouter.put('/:id', async (c) => {
         // Update user
         const userUpdatePayload: any = {
           name: body.name?.trim() || existing.name,
-          email: emailLower,
           avatar
         };
         if (phoneValue !== undefined) userUpdatePayload.phone = phoneValue;
@@ -261,7 +254,6 @@ teachersRouter.put('/:id', async (c) => {
 
     const updatedData: any = {
       name: body.name?.trim() ?? existing.name,
-      email: body.email !== undefined ? body.email?.trim() : existing.email,
       avatar,
       bio: body.bio !== undefined ? body.bio : existing.bio,
       status: body.status ?? existing.status,

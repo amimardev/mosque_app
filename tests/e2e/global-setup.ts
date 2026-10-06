@@ -43,7 +43,6 @@ export default async function globalSetup() {
   await db.insert(schema.users).values({
     id: 'usr_admin_rabeh',
     name: 'رابح',
-    email: 'admin@local.invalid',
     phone: '0553588565',
     password,
     role: 'teacher',

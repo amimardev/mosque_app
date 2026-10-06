@@ -34,7 +34,6 @@ export async function getFullUserProfile(userId: string) {
   return {
     id: user.id,
     name: user.name,
-    email: user.email,
     phone: user.phone,
     role,
     avatar: user.avatar || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(user.name)}`,

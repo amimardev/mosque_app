@@ -227,15 +227,9 @@ function MasterParentsDirectoryPage() {
                     )}
                   </div>
 
-                  {/* Optional Email / Address / Notes */}
-                  {(parent.email || parent.address || parent.notes) && (
+                  {/* Optional Address / Notes */}
+                  {(parent.address || parent.notes) && (
                     <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-600 space-y-0.5">
-                      {parent.email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>{parent.email}</span>
-                        </div>
-                      )}
                       {parent.address && (
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
@@ -322,16 +316,13 @@ function MasterParentsDirectoryPage() {
                         )}
                       </td>
 
-                      {/* Email / Address */}
+                      {/* Address */}
                       <td className="py-3.5 px-4 text-slate-600">
                         <div>
-                          {parent.email && (
-                            <span className="block text-[11px] font-medium text-slate-700">{parent.email}</span>
-                          )}
                           {parent.address && (
                             <span className="block text-[10px] text-slate-500">{parent.address}</span>
                           )}
-                          {!parent.email && !parent.address && (
+                          {!parent.address && (
                             <span className="text-slate-400 text-[11px]">-</span>
                           )}
                         </div>

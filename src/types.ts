@@ -85,7 +85,6 @@ export type UserRole = 'admin' | 'teacher' | 'parent';
 export interface User {
   id: string;
   name: string;
-  email: string;
   phone?: string | null;
   role: UserRole;
   avatar?: string | null;
@@ -134,7 +133,8 @@ export interface Session {
 export interface Teacher {
   id: string;
   name: string;
-  email?: string | null;
+  /** @deprecated Email is no longer stored or collected. */
+  email?: never;
   phone?: string | null;
   avatar: string;
   bio?: string | null;
@@ -270,8 +270,9 @@ export interface Group {
 export interface Parent {
   id: string;
   name: string;
+  /** @deprecated Email is no longer stored or collected. */
+  email?: never;
   phone: string;
-  email?: string | null;
   address?: string | null;
   notes?: string | null;
   studentsCount?: number;
@@ -291,8 +292,10 @@ export interface Student {
   parentId?: string | null;
   parentName?: string | null;
   parentPhone?: string | null;
+  /** @deprecated Email is no longer stored or collected. */
+  email?: never;
+  phone?: string | null;
   parent?: Parent | null;
-  email?: string | null;
   groupId?: string | null;
   currentSurahNumber: number;
   currentSurahName: string;

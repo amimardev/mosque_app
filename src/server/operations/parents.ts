@@ -66,7 +66,6 @@ parentsRouter.get('/', async (c) => {
     enriched = enriched.filter(p =>
       p.name.toLowerCase().includes(search) ||
       p.phone.includes(search) ||
-      (p.email && p.email.toLowerCase().includes(search)) ||
       p.students.some(st => st.name.toLowerCase().includes(search))
     );
   }
@@ -101,7 +100,7 @@ parentsRouter.post('/', async (c) => {
   await ensureDatabaseInitialized();
   try {
     const body = await c.req.json();
-    const { name, phone, email, address, notes, password } = body;
+    const { name, phone, address, notes, password } = body;
 
     if (!name || !name.trim()) {
       return c.json({ error: 'اسم ولي الأمر مطلوب' }, 400);
@@ -113,15 +112,13 @@ parentsRouter.post('/', async (c) => {
     const id = `prn_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const phoneValue = phone.trim();
-    const emailLower = email?.trim().toLowerCase() || `${id}@phone.local`;
     const existingUser = await db.select().from(schema.users)
-      .where(or(eq(schema.users.phone, phoneValue), eq(schema.users.email, emailLower))).then(r => r[0]);
+      .where(eq(schema.users.phone, phoneValue)).then(r => r[0]);
     let userId = existingUser?.id || `usr_prn_${id}`;
     if (!existingUser) {
       await db.insert(schema.users).values({
         id: userId,
         name: name.trim(),
-        email: emailLower,
         phone: phoneValue,
         password: await hashPassword(password || 'password123'),
         role: 'parent',
@@ -134,7 +131,6 @@ parentsRouter.post('/', async (c) => {
     const newParent = {
       id,
       name: name.trim(),
-      email: email?.trim() || null,
       address: address?.trim() || null,
       notes: notes?.trim() || null,
       userId,
@@ -172,17 +168,13 @@ parentsRouter.put('/:id', async (c) => {
 
     const phoneValue = body.phone !== undefined ? body.phone.trim() : undefined;
     let userId = existing.userId;
-    const parentEmail = body.email !== undefined ? body.email?.trim() : existing.email;
-
     // Manage user credential linking
-    if (parentEmail || phoneValue) {
-      const emailLower = parentEmail?.toLowerCase() || `${id}@phone.local`;
+    if (phoneValue || body.password || userId) {
       if (!userId) {
         userId = `usr_prn_${id}`;
         await db.insert(schema.users).values({
           id: userId,
           name: body.name?.trim() || existing.name,
-          email: emailLower,
           phone: phoneValue || null,
           password: await hashPassword(body.password || 'password123'),
           role: 'parent',
@@ -191,7 +183,6 @@ parentsRouter.put('/:id', async (c) => {
       } else {
         const userUpdatePayload: any = {
           name: (body.name || existing.name).trim(),
-          email: emailLower
         };
         if (phoneValue !== undefined) userUpdatePayload.phone = phoneValue;
         if (body.password) {
@@ -203,7 +194,6 @@ parentsRouter.put('/:id', async (c) => {
 
     const updated = {
       name: body.name !== undefined ? body.name.trim() : existing.name,
-      email: parentEmail || null,
       address: body.address !== undefined ? (body.address?.trim() || null) : existing.address,
       notes: body.notes !== undefined ? (body.notes?.trim() || null) : existing.notes,
       userId,

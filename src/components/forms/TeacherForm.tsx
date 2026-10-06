@@ -37,7 +37,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
       name: initialData?.name || '',
       avatar: initialData?.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${initialData?.id || teacherId}`,
       phone: initialData?.phone || '',
-      email: initialData?.email || '',
       password: '',
       isAdmin: !!initialData?.isAdmin,
       bio: initialData?.bio || '',
@@ -59,7 +58,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
           name: value.name.trim(),
           avatar: value.avatar.trim() || `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(value.name)}`,
           phone: value.phone.trim() || undefined,
-          email: value.email.trim() || undefined,
           bio: value.bio.trim() || undefined,
           status: value.status,
           groupIds: value.groupIds,
@@ -181,26 +179,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="مثال: 0555123456"
-                    className="font-mono text-left"
-                    dir="ltr"
-                  />
-                </FormItem>
-              )}
-            />
-
-            <form.Field
-              name="email"
-              children={(field) => (
-                <FormItem>
-                  <FormLabel htmlFor={field.name}>البريد الإلكتروني</FormLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="teacher@madrasa.org"
                     className="font-mono text-left"
                     dir="ltr"
                   />

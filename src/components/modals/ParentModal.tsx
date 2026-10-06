@@ -35,7 +35,6 @@ export const ParentModal: React.FC<ParentModalProps> = ({
     defaultValues: {
       name: parentToEdit?.name || '',
       phone: parentToEdit?.phone || '',
-      email: parentToEdit?.email || '',
       password: '',
       address: parentToEdit?.address || '',
       notes: parentToEdit?.notes || ''
@@ -58,7 +57,6 @@ export const ParentModal: React.FC<ParentModalProps> = ({
         const payload = {
           name: value.name.trim(),
           phone: value.phone.trim(),
-          email: value.email.trim() || null,
           password: value.password.trim() || undefined,
           address: value.address.trim() || null,
           notes: value.notes.trim() || null
@@ -180,28 +178,6 @@ export const ParentModal: React.FC<ParentModalProps> = ({
             )}
           />
 
-          {/* Email */}
-          <form.Field
-            name="email"
-            children={(field) => (
-              <FormItem>
-                <FormLabel htmlFor={field.name} className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-teal-600" />
-                  <span>البريد الإلكتروني (اختياري):</span>
-                </FormLabel>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="parent@example.com"
-                  className="bg-slate-50 font-semibold"
-                />
-              </FormItem>
-            )}
-          />
 
           {/* Address */}
           <form.Field

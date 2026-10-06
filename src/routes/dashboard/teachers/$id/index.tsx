@@ -140,21 +140,6 @@ function TeacherDetailsPage() {
                 )}
               </div>
 
-              {/* Email */}
-              <div className="flex items-center gap-2 py-1">
-                <span className="text-slate-400 font-bold min-w-28 shrink-0">البريد الإلكتروني:</span>
-                {teacher.email ? (
-                  <a
-                    href={`mailto:${teacher.email}`}
-                    className="font-medium text-emerald-700 hover:underline truncate"
-                  >
-                    {teacher.email}
-                  </a>
-                ) : (
-                  <span className="font-bold text-slate-400">غير متوفر</span>
-                )}
-              </div>
-
               {/* Bio if exists */}
               {teacher.bio && (
                 <div className="sm:col-span-2 pt-2 border-t border-slate-50 space-y-1">

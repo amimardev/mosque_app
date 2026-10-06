@@ -699,23 +699,6 @@ var LogOut = createLucideIcon("log-out", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Mail = createLucideIcon("mail", [["path", {
-	d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7",
-	key: "132q7q"
-}], ["rect", {
-	x: "2",
-	y: "4",
-	width: "20",
-	height: "16",
-	rx: "2",
-	key: "izxlao"
-}]]);
-/**
-* @license lucide-react v0.546.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var MapPin = createLucideIcon("map-pin", [["path", {
 	d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
 	key: "1r0f0z"
@@ -1175,6 +1158,21 @@ var UserMinus = createLucideIcon("user-minus", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var UserRound = createLucideIcon("user-round", [["circle", {
+	cx: "12",
+	cy: "8",
+	r: "5",
+	key: "1hypcn"
+}], ["path", {
+	d: "M20 21a8 8 0 0 0-16 0",
+	key: "rfgkzh"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var User = createLucideIcon("user", [["path", {
 	d: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2",
 	key: "975kel"
@@ -1224,4 +1222,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { CheckCheck as $, Lock as A, Funnel as B, PenLine as C, MapPin as D, MessageSquare as E, Layers as F, Clock as G, FolderOpen as H, KeyRound as I, ChevronUp as J, CircleCheck as K, Info as L, List as M, LayoutGrid as N, Mail as O, LayoutDashboard as P, Check as Q, History as R, Phone as S, OctagonAlert as T, FileText as U, FolderPlus as V, Download as W, ChevronLeft as X, ChevronRight as Y, ChevronDown as Z, ShieldAlert as _, UserPlus as a, Award as at, RefreshCw as b, TriangleAlert as c, Star as d, Calendar as et, Square as f, ShieldCheck as g, Sparkles as h, UserMinus as i, BellRing as it, LoaderCircle as j, LogOut as k, Trash2 as l, SquareCheckBig as m, Users as n, BookOpen as nt, UserCheck as o, ArrowRight as ot, SquarePen as p, CircleAlert as q, User as r, Bell as rt, Upload as s, X as t, CalendarRange as tt, Sun as u, Search as v, PanelLeft as w, Plus as x, Save as y, GraduationCap as z };
+export { CheckCheck as $, Lock as A, Funnel as B, Phone as C, MessageSquare as D, OctagonAlert as E, Layers as F, Clock as G, FolderOpen as H, KeyRound as I, ChevronUp as J, CircleCheck as K, Info as L, List as M, LayoutGrid as N, MapPin as O, LayoutDashboard as P, Check as Q, History as R, Plus as S, PanelLeft as T, FileText as U, FolderPlus as V, Download as W, ChevronLeft as X, ChevronRight as Y, ChevronDown as Z, ShieldCheck as _, UserMinus as a, Award as at, Save as b, Upload as c, Sun as d, Calendar as et, Star as f, Sparkles as g, SquareCheckBig as h, UserRound as i, BellRing as it, LoaderCircle as j, LogOut as k, TriangleAlert as l, SquarePen as m, Users as n, BookOpen as nt, UserPlus as o, ArrowRight as ot, Square as p, CircleAlert as q, User as r, Bell as rt, UserCheck as s, X as t, CalendarRange as tt, Trash2 as u, ShieldAlert as v, PenLine as w, RefreshCw as x, Search as y, GraduationCap as z };

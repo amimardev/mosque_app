@@ -238,7 +238,6 @@ test('server functions complete a real parent login, API request, current-user r
   const id = randomUUID();
   const userId = `test_user_${id}`;
   const parentId = `test_parent_${id}`;
-  const email = `server-function-test-${id}@example.test`;
   const insertedNotificationId = `test_notification_${id}`;
   let userInserted = false;
 
@@ -246,7 +245,6 @@ test('server functions complete a real parent login, API request, current-user r
     await database.db.insert(schema.users).values({
       id: userId,
       name: 'Test Parent',
-      email,
       phone: '+10000000000',
       password: await authService.hashPassword('test-password-123'),
       role: 'parent',
@@ -357,7 +355,6 @@ test('apiRequestFn records absent attendance, creates the in-app notification, a
     await database.db.insert(schema.users).values({
       id: adminId,
       name: 'Test Admin',
-      email: `server-function-admin-${id}@example.test`,
       phone: `+100000001${id.slice(-2)}`,
       password: null,
       role: 'admin',
@@ -366,7 +363,6 @@ test('apiRequestFn records absent attendance, creates the in-app notification, a
     await database.db.insert(schema.users).values({
       id: parentUserId,
       name: 'Test Push Parent',
-      email: `server-function-parent-${id}@example.test`,
       phone: `+100000002${id.slice(-2)}`,
       password: null,
       role: 'parent',
@@ -524,7 +520,6 @@ test('GET /api/students returns only own children for parent and only group stud
     await database.db.insert(schema.users).values({
       id: parent1UserId,
       name: 'Test Parent 1',
-      email: `parent1-${id}@example.test`,
       phone: `+100000003${id.slice(-2)}`,
       role: 'parent',
     });
@@ -538,7 +533,6 @@ test('GET /api/students returns only own children for parent and only group stud
     await database.db.insert(schema.users).values({
       id: parent2UserId,
       name: 'Test Parent 2',
-      email: `parent2-${id}@example.test`,
       phone: `+100000004${id.slice(-2)}`,
       role: 'parent',
     });
@@ -552,7 +546,6 @@ test('GET /api/students returns only own children for parent and only group stud
     await database.db.insert(schema.users).values({
       id: teacherUserId,
       name: 'Test Teacher',
-      email: `teacher-${id}@example.test`,
       phone: `+100000005${id.slice(-2)}`,
       role: 'teacher',
     });
@@ -566,7 +559,6 @@ test('GET /api/students returns only own children for parent and only group stud
     await database.db.insert(schema.users).values({
       id: adminUserId,
       name: 'Test Admin',
-      email: `admin-${id}@example.test`,
       phone: `+100000006${id.slice(-2)}`,
       role: 'teacher',
     });

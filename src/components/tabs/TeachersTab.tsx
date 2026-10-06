@@ -33,7 +33,6 @@ export const TeachersTab: React.FC<TeachersTabProps> = ({
       const lower = searchQuery.toLowerCase();
       return (
         teacher.name.toLowerCase().includes(lower) ||
-        (teacher.email && teacher.email.toLowerCase().includes(lower)) ||
         (teacher.phone && teacher.phone.includes(searchQuery))
       );
     });

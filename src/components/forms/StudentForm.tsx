@@ -52,7 +52,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       gender: (initialData?.gender || 'male') as 'male' | 'female',
       dateOfBirth: initialData?.dateOfBirth || (typeof initialData?.age === 'string' && initialData.age.includes('-') ? initialData.age : ''),
       parentId: initialData?.parentId || '',
-      email: initialData?.email || '',
+      phone: initialData?.phone || '',
       currentSurahNumber: initialData?.currentSurahNumber || 1,
       currentSurahName: initialData?.currentSurahName || 'Al-Fatihah',
       currentAyah: initialData?.currentAyah || 1,
@@ -79,7 +79,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           dateOfBirth: value.dateOfBirth || undefined,
           age: value.dateOfBirth || undefined,
           parentId: value.parentId || undefined,
-          email: value.email.trim() || undefined,
+          phone: value.phone.trim() || undefined,
           currentSurahNumber: Number(value.currentSurahNumber),
           currentSurahName: value.currentSurahName,
           currentAyah: Number(value.currentAyah),
@@ -249,18 +249,18 @@ export const StudentForm: React.FC<StudentFormProps> = ({
             />
 
             <form.Field
-              name="email"
+              name="phone"
               children={(field) => (
                 <FormItem>
-                  <FormLabel htmlFor={field.name}>البريد الإلكتروني للطالب (اختياري)</FormLabel>
+                  <FormLabel htmlFor={field.name}>رقم هاتف الطالب (اختياري)</FormLabel>
                   <Input
                     id={field.name}
                     name={field.name}
-                    type="email"
+                    type="tel"
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="student@example.com"
+                    placeholder="0550000000"
                     className="text-right font-mono"
                     dir="ltr"
                   />
@@ -388,9 +388,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                           <div className="text-[11px] text-slate-500 flex items-center gap-1 font-mono mt-0.5" dir="ltr">
                             <Phone className="w-3 h-3 text-emerald-600" />
                             <span>{selectedParent.phone}</span>
-                            {selectedParent.email && (
-                              <span className="text-slate-400 font-sans">• {selectedParent.email}</span>
-                            )}
                           </div>
                         </div>
                       </div>

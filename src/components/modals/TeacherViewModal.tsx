@@ -60,12 +60,6 @@ export const TeacherViewModal: React.FC<TeacherViewModalProps> = ({
                     {teacher.phone}
                   </span>
                 )}
-                {teacher.email && (
-                  <span className="flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-emerald-400" />
-                    {teacher.email}
-                  </span>
-                )}
               </div>
             </div>
 

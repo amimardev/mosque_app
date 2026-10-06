@@ -168,11 +168,6 @@ export const ChangeParentModal: React.FC<ChangeParentModalProps> = ({
                           {selectedParent.phone}
                         </span>
                       </div>
-                      {selectedParent.email && (
-                        <div className="text-[11px] text-slate-500">
-                          البريد الإلكتروني: <span className="font-medium text-slate-700">{selectedParent.email}</span>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>

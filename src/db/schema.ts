@@ -4,7 +4,6 @@ import type { GroupSessionTime } from '../types';
 export const teachers = pgTable('teachers', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email'),
   avatar: text('avatar').notNull(),
   bio: text('bio'),
   status: text('status').default('active').notNull(), // 'active' | 'on_leave'
@@ -51,7 +50,6 @@ export const groupTeachers = pgTable('group_teachers', {
 export const parents = pgTable('parents', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email'),
   address: text('address'),
   notes: text('notes'),
   userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
@@ -67,7 +65,7 @@ export const students = pgTable('students', {
   dateOfBirth: text('date_of_birth'),
   age: text('age'), // Stored as a date string (YYYY-MM-DD), real displayed age is calculated dynamically
   parentId: text('parent_id').references(() => parents.id, { onDelete: 'set null' }),
-  email: text('email'),
+  phone: text('phone'),
   groupId: text('group_id').references(() => groups.id, { onDelete: 'set null' }),
   currentSurahNumber: integer('current_surah_number').default(1).notNull(),
   currentSurahName: text('current_surah_name').default('Al-Fatihah').notNull(),
@@ -103,7 +101,6 @@ export const studentRatings = pgTable('student_ratings', {
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  email: text('email').notNull().unique(),
   phone: text('phone').unique(),
   password: text('password'),
   role: text('role').default('admin').notNull(),

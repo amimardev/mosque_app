@@ -335,7 +335,7 @@ studentsRouter.post('/', async (c) => {
       dateOfBirth: birthDate,
       age: birthDate || (body.age ? String(body.age) : null), // Stored as date in age column
       parentId,
-      email: body.email?.trim() || null,
+      phone: body.phone?.trim() || null,
       groupId: body.groupId || null,
       currentSurahNumber: surahNumber,
       currentSurahName: surahName,
@@ -434,7 +434,7 @@ studentsRouter.put('/:id', async (c) => {
       dateOfBirth: birthDate,
       age: birthDate ?? (body.age !== undefined ? String(body.age) : existing.age), // Stored as date in age column
       parentId: targetParentId,
-      email: body.email !== undefined ? body.email?.trim() : existing.email,
+      phone: body.phone !== undefined ? body.phone?.trim() || null : existing.phone,
       groupId: targetGroupId,
       currentSurahNumber: surahNumber,
       currentSurahName: surahName,

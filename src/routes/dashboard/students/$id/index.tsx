@@ -333,18 +333,6 @@ function StudentDetailsPage() {
                 )}
               </div>
 
-              {/* Email if exists */}
-              {student.email && (
-                <div className="flex items-center gap-2 py-1">
-                  <span className="text-slate-400 font-bold min-w-28 shrink-0">البريد الإلكتروني:</span>
-                  <a
-                    href={`mailto:${student.email}`}
-                    className="font-medium text-emerald-700 hover:underline truncate"
-                  >
-                    {student.email}
-                  </a>
-                </div>
-              )}
             </div>
           </div>
         </div>
