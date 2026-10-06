@@ -197,7 +197,7 @@ function TeacherDetailsPage() {
                       </span>
                     </div>
                     <span className="text-[11px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                      {(group as any).level === 'Beginner' ? 'مبتدئ' : (group as any).level === 'Intermediate' ? 'متوسط' : 'متقدم'}
+                      {(group as any).level === 'primary' ? 'ابتدائي' : (group as any).level === 'secondary' ? 'ثانوي' : 'متوسط'}
                     </span>
                   </div>
                 </Link>

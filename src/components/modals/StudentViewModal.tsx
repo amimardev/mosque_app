@@ -166,7 +166,7 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
                       {getGroupDisplayName(student.group)}
                     </span>
                     <span className="text-xs font-semibold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
-                      {student.group.level || 'Intermediate'}
+                      {student.group.level === 'primary' ? 'ابتدائي' : student.group.level === 'secondary' ? 'ثانوي' : 'متوسط'}
                     </span>
                   </div>
 

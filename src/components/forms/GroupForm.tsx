@@ -124,7 +124,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
       typeId: initialTypeId,
       number: initialData?.number ? String(initialData.number) : '',
       gender: (initialData?.gender || 'male') as 'male' | 'female',
-      level: initialData?.level || 'Intermediate',
+      level: initialData?.level || 'middle',
       room: initialData?.room || 'قاعة المحراب الرئيسية',
       capacity: initialData?.capacity ? Number(initialData.capacity) : 20,
       days: initialData?.days || ['Monday', 'Wednesday', 'Saturday'],
@@ -324,10 +324,9 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                       <SelectValue placeholder="اختر المستوى" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Beginner">مبتدئ (تلقين وتأسيس)</SelectItem>
-                      <SelectItem value="Intermediate">متوسط (حفظ وتثبيت)</SelectItem>
-                      <SelectItem value="Advanced">متقدم (ضبط المتشابهات)</SelectItem>
-                      <SelectItem value="Ijazah & Sanad">إجازة وسند متصل</SelectItem>
+                      <SelectItem value="primary">ابتدائي</SelectItem>
+                      <SelectItem value="middle">متوسط</SelectItem>
+                      <SelectItem value="secondary">ثانوي</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>

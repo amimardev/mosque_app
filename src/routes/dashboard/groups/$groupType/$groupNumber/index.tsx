@@ -163,7 +163,7 @@ function ViewGroupByNumberPage() {
                 {group.gender === 'male' ? 'حلقة ذكور' : 'حلقة إناث'}
               </span>
               <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                {group.level === 'Beginner' ? 'مبتدئ' : group.level === 'Advanced' ? 'متقدم' : group.level === 'Ijazah & Sanad' ? 'إجازة وسند' : 'متوسط'}
+                {group.level === 'primary' ? 'ابتدائي' : group.level === 'secondary' ? 'ثانوي' : 'متوسط'}
               </span>
             </div>
             

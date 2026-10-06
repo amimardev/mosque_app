@@ -208,7 +208,7 @@ export const BulkTimingModal: React.FC<BulkTimingModalProps> = ({
                                   حلقة رقم {g.number}
                                 </span>
                                 <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">
-                                  {g.level === 'Beginner' ? 'مبتدئ' : g.level === 'Advanced' ? 'متقدم' : 'متوسط'}
+                                  {g.level === 'primary' ? 'ابتدائي' : g.level === 'secondary' ? 'ثانوي' : 'متوسط'}
                                 </span>
                               </div>
                               <p className="text-[11px] text-slate-500 mt-0.5">

@@ -66,7 +66,7 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           time_slot TEXT,
           room TEXT DEFAULT 'Main Halaqa Hall',
           capacity INTEGER DEFAULT 20 NOT NULL,
-          level TEXT DEFAULT 'Intermediate' NOT NULL,
+          level TEXT DEFAULT 'middle' NOT NULL,
           status TEXT DEFAULT 'active' NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL

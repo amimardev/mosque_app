@@ -34,7 +34,7 @@ export const groups = pgTable('groups', {
   timeSlot: text('time_slot'), // e.g., "16:30 - 18:00"
   room: text('room').default('Main Halaqa Hall'),
   capacity: integer('capacity').default(20).notNull(),
-  level: text('level').default('Intermediate').notNull(), // 'Beginner' | 'Intermediate' | 'Advanced Hifz' | 'Ijazah'
+  level: text('level').default('middle').notNull(), // 'primary' | 'middle' | 'secondary'
   status: text('status').default('active').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

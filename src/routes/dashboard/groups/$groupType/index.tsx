@@ -187,7 +187,7 @@ function GroupTypeGroupsPage() {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2 flex-row-reverse">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md inline-block">
-                        {group.level === 'Beginner' ? 'مبتدئ' : group.level === 'Advanced' ? 'متقدم' : group.level === 'Ijazah & Sanad' ? 'إجازة وسند' : 'متوسط'}
+                        {group.level === 'primary' ? 'ابتدائي' : group.level === 'secondary' ? 'ثانوي' : 'متوسط'}
                       </span>
                       <span className="text-xs font-semibold text-slate-500">
                         {group.gender === 'male' ? 'طلاب ذكور' : 'طالبات إناث'}

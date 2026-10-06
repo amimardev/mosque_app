@@ -198,7 +198,7 @@ groupsRouter.post('/', async (c) => {
       timeSlot: body.timeSlot?.trim() || '16:30 - 18:00',
       room: body.room?.trim() || 'قاعة المحراب الرئيسية',
       capacity: parseInt(body.capacity, 10) || 20,
-      level: body.level || 'Intermediate',
+      level: body.level || 'middle',
       status: body.status || 'active',
       createdAt: new Date(),
       updatedAt: new Date()
