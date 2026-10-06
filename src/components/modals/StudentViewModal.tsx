@@ -201,7 +201,6 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
                       />
                       <div className="text-xs">
                         <span className="font-semibold text-slate-900 block">{t.name}</span>
-                        <span className="text-[11px] text-slate-500">{t.specialization}</span>
                       </div>
                     </div>
                   ))}

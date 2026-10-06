@@ -18,7 +18,7 @@ export const getCurrentUserFn = createServerFn({ method: 'GET' }).handler(async 
   });
 });
 
-export const loginSchema = z.object({ email: z.string().trim().email(), password: z.string().min(1) });
+export const loginSchema = z.object({ phone: z.string().trim().min(1), password: z.string().min(1) });
 
 export const loginFn = createServerFn({ method: 'POST' })
   .validator(loginSchema)

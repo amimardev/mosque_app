@@ -1,7 +1,7 @@
 import { OperationRegistry } from '../operationRegistry.js';
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
 import { getSessionId } from '../session.js';
 import { hashPassword } from '../authService.js';
@@ -29,6 +29,8 @@ teachersRouter.get('/', async (c) => {
   const q = c.req.query('q')?.trim() || '';
 
   const allTeachers = await db.select().from(schema.teachers).orderBy(schema.teachers.name);
+  const allUsers = await db.select().from(schema.users);
+  const usersById = new Map(allUsers.map(user => [user.id, user]));
   const allGroupTeachers = await db.select().from(schema.groupTeachers);
   const allGroups = await db.select().from(schema.groups);
   const allStudents = await db.select().from(schema.students);
@@ -62,6 +64,7 @@ teachersRouter.get('/', async (c) => {
 
     return {
       ...teacher,
+      phone: usersById.get(teacher.userId || '')?.phone || null,
       avatar,
       assignedGroups,
       studentsCount: studentsTaughtCount
@@ -73,8 +76,7 @@ teachersRouter.get('/', async (c) => {
     result = result.filter(t => 
       t.name.toLowerCase().includes(lower) ||
       (t.email && t.email.toLowerCase().includes(lower)) ||
-      (t.phone && t.phone.toLowerCase().includes(lower)) ||
-      (t.specialization && t.specialization.toLowerCase().includes(lower))
+      (t.phone && t.phone.toLowerCase().includes(lower))
     );
   }
 
@@ -117,10 +119,14 @@ teachersRouter.get('/:id', async (c) => {
   }));
 
   const avatar = `/api/storage/teacher-${teacher.id}`;
+  const user = teacher.userId
+    ? await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, teacher.userId)).then(r => r[0])
+    : null;
 
   return c.json({
     teacher: {
       ...teacher,
+      phone: user?.phone || null,
       avatar,
       assignedGroups,
       students: assignedStudents
@@ -136,34 +142,32 @@ teachersRouter.post('/', async (c) => {
     const id = body.id || `tch_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const avatar = body.avatar || `/api/storage/teacher-${id}`;
 
-    // 1. Create user credential record if email is provided
-    let userId: string | null = null;
-    if (body.email && body.email.trim()) {
-      const emailLower = body.email.trim().toLowerCase();
-      const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, emailLower)).then(r => r[0]);
-      
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        userId = `usr_tch_${id}`;
-        await db.insert(schema.users).values({
-          id: userId,
-          name: body.name?.trim() || 'معلم جديد',
-          email: emailLower,
-          password: await hashPassword(body.password || 'password123'),
-          role: body.isAdmin ? 'admin' : 'teacher',
-          avatar
-        });
-      }
+    const phoneValue = body.phone?.trim() || null;
+    const emailLower = body.email?.trim().toLowerCase() || `${id}@phone.local`;
+    const existingUser = phoneValue
+      ? await db.select().from(schema.users)
+        .where(or(eq(schema.users.phone, phoneValue), eq(schema.users.email, emailLower))).then(r => r[0])
+      : await db.select().from(schema.users).where(eq(schema.users.email, emailLower)).then(r => r[0]);
+    let userId: string | null = existingUser?.id || `usr_tch_${id}`;
+    if (!existingUser) {
+      await db.insert(schema.users).values({
+        id: userId,
+        name: body.name?.trim() || 'معلم جديد',
+        email: emailLower,
+        phone: phoneValue,
+        password: await hashPassword(body.password || 'password123'),
+        role: body.isAdmin ? 'admin' : 'teacher',
+        avatar
+      });
+    } else if (phoneValue) {
+      await db.update(schema.users).set({ phone: phoneValue }).where(eq(schema.users.id, existingUser.id));
     }
 
     const newTeacher = {
       id,
       name: body.name?.trim(),
       email: body.email?.trim() || null,
-      phone: body.phone?.trim() || null,
       avatar,
-      specialization: body.specialization?.trim() || 'Tajweed & Hifz',
       bio: body.bio?.trim() || null,
       status: body.status || 'active',
       userId,
@@ -221,8 +225,9 @@ teachersRouter.put('/:id', async (c) => {
 
     // 2. Manage Associated User record
     let userId = existing.userId;
-    if (body.email && body.email.trim()) {
-      const emailLower = body.email.trim().toLowerCase();
+    if ((body.email && body.email.trim()) || body.phone !== undefined) {
+      const emailLower = body.email?.trim().toLowerCase() || `${id}@phone.local`;
+      const phoneValue = body.phone !== undefined ? body.phone.trim() : undefined;
       
       if (!userId) {
         // Create user
@@ -231,6 +236,7 @@ teachersRouter.put('/:id', async (c) => {
           id: userId,
           name: body.name?.trim() || existing.name,
           email: emailLower,
+          phone: phoneValue || null,
           password: await hashPassword(body.password || 'password123'),
           role: body.isAdmin ? 'admin' : 'teacher',
           avatar
@@ -242,6 +248,7 @@ teachersRouter.put('/:id', async (c) => {
           email: emailLower,
           avatar
         };
+        if (phoneValue !== undefined) userUpdatePayload.phone = phoneValue;
         if (body.password) {
           userUpdatePayload.password = await hashPassword(body.password);
         }
@@ -255,9 +262,7 @@ teachersRouter.put('/:id', async (c) => {
     const updatedData: any = {
       name: body.name?.trim() ?? existing.name,
       email: body.email !== undefined ? body.email?.trim() : existing.email,
-      phone: body.phone !== undefined ? body.phone?.trim() : existing.phone,
       avatar,
-      specialization: body.specialization?.trim() ?? existing.specialization,
       bio: body.bio !== undefined ? body.bio : existing.bio,
       status: body.status ?? existing.status,
       userId,

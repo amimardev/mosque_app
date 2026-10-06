@@ -25,19 +25,19 @@ export default async function globalSetup() {
   await ensureDatabaseInitialized();
 
   const password = await hashPassword('password123');
-  const seedUser = async (id: string, name: string, email: string, role: string) => {
-    const [user] = await db.insert(schema.users).values({ id, name, email, password, role })
+  const seedUser = async (id: string, name: string, email: string, phone: string, role: string) => {
+    const [user] = await db.insert(schema.users).values({ id, name, email, phone, password, role })
       .onConflictDoUpdate({
         target: schema.users.email,
-        set: { name, password, role },
+        set: { name, phone, password, role },
       })
       .returning({ id: schema.users.id });
     return user;
   };
 
-  const parentUser = await seedUser('playwright_demo_parent', 'ولي الأمر التجريبي', 'parent@madrasa.iq', 'parent');
-  const teacherUser = await seedUser('playwright_demo_teacher', 'المعلم التجريبي', 'teacher@madrasa.iq', 'teacher');
-  await seedUser('playwright_demo_admin', 'مدير تجريبي', 'admin@madrasa.iq', 'admin');
+  const parentUser = await seedUser('playwright_demo_parent', 'ولي الأمر التجريبي', 'parent@madrasa.iq', '+9647700000003', 'parent');
+  const teacherUser = await seedUser('playwright_demo_teacher', 'المعلم التجريبي', 'teacher@madrasa.iq', '+9647700000002', 'teacher');
+  await seedUser('playwright_demo_admin', 'مدير تجريبي', 'admin@madrasa.iq', '+9647700000001', 'admin');
 
   const [parent] = await db.select({ id: schema.parents.id })
     .from(schema.parents)
@@ -46,13 +46,12 @@ export default async function globalSetup() {
 
   if (parent) {
     await db.update(schema.parents)
-      .set({ name: 'ولي الأمر التجريبي', phone: '+10000000001' })
+      .set({ name: 'ولي الأمر التجريبي' })
       .where(eq(schema.parents.id, parent.id));
   } else {
     await db.insert(schema.parents).values({
       id: 'playwright_demo_parent_profile',
       name: 'ولي الأمر التجريبي',
-      phone: '+10000000001',
       userId: parentUser.id,
     });
   }
@@ -74,7 +73,6 @@ export default async function globalSetup() {
       id: 'playwright_demo_teacher_profile',
       name: 'المعلم التجريبي',
       avatar: '/images/teachers_faceless_1790530831937.jpg',
-      specialization: 'Hifz',
       userId: teacherUser.id,
       isAdmin: false,
     });

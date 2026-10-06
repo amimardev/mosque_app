@@ -1,7 +1,7 @@
 import { OperationRegistry } from '../operationRegistry.js';
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
-import { eq, desc, like, or } from 'drizzle-orm';
+import { eq, desc, or } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
 import { getSessionId } from '../session.js';
 import { hashPassword } from '../authService.js';
@@ -29,6 +29,8 @@ parentsRouter.get('/', async (c) => {
   const search = c.req.query('search')?.trim().toLowerCase();
 
   const allParents = await db.select().from(schema.parents).orderBy(desc(schema.parents.createdAt));
+  const allUsers = await db.select().from(schema.users);
+  const usersById = new Map(allUsers.map(user => [user.id, user]));
   const allStudents = await db.select().from(schema.students);
 
   const studentsByParent = new Map<string, typeof allStudents>();
@@ -44,6 +46,7 @@ parentsRouter.get('/', async (c) => {
     const parentStudents = studentsByParent.get(parent.id) || [];
     return {
       ...parent,
+      phone: usersById.get(parent.userId || '')?.phone || '',
       studentsCount: parentStudents.length,
       students: parentStudents.map(st => ({
         id: st.id,
@@ -86,6 +89,7 @@ parentsRouter.get('/:id', async (c) => {
   return c.json({
     parent: {
       ...parent,
+      phone: parent.userId ? (await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, parent.userId)).then(r => r[0]?.phone)) || '' : '',
       studentsCount: linkedStudents.length,
       students: linkedStudents
     }
@@ -108,31 +112,28 @@ parentsRouter.post('/', async (c) => {
 
     const id = `prn_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-    // Create user login if email is specified
-    let userId: string | null = null;
-    if (email && email.trim()) {
-      const emailLower = email.trim().toLowerCase();
-      const existingUser = await db.select().from(schema.users).where(eq(schema.users.email, emailLower)).then(r => r[0]);
-
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        userId = `usr_prn_${id}`;
-        await db.insert(schema.users).values({
-          id: userId,
-          name: name.trim(),
-          email: emailLower,
-          password: await hashPassword(password || 'password123'),
-          role: 'parent',
-          avatar: `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(name.trim())}`
-        });
-      }
+    const phoneValue = phone.trim();
+    const emailLower = email?.trim().toLowerCase() || `${id}@phone.local`;
+    const existingUser = await db.select().from(schema.users)
+      .where(or(eq(schema.users.phone, phoneValue), eq(schema.users.email, emailLower))).then(r => r[0]);
+    let userId = existingUser?.id || `usr_prn_${id}`;
+    if (!existingUser) {
+      await db.insert(schema.users).values({
+        id: userId,
+        name: name.trim(),
+        email: emailLower,
+        phone: phoneValue,
+        password: await hashPassword(password || 'password123'),
+        role: 'parent',
+        avatar: `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(name.trim())}`
+      });
+    } else {
+      await db.update(schema.users).set({ phone: phoneValue }).where(eq(schema.users.id, existingUser.id));
     }
 
     const newParent = {
       id,
       name: name.trim(),
-      phone: phone.trim(),
       email: email?.trim() || null,
       address: address?.trim() || null,
       notes: notes?.trim() || null,
@@ -169,18 +170,20 @@ parentsRouter.put('/:id', async (c) => {
       }
     }
 
+    const phoneValue = body.phone !== undefined ? body.phone.trim() : undefined;
     let userId = existing.userId;
     const parentEmail = body.email !== undefined ? body.email?.trim() : existing.email;
 
     // Manage user credential linking
-    if (parentEmail) {
-      const emailLower = parentEmail.toLowerCase();
+    if (parentEmail || phoneValue) {
+      const emailLower = parentEmail?.toLowerCase() || `${id}@phone.local`;
       if (!userId) {
         userId = `usr_prn_${id}`;
         await db.insert(schema.users).values({
           id: userId,
           name: body.name?.trim() || existing.name,
           email: emailLower,
+          phone: phoneValue || null,
           password: await hashPassword(body.password || 'password123'),
           role: 'parent',
           avatar: `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent((body.name || existing.name).trim())}`
@@ -190,6 +193,7 @@ parentsRouter.put('/:id', async (c) => {
           name: (body.name || existing.name).trim(),
           email: emailLower
         };
+        if (phoneValue !== undefined) userUpdatePayload.phone = phoneValue;
         if (body.password) {
           userUpdatePayload.password = await hashPassword(body.password);
         }
@@ -199,7 +203,6 @@ parentsRouter.put('/:id', async (c) => {
 
     const updated = {
       name: body.name !== undefined ? body.name.trim() : existing.name,
-      phone: body.phone !== undefined ? body.phone.trim() : existing.phone,
       email: parentEmail || null,
       address: body.address !== undefined ? (body.address?.trim() || null) : existing.address,
       notes: body.notes !== undefined ? (body.notes?.trim() || null) : existing.notes,

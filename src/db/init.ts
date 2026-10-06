@@ -31,14 +31,16 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           email TEXT,
-          phone TEXT,
           avatar TEXT NOT NULL,
-          specialization TEXT NOT NULL DEFAULT 'Tajweed & Hifz',
           bio TEXT,
           status TEXT NOT NULL DEFAULT 'active',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
+      `;
+
+      await sql`
+        ALTER TABLE teachers DROP COLUMN IF EXISTS specialization;
       `;
 
       await sql`
@@ -105,7 +107,6 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         CREATE TABLE IF NOT EXISTS parents (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
-          phone TEXT NOT NULL,
           email TEXT,
           address TEXT,
           notes TEXT,
@@ -168,6 +169,9 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='parent_name';
         `;
         if (Array.isArray(hasParentNameCol) && hasParentNameCol.length > 0) {
+        const hasParentPhoneCol = await sql`
+          SELECT 1 FROM information_schema.columns WHERE table_name='parents' AND column_name='phone';
+        `;
           const unlinked = await sql`
             SELECT id, parent_name, parent_phone FROM students WHERE parent_id IS NULL AND parent_name IS NOT NULL AND parent_name != '';
           `;
@@ -183,10 +187,17 @@ export async function ensureDatabaseInitialized(): Promise<void> {
                 pId = (existing[0] as any).id;
               } else {
                 pId = `prn_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-                await sql`
-                  INSERT INTO parents (id, name, phone, created_at, updated_at)
-                  VALUES (${pId}, ${pName}, ${pPhone}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-                `;
+                if (Array.isArray(hasParentPhoneCol) && hasParentPhoneCol.length > 0) {
+                  await sql`
+                    INSERT INTO parents (id, name, phone, created_at, updated_at)
+                    VALUES (${pId}, ${pName}, ${pPhone}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                  `;
+                } else {
+                  await sql`
+                    INSERT INTO parents (id, name, created_at, updated_at)
+                    VALUES (${pId}, ${pName}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                  `;
+                }
               }
               await sql`UPDATE students SET parent_id = ${pId} WHERE id = ${st.id};`;
             }
@@ -229,11 +240,34 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
+          phone TEXT UNIQUE,
           password TEXT,
           role TEXT DEFAULT 'admin' NOT NULL,
           avatar TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
+      `;
+
+      // Move login phone numbers onto users before removing the duplicated
+      // profile columns. Existing users retain their contact number.
+      await sql`
+        DO $$
+        BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='phone') THEN
+            ALTER TABLE users ADD COLUMN phone TEXT UNIQUE;
+          END IF;
+
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='parents' AND column_name='phone') THEN
+            EXECUTE 'UPDATE users u SET phone = p.phone FROM parents p WHERE p.user_id = u.id AND u.phone IS NULL AND p.phone IS NOT NULL';
+          END IF;
+
+          IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='teachers' AND column_name='phone') THEN
+            EXECUTE 'UPDATE users u SET phone = t.phone FROM teachers t WHERE t.user_id = u.id AND u.phone IS NULL AND t.phone IS NOT NULL';
+          END IF;
+
+          ALTER TABLE parents DROP COLUMN IF EXISTS phone;
+          ALTER TABLE teachers DROP COLUMN IF EXISTS phone;
+        END $$;
       `;
 
       await sql`

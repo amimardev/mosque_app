@@ -86,6 +86,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: UserRole;
   avatar?: string | null;
   teacherId?: string | null;
@@ -136,7 +137,6 @@ export interface Teacher {
   email?: string | null;
   phone?: string | null;
   avatar: string;
-  specialization: string;
   bio?: string | null;
   status: 'active' | 'on_leave';
   isAdmin?: boolean;

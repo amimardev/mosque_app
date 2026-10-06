@@ -474,7 +474,6 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                         <img src={t.avatar} alt={t.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
                         <div className="min-w-0">
                           <span className="block text-xs font-bold text-slate-900 truncate">{t.name}</span>
-                          <span className="block text-[10px] text-slate-500 truncate">{t.specialization}</span>
                         </div>
                       </div>
                       <button
@@ -644,7 +643,6 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                       />
                       <div className="text-right min-w-0">
                         <span className="block text-xs font-bold text-slate-800 group-hover:text-emerald-900 transition-colors truncate">{teacher.name}</span>
-                        <span className="block text-[10px] text-slate-500 font-medium truncate">{teacher.specialization}</span>
                       </div>
                     </div>
                     <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shrink-0">

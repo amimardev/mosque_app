@@ -26,14 +26,13 @@ export const TeachersTab: React.FC<TeachersTabProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Search by teacher full name, specialization, phone, or email
+  // Search by teacher name, phone, or email
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
       if (!searchQuery) return true;
       const lower = searchQuery.toLowerCase();
       return (
         teacher.name.toLowerCase().includes(lower) ||
-        (teacher.specialization && teacher.specialization.toLowerCase().includes(lower)) ||
         (teacher.email && teacher.email.toLowerCase().includes(lower)) ||
         (teacher.phone && teacher.phone.includes(searchQuery))
       );
@@ -83,7 +82,7 @@ export const TeachersTab: React.FC<TeachersTabProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search teachers by full name, specialization, or phone..."
+            placeholder="Search teachers by full name or phone..."
             className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-800"
           />
           {searchQuery && (
@@ -137,10 +136,6 @@ export const TeachersTab: React.FC<TeachersTabProps> = ({
                         {teacher.status === 'active' ? 'Active' : 'On Leave'}
                       </span>
                     </div>
-
-                    <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block truncate max-w-full">
-                      {teacher.specialization}
-                    </span>
 
                     <span className="text-[11px] text-slate-400 block mt-1">
                       {teacher.studentsCount || 0} Enrolled Students

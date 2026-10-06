@@ -119,9 +119,6 @@ function TeacherDetailsPage() {
                 {teacher.name}
               </h1>
 
-              <p className="text-emerald-700 text-xs sm:text-sm font-bold">
-                {teacher.specialization}
-              </p>
             </div>
 
             {/* Clean Information Rows */}

@@ -5,9 +5,7 @@ export const teachers = pgTable('teachers', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email'),
-  phone: text('phone'),
   avatar: text('avatar').notNull(),
-  specialization: text('specialization').default('Tajweed & Hifz').notNull(),
   bio: text('bio'),
   status: text('status').default('active').notNull(), // 'active' | 'on_leave'
   userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
@@ -53,7 +51,6 @@ export const groupTeachers = pgTable('group_teachers', {
 export const parents = pgTable('parents', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  phone: text('phone').notNull(),
   email: text('email'),
   address: text('address'),
   notes: text('notes'),
@@ -108,6 +105,7 @@ export const users = pgTable('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
+  phone: text('phone').unique(),
   password: text('password'),
   role: text('role').default('admin').notNull(),
   avatar: text('avatar'),

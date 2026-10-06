@@ -53,10 +53,6 @@ export const TeacherViewModal: React.FC<TeacherViewModalProps> = ({
                 </span>
               </div>
 
-              <p className="text-emerald-300 text-xs sm:text-sm font-medium mb-1">
-                {teacher.specialization}
-              </p>
-
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300">
                 {teacher.phone && (
                   <span className="flex items-center gap-1 font-mono">

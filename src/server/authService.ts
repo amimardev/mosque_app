@@ -27,6 +27,7 @@ export async function getFullUserProfile(userId: string) {
 
   if (user.role === 'parent') {
     parentProfile = await db.select().from(schema.parents).where(eq(schema.parents.userId, user.id)).then((rows) => rows[0]);
+    if (parentProfile) parentProfile = { ...parentProfile, phone: user.phone || '' };
     if (parentProfile) children = await db.select().from(schema.students).where(eq(schema.students.parentId, parentProfile.id));
   }
 
@@ -34,6 +35,7 @@ export async function getFullUserProfile(userId: string) {
     id: user.id,
     name: user.name,
     email: user.email,
+    phone: user.phone,
     role,
     avatar: user.avatar || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(user.name)}`,
     teacherProfile,
@@ -42,10 +44,10 @@ export async function getFullUserProfile(userId: string) {
   };
 }
 
-export async function authenticateUser(email: string, password: string) {
+export async function authenticateUser(phone: string, password: string) {
   await ensureDatabaseInitialized();
   const user = await db.select().from(schema.users)
-    .where(eq(schema.users.email, email.trim().toLowerCase())).then((rows) => rows[0]);
+    .where(eq(schema.users.phone, phone.trim())).then((rows) => rows[0]);
   if (!user) return null;
 
   const isHash = !!user.password?.startsWith('$2');

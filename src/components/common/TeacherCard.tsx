@@ -32,10 +32,6 @@ export const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, onClick }) =>
               </span>
             </div>
 
-            <p className="text-xs text-emerald-800 font-semibold line-clamp-2">
-              {teacher.specialization}
-            </p>
-
             <div className="text-[11px] text-slate-500 pt-1 text-right">
               البريد: {teacher.email || 'غير متوفر'}
             </div>

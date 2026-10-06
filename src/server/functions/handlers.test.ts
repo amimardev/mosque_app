@@ -148,14 +148,14 @@ test('getCurrentUserFn returns the profile for a valid session', async () => {
 });
 
 test('loginFn validates credentials before its handler runs', () => {
-  assert.equal(loginSchema.safeParse({ email: ' parent@example.com ', password: 'secret' }).success, true);
-  assert.equal(loginSchema.safeParse({ email: 'not-an-email', password: 'secret' }).success, false);
-  assert.equal(loginSchema.safeParse({ email: 'parent@example.com', password: '' }).success, false);
+  assert.equal(loginSchema.safeParse({ phone: ' +9647700000001 ', password: 'secret' }).success, true);
+  assert.equal(loginSchema.safeParse({ phone: '', password: 'secret' }).success, false);
+  assert.equal(loginSchema.safeParse({ phone: '+9647700000001', password: '' }).success, false);
 });
 
 test('loginFn returns failure and does not create a session for invalid credentials', async () => {
   let sessionCreated = false;
-  const result = await handleLogin({ email: 'parent@example.com', password: 'wrong' }, {
+  const result = await handleLogin({ phone: '+9647700000001', password: 'wrong' }, {
     authenticateUser: async () => null,
     createAuthSession: async () => {
       sessionCreated = true;
@@ -173,9 +173,9 @@ test('loginFn returns failure and does not create a session for invalid credenti
 test('loginFn creates a session, sets its cookie, and returns the profile', async () => {
   const profile = { id: 'user-parent-1', role: 'parent' };
   const calls: string[] = [];
-  const result = await handleLogin({ email: 'parent@example.com', password: 'correct' }, {
-    authenticateUser: async (email, password) => {
-      assert.equal(email, 'parent@example.com');
+  const result = await handleLogin({ phone: '+9647700000001', password: 'correct' }, {
+    authenticateUser: async (phone, password) => {
+      assert.equal(phone, '+9647700000001');
       assert.equal(password, 'correct');
       calls.push('authenticated');
       return { id: 'user-parent-1' };
@@ -247,6 +247,7 @@ test('server functions complete a real parent login, API request, current-user r
       id: userId,
       name: 'Test Parent',
       email,
+      phone: '+10000000000',
       password: await authService.hashPassword('test-password-123'),
       role: 'parent',
     });
@@ -254,7 +255,6 @@ test('server functions complete a real parent login, API request, current-user r
     await database.db.insert(schema.parents).values({
       id: parentId,
       name: 'Test Parent',
-      phone: '+10000000000',
       userId,
     });
     await database.db.insert(schema.notifications).values({
@@ -267,7 +267,7 @@ test('server functions complete a real parent login, API request, current-user r
     });
 
     const loginHeaders: Array<[string, string]> = [];
-    const login = await handleLogin({ email, password: 'test-password-123' }, {
+    const login = await handleLogin({ phone: '+10000000000', password: 'test-password-123' }, {
       authenticateUser: authService.authenticateUser,
       createAuthSession: session.createAuthSession,
       sessionCookie: session.sessionCookie,
@@ -358,6 +358,7 @@ test('apiRequestFn records absent attendance, creates the in-app notification, a
       id: adminId,
       name: 'Test Admin',
       email: `server-function-admin-${id}@example.test`,
+      phone: `+100000001${id.slice(-2)}`,
       password: null,
       role: 'admin',
     });
@@ -366,13 +367,13 @@ test('apiRequestFn records absent attendance, creates the in-app notification, a
       id: parentUserId,
       name: 'Test Push Parent',
       email: `server-function-parent-${id}@example.test`,
+      phone: `+100000002${id.slice(-2)}`,
       password: null,
       role: 'parent',
     });
     await database.db.insert(schema.parents).values({
       id: parentId,
       name: 'Test Push Parent',
-      phone: '+10000000001',
       userId: parentUserId,
     });
     await database.db.insert(schema.groupTypes).values({
@@ -521,12 +522,12 @@ test('GET /api/students returns only own children for parent and only group stud
       id: parent1UserId,
       name: 'Test Parent 1',
       email: `parent1-${id}@example.test`,
+      phone: `+100000003${id.slice(-2)}`,
       role: 'parent',
     });
     await database.db.insert(schema.parents).values({
       id: parent1ProfileId,
       name: 'Test Parent 1',
-      phone: '+10000000010',
       userId: parent1UserId,
     });
 
@@ -535,12 +536,12 @@ test('GET /api/students returns only own children for parent and only group stud
       id: parent2UserId,
       name: 'Test Parent 2',
       email: `parent2-${id}@example.test`,
+      phone: `+100000004${id.slice(-2)}`,
       role: 'parent',
     });
     await database.db.insert(schema.parents).values({
       id: parent2ProfileId,
       name: 'Test Parent 2',
-      phone: '+10000000020',
       userId: parent2UserId,
     });
 
@@ -549,6 +550,7 @@ test('GET /api/students returns only own children for parent and only group stud
       id: teacherUserId,
       name: 'Test Teacher',
       email: `teacher-${id}@example.test`,
+      phone: `+100000005${id.slice(-2)}`,
       role: 'teacher',
     });
     await database.db.insert(schema.teachers).values({
@@ -686,4 +688,3 @@ test('GET /api/students returns only own children for parent and only group stud
     }
   }
 });
-

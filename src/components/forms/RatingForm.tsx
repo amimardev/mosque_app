@@ -256,7 +256,7 @@ export const RatingForm: React.FC<RatingFormProps> = ({
                     <SelectContent>
                       {teachers.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
-                          {t.name} ({t.specialization})
+                          {t.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -71,16 +71,16 @@ export async function handleGetCurrentUser<UserProfile>(
 }
 
 export async function handleLogin<UserProfile>(
-  data: { email: string; password: string },
+  data: { phone: string; password: string },
   deps: {
-    authenticateUser: (email: string, password: string) => Promise<{ id: string } | null>;
+    authenticateUser: (phone: string, password: string) => Promise<{ id: string } | null>;
     createAuthSession: (userId: string) => Promise<string>;
     sessionCookie: (token: string) => string;
     getFullUserProfile: (userId: string) => Promise<UserProfile | null>;
     setResponseHeader: ResponseHeaderSetter;
   },
 ) {
-  const user = await deps.authenticateUser(data.email, data.password);
+  const user = await deps.authenticateUser(data.phone, data.password);
   if (!user) return { success: false, user: null };
 
   const token = await deps.createAuthSession(user.id);

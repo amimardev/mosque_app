@@ -190,9 +190,6 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                         <span className="font-bold text-sm text-white block truncate">
                           {tch.name}
                         </span>
-                        <span className="text-xs text-emerald-300 block truncate">
-                          {tch.specialization}
-                        </span>
                         {tch.phone && (
                           <span className="text-[11px] text-slate-300 font-mono flex items-center gap-1 mt-0.5">
                             <Phone className="w-3 h-3 opacity-70" />
@@ -468,7 +465,7 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                           key={t.id}
                           src={t.avatar}
                           alt={t.name}
-                          title={`${t.name} (${t.specialization})`}
+                          title={t.name}
                           className="w-7 h-7 rounded-full ring-2 ring-white object-cover shadow-xs"
                         />
                       ))}

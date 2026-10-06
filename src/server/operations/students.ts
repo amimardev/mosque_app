@@ -9,6 +9,17 @@ import { getSessionId } from '../session.js';
 
 export const studentsRouter = new OperationRegistry();
 
+async function getParentWithPhone(parentId: string | null | undefined) {
+  const parent = parentId
+    ? await db.select().from(schema.parents).where(eq(schema.parents.id, parentId)).then(r => r[0])
+    : null;
+  if (!parent) return null;
+  const user = parent.userId
+    ? await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, parent.userId)).then(r => r[0])
+    : null;
+  return { ...parent, phone: user?.phone || '' };
+}
+
 // Helper to authenticate user and resolve effective role
 async function getAuthenticatedUser(c: any) {
   const sessionId = getSessionId(c);
@@ -74,6 +85,8 @@ studentsRouter.get('/', async (c) => {
   const allGroupTypes = await db.select().from(schema.groupTypes);
   const allRatings = await db.select().from(schema.studentRatings).orderBy(desc(schema.studentRatings.createdAt));
   const allParents = await db.select().from(schema.parents);
+  const allUsers = await db.select().from(schema.users);
+  const parentPhones = new Map(allUsers.map(user => [user.id, user.phone]));
 
   // Map groups, types, and parents by ID
   const groupMap = new Map(allGroups.map(g => [g.id, g]));
@@ -103,8 +116,8 @@ studentsRouter.get('/', async (c) => {
       dateOfBirth: birthDate || student.dateOfBirth,
       avatar,
       parentName: parentObj?.name || null,
-      parentPhone: parentObj?.phone || null,
-      parent: parentObj || null,
+      parentPhone: parentObj?.userId ? parentPhones.get(parentObj.userId) || null : null,
+      parent: parentObj ? { ...parentObj, phone: parentObj.userId ? parentPhones.get(parentObj.userId) || '' : '' } : null,
       group: studentGroup ? {
         id: studentGroup.id,
         number: studentGroup.number,
@@ -236,7 +249,7 @@ studentsRouter.get('/:id', async (c) => {
   .orderBy(desc(schema.sessions.date));
 
   const surahData = getSurahByNumber(student.currentSurahNumber);
-  let parentObj = student.parentId ? await db.select().from(schema.parents).where(eq(schema.parents.id, student.parentId)).then(r => r[0]) : null;
+  const parentObj = await getParentWithPhone(student.parentId);
 
   const avatar = student.avatar || `/api/storage/student-${student.id}`;
 
@@ -332,7 +345,7 @@ studentsRouter.post('/', async (c) => {
     }
 
     await db.insert(schema.students).values(newStudent);
-    const parentObj = newStudent.parentId ? await db.select().from(schema.parents).where(eq(schema.parents.id, newStudent.parentId)).then(r => r[0]) : null;
+    const parentObj = await getParentWithPhone(newStudent.parentId);
     const computedAge = calculateAge(newStudent.dateOfBirth || newStudent.age);
     return c.json({
       success: true,
@@ -424,7 +437,7 @@ studentsRouter.put('/:id', async (c) => {
 
     await db.update(schema.students).set(updatedData).where(eq(schema.students.id, id));
 
-    const parentObj = updatedData.parentId ? await db.select().from(schema.parents).where(eq(schema.parents.id, updatedData.parentId)).then(r => r[0]) : null;
+    const parentObj = await getParentWithPhone(updatedData.parentId);
     const computedAge = calculateAge(updatedData.dateOfBirth || updatedData.age);
     return c.json({
       success: true,

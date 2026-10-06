@@ -36,7 +36,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
     defaultValues: {
       name: initialData?.name || '',
       avatar: initialData?.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${initialData?.id || teacherId}`,
-      specialization: initialData?.specialization || 'حفظ القرآن والتجويد',
       phone: initialData?.phone || '',
       email: initialData?.email || '',
       password: '',
@@ -59,7 +58,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
           id: teacherId,
           name: value.name.trim(),
           avatar: value.avatar.trim() || `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(value.name)}`,
-          specialization: value.specialization.trim(),
           phone: value.phone.trim() || undefined,
           email: value.email.trim() || undefined,
           bio: value.bio.trim() || undefined,
@@ -159,26 +157,6 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
               )}
             />
 
-            <form.Field
-              name="specialization"
-              children={(field) => (
-                <FormItem>
-                  <FormLabel htmlFor={field.name}>
-                    التخصص العلمي والقراءات <span className="text-rose-500">*</span>
-                  </FormLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder="مثال: القراءات العشر الصغرى، ورش وعاصم"
-                    className="text-right font-medium"
-                    required
-                  />
-                </FormItem>
-              )}
-            />
           </div>
         </div>
 
