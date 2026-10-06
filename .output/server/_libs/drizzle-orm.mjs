@@ -2841,6 +2841,11 @@ function mapRelationalRow(tablesConfig, tableConfig, row, buildQueryResultSelect
 	return result;
 }
 //#endregion
+//#region node_modules/drizzle-orm/sql/functions/aggregate.js
+function count(expression) {
+	return sql`count(${expression || sql.raw("*")})`.mapWith(Number);
+}
+//#endregion
 //#region node_modules/drizzle-orm/pg-core/view-base.js
 var PgViewBase = class extends View {
 	static [entityKind] = "PgViewBase";
@@ -5437,4 +5442,4 @@ function drizzle(...params) {
 	drizzle2.mock = mock;
 })(drizzle || (drizzle = {}));
 //#endregion
-export { gt as a, pgTable as c, jsonb as d, integer as f, eq as i, timestamp as l, desc as n, inArray as o, boolean as p, and as r, or as s, drizzle as t, text as u };
+export { eq as a, isNull as c, timestamp as d, text as f, boolean as h, and as i, or as l, integer as m, count as n, gt as o, jsonb as p, desc as r, inArray as s, drizzle as t, pgTable as u };

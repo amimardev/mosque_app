@@ -110,6 +110,43 @@ var Award = createLucideIcon("award", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var BellRing = createLucideIcon("bell-ring", [
+	["path", {
+		d: "M10.268 21a2 2 0 0 0 3.464 0",
+		key: "vwvbt9"
+	}],
+	["path", {
+		d: "M22 8c0-2.3-.8-4.3-2-6",
+		key: "5bb3ad"
+	}],
+	["path", {
+		d: "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",
+		key: "11g9vi"
+	}],
+	["path", {
+		d: "M4 2C2.8 3.7 2 5.7 2 8",
+		key: "tap9e0"
+	}]
+]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Bell = createLucideIcon("bell", [["path", {
+	d: "M10.268 21a2 2 0 0 0 3.464 0",
+	key: "vwvbt9"
+}], ["path", {
+	d: "M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326",
+	key: "11g9vi"
+}]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var BookOpen = createLucideIcon("book-open", [["path", {
 	d: "M12 7v14",
 	key: "1akyts"
@@ -189,6 +226,19 @@ var Calendar = createLucideIcon("calendar", [
 		key: "8toen8"
 	}]
 ]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var CheckCheck = createLucideIcon("check-check", [["path", {
+	d: "M18 6 7 17l-5-5",
+	key: "116fxf"
+}], ["path", {
+	d: "m22 10-7.5 7.5L13 16",
+	key: "ke71qq"
+}]]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -297,6 +347,26 @@ var Clock = createLucideIcon("clock", [["path", {
 	r: "10",
 	key: "1mglay"
 }]]);
+/**
+* @license lucide-react v0.546.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var Download = createLucideIcon("download", [
+	["path", {
+		d: "M12 15V3",
+		key: "m9g1x1"
+	}],
+	["path", {
+		d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4",
+		key: "ih7n3h"
+	}],
+	["path", {
+		d: "m7 10 5 5 5-5",
+		key: "brsn70"
+	}]
+]);
 /**
 * @license lucide-react v0.546.0 - ISC
 *
@@ -1154,4 +1224,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { CalendarRange as $, Lock as A, Funnel as B, PenLine as C, MapPin as D, MessageSquare as E, Layers as F, CircleCheck as G, FolderOpen as H, KeyRound as I, ChevronRight as J, CircleAlert as K, Info as L, List as M, LayoutGrid as N, Mail as O, LayoutDashboard as P, Calendar as Q, History as R, Phone as S, OctagonAlert as T, FileText as U, FolderPlus as V, Clock as W, ChevronDown as X, ChevronLeft as Y, Check as Z, ShieldAlert as _, UserPlus as a, RefreshCw as b, TriangleAlert as c, Star as d, BookOpen as et, Square as f, ShieldCheck as g, Sparkles as h, UserMinus as i, LoaderCircle as j, LogOut as k, Trash2 as l, SquareCheckBig as m, Users as n, ArrowRight as nt, UserCheck as o, SquarePen as p, ChevronUp as q, User as r, Upload as s, X as t, Award as tt, Sun as u, Search as v, PanelLeft as w, Plus as x, Save as y, GraduationCap as z };
+export { CheckCheck as $, Lock as A, Funnel as B, PenLine as C, MapPin as D, MessageSquare as E, Layers as F, Clock as G, FolderOpen as H, KeyRound as I, ChevronUp as J, CircleCheck as K, Info as L, List as M, LayoutGrid as N, Mail as O, LayoutDashboard as P, Check as Q, History as R, Phone as S, OctagonAlert as T, FileText as U, FolderPlus as V, Download as W, ChevronLeft as X, ChevronRight as Y, ChevronDown as Z, ShieldAlert as _, UserPlus as a, Award as at, RefreshCw as b, TriangleAlert as c, Star as d, Calendar as et, Square as f, ShieldCheck as g, Sparkles as h, UserMinus as i, BellRing as it, LoaderCircle as j, LogOut as k, Trash2 as l, SquareCheckBig as m, Users as n, BookOpen as nt, UserCheck as o, ArrowRight as ot, SquarePen as p, CircleAlert as q, User as r, Bell as rt, Upload as s, X as t, CalendarRange as tt, Sun as u, Search as v, PanelLeft as w, Plus as x, Save as y, GraduationCap as z };
