@@ -10,6 +10,7 @@ import { QURAN_SURAHS } from '../../../../lib/quranData';
 import { ScrollArea } from '../../../../components/ui/scroll-area';
 import { ChangeParentModal } from '../../../../components/modals/ChangeParentModal';
 import { calculateAge, formatArabicAge } from '../../../../lib/ageUtils';
+import { useAuth } from '../../../../context/AuthContext';
 
 export const Route = createFileRoute('/dashboard/students/$id/')({
   component: StudentDetailsPage,
@@ -18,6 +19,9 @@ export const Route = createFileRoute('/dashboard/students/$id/')({
 function StudentDetailsPage() {
   const { id } = useParams({ from: '/dashboard/students/$id/' });
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isParent = user?.role === 'parent';
   const [student, setStudent] = useState<Student | null>(null);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -208,30 +212,36 @@ function StudentDetailsPage() {
 
         {/* Actions - on the Left on desktop, directly below on mobile */}
         <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-          <button
-            onClick={handleOpenNewRating}
-            className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
-          >
-            <Award className="w-4 h-4" />
-            <span>+ إضافة تقييم شهري</span>
-          </button>
+          {!isParent && (
+            <button
+              onClick={handleOpenNewRating}
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+            >
+              <Award className="w-4 h-4" />
+              <span>+ إضافة تقييم شهري</span>
+            </button>
+          )}
 
-          <Link
-            to="/dashboard/students/$id/edit"
-            params={{ id: student.id }}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
-          >
-            <Edit className="w-3.5 h-3.5" />
-            <span>تعديل الملف</span>
-          </Link>
+          {isAdmin && (
+            <>
+              <Link
+                to="/dashboard/students/$id/edit"
+                params={{ id: student.id }}
+                className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                <span>تعديل الملف</span>
+              </Link>
 
-          <button
-            onClick={handleDeleteStudent}
-            className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors cursor-pointer"
-            title="حذف الطالب"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+              <button
+                onClick={handleDeleteStudent}
+                className="p-2 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                title="حذف الطالب"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -295,12 +305,14 @@ function StudentDetailsPage() {
                   <span className="font-bold text-slate-800">
                     {student.parentName || 'غير متوفر'}
                   </span>
-                  <button
-                    onClick={() => setIsChangeParentModalOpen(true)}
-                    className="px-2 py-0.5 text-[10px] bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold rounded-lg transition-colors cursor-pointer"
-                  >
-                    تغيير ولي الأمر
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setIsChangeParentModalOpen(true)}
+                      className="px-2 py-0.5 text-[10px] bg-teal-100 hover:bg-teal-200 text-teal-800 font-bold rounded-lg transition-colors cursor-pointer"
+                    >
+                      تغيير ولي الأمر
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -398,13 +410,15 @@ function StudentDetailsPage() {
             </p>
           </div>
 
-          <button
-            onClick={handleOpenNewRating}
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>إضافة تقييم</span>
-          </button>
+          {!isParent && (
+            <button
+              onClick={handleOpenNewRating}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>إضافة تقييم</span>
+            </button>
+          )}
         </div>
 
         {/* Ratings List */}
@@ -437,21 +451,23 @@ function StudentDetailsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleOpenEditRating(rating)}
-                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      تعديل
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRating(rating.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title="حذف التقييم"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {!isParent && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditRating(rating)}
+                        className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRating(rating.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="حذف التقييم"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Score Breakdown Pills */}

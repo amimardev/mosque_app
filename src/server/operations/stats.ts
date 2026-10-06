@@ -4,12 +4,61 @@ import * as schema from '../../db/schema.js';
 import { ensureDatabaseInitialized } from '../../db/init.js';
 import { QURAN_SURAHS } from '../../lib/quranData.js';
 
+import { getSessionId } from '../session.js';
+import { eq } from 'drizzle-orm';
+
 export const statsRouter = new OperationRegistry();
+
+// Helper to authenticate user and resolve effective role
+async function getAuthenticatedUser(c: any) {
+  const sessionId = getSessionId(c);
+  if (!sessionId) return null;
+
+  const user = await db.select().from(schema.users).where(eq(schema.users.id, sessionId)).then(r => r[0]);
+  if (!user) return null;
+
+  let teacherProfile: any = null;
+  let parentProfile: any = null;
+  let role = user.role;
+
+  if (user.role === 'admin' || user.role === 'teacher') {
+    teacherProfile = await db.select().from(schema.teachers).where(eq(schema.teachers.userId, user.id)).then(r => r[0]);
+    if (teacherProfile && teacherProfile.isAdmin) {
+      role = 'admin';
+    }
+  }
+
+  if (user.role === 'parent') {
+    parentProfile = await db.select().from(schema.parents).where(eq(schema.parents.userId, user.id)).then(r => r[0]);
+  }
+
+  return { ...user, role, teacherProfile, parentProfile };
+}
 
 statsRouter.get('/counts', async (c) => {
   await ensureDatabaseInitialized();
   try {
-    const allStudents = await db.select({ id: schema.students.id }).from(schema.students);
+    const user = await getAuthenticatedUser(c);
+    let allStudents = await db.select().from(schema.students);
+
+    if (user?.role === 'parent') {
+      const parentId = user.parentProfile?.id;
+      allStudents = parentId ? allStudents.filter(s => s.parentId === parentId) : [];
+    } else if (user?.role === 'teacher') {
+      const teacherId = user.teacherProfile?.id;
+      if (teacherId) {
+        const assignedGroupTeachers = await db.select().from(schema.groupTeachers).where(eq(schema.groupTeachers.teacherId, teacherId));
+        const teacherGroupIds = new Set(assignedGroupTeachers.map(gt => gt.groupId));
+        allStudents = allStudents.filter(s => {
+          if (!s.groupId) return false;
+          const studentGroupIds = s.groupId.split(',').map(id => id.trim()).filter(Boolean);
+          return studentGroupIds.some(gid => teacherGroupIds.has(gid));
+        });
+      } else {
+        allStudents = [];
+      }
+    }
+
     const allParents = await db.select({ id: schema.parents.id }).from(schema.parents);
     const allTeachers = await db.select({ id: schema.teachers.id }).from(schema.teachers);
     const allGroups = await db.select({ id: schema.groups.id }).from(schema.groups);

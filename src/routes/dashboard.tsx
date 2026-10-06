@@ -152,7 +152,7 @@ function DashboardLayout() {
   const navItems = rawNavItems.filter(item => {
     if (!user) return false;
     if (user.role === 'parent') {
-      return item.to === '/dashboard/sessions';
+      return item.to === '/dashboard/sessions' || item.to === '/dashboard/students';
     }
     if (user.role === 'teacher') {
       return item.to !== '/dashboard/parents' && item.to !== '/dashboard/teachers';

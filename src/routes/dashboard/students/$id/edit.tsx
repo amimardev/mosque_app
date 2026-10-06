@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { StudentForm } from '../../../../components/forms/StudentForm';
 import { Student } from '../../../../types';
+import { useAuth } from '../../../../context/AuthContext';
 
 export const Route = createFileRoute('/dashboard/students/$id/edit')({
   component: EditStudentPage,
@@ -11,8 +12,15 @@ export const Route = createFileRoute('/dashboard/students/$id/edit')({
 function EditStudentPage() {
   const { id } = useParams({ from: '/dashboard/students/$id/edit' });
   const navigate = useNavigate();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthLoading && user && user.role !== 'admin') {
+      navigate({ to: '/dashboard/students/$id', params: { id } });
+    }
+  }, [user, isAuthLoading, navigate, id]);
 
   useEffect(() => {
     async function loadData() {

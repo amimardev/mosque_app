@@ -483,3 +483,207 @@ test('apiRequestFn records absent attendance, creates the in-app notification, a
     }
   }
 });
+
+test('GET /api/students returns only own children for parent and only group students for non-admin teacher against DATABASE_URL_TEST', async () => {
+  const [database, schema, init, session, operations] = await Promise.all([
+    import('../../db/index.js'),
+    import('../../db/schema.js'),
+    import('../../db/init.js'),
+    import('../session.js'),
+    import('../operations.js'),
+  ]);
+  await init.ensureDatabaseInitialized();
+
+  const id = randomUUID();
+  const parent1UserId = `test_p1_u_${id}`;
+  const parent1ProfileId = `test_p1_p_${id}`;
+  const parent2UserId = `test_p2_u_${id}`;
+  const parent2ProfileId = `test_p2_p_${id}`;
+
+  const teacherUserId = `test_tch_u_${id}`;
+  const teacherProfileId = `test_tch_p_${id}`;
+
+  const groupTypeId = `test_gt_${id}`;
+  const group1Id = `test_grp1_${id}`;
+  const group2Id = `test_grp2_${id}`;
+  const groupTeacherId = `test_gtch_${id}`;
+
+  const studentChild1Id = `test_std_c1_${id}`;
+  const studentOtherId = `test_std_other_${id}`;
+
+  let parentCookieHeader = '';
+  let teacherCookieHeader = '';
+  let seeded = false;
+
+  try {
+    // 1. Create Parent 1 (our test parent)
+    await database.db.insert(schema.users).values({
+      id: parent1UserId,
+      name: 'Test Parent 1',
+      email: `parent1-${id}@example.test`,
+      role: 'parent',
+    });
+    await database.db.insert(schema.parents).values({
+      id: parent1ProfileId,
+      name: 'Test Parent 1',
+      phone: '+10000000010',
+      userId: parent1UserId,
+    });
+
+    // 2. Create Parent 2 (other parent)
+    await database.db.insert(schema.users).values({
+      id: parent2UserId,
+      name: 'Test Parent 2',
+      email: `parent2-${id}@example.test`,
+      role: 'parent',
+    });
+    await database.db.insert(schema.parents).values({
+      id: parent2ProfileId,
+      name: 'Test Parent 2',
+      phone: '+10000000020',
+      userId: parent2UserId,
+    });
+
+    // 3. Create Teacher (non-admin teacher)
+    await database.db.insert(schema.users).values({
+      id: teacherUserId,
+      name: 'Test Teacher',
+      email: `teacher-${id}@example.test`,
+      role: 'teacher',
+    });
+    await database.db.insert(schema.teachers).values({
+      id: teacherProfileId,
+      name: 'Test Teacher',
+      avatar: '/logo.png',
+      userId: teacherUserId,
+      isAdmin: false,
+    });
+
+    // 4. Create Groups
+    await database.db.insert(schema.groupTypes).values({
+      id: groupTypeId,
+      name: `Type ${id}`,
+      slug: `type-${id}`,
+    });
+    await database.db.insert(schema.groups).values([
+      { id: group1Id, number: 111, typeId: groupTypeId, studyTime: 'Time 1' },
+      { id: group2Id, number: 222, typeId: groupTypeId, studyTime: 'Time 2' },
+    ]);
+
+    // Teacher is assigned ONLY to group1Id
+    await database.db.insert(schema.groupTeachers).values({
+      id: groupTeacherId,
+      groupId: group1Id,
+      teacherId: teacherProfileId,
+      role: 'lead',
+    });
+
+    // 5. Create Students
+    // Child 1 belongs to Parent 1 and is in Group 1
+    await database.db.insert(schema.students).values({
+      id: studentChild1Id,
+      name: 'Child 1 of Parent 1',
+      avatar: '/logo.png',
+      parentId: parent1ProfileId,
+      groupId: group1Id,
+    });
+    // Student Other belongs to Parent 2 and is in Group 2 (teacher not assigned to Group 2)
+    await database.db.insert(schema.students).values({
+      id: studentOtherId,
+      name: 'Student of Parent 2',
+      avatar: '/logo.png',
+      parentId: parent2ProfileId,
+      groupId: group2Id,
+    });
+
+    seeded = true;
+
+    // Create session cookies
+    const parentToken = await session.createAuthSession(parent1UserId);
+    parentCookieHeader = session.sessionCookie(parentToken);
+
+    const teacherToken = await session.createAuthSession(teacherUserId);
+    teacherCookieHeader = session.sessionCookie(teacherToken);
+
+    // --- TEST 1: Parent fetches students ---
+    const parentReq = await handleApiRequest({ method: 'GET', path: '/api/students' }, {
+      cookieHeader: parentCookieHeader,
+      getSessionUserId: session.getSessionUserId,
+      dispatch: (request) => operations.apiRouter.dispatch(request),
+      setResponseHeader: () => {},
+    });
+    assert.equal(parentReq.status, 200);
+    const parentStudents = parentReq.body.students as any[];
+    assert.ok(Array.isArray(parentStudents));
+    const parentStudentIds = parentStudents.map(s => s.id);
+    assert.ok(parentStudentIds.includes(studentChild1Id), 'Parent must see their own child');
+    assert.ok(!parentStudentIds.includes(studentOtherId), 'Parent must NOT see another parent child');
+
+    // Also verify Parent GET /api/students/:id security
+    const parentOwnChildReq = await handleApiRequest({ method: 'GET', path: `/api/students/${studentChild1Id}` }, {
+      cookieHeader: parentCookieHeader,
+      getSessionUserId: session.getSessionUserId,
+      dispatch: (request) => operations.apiRouter.dispatch(request),
+      setResponseHeader: () => {},
+    });
+    assert.equal(parentOwnChildReq.status, 200);
+    assert.equal(parentOwnChildReq.body.student.id, studentChild1Id);
+
+    const parentForeignChildReq = await handleApiRequest({ method: 'GET', path: `/api/students/${studentOtherId}` }, {
+      cookieHeader: parentCookieHeader,
+      getSessionUserId: session.getSessionUserId,
+      dispatch: (request) => operations.apiRouter.dispatch(request),
+      setResponseHeader: () => {},
+    });
+    assert.equal(parentForeignChildReq.status, 403, 'Parent must be forbidden from accessing other children');
+
+    // --- TEST 2: Non-admin Teacher fetches students ---
+    const teacherReq = await handleApiRequest({ method: 'GET', path: '/api/students' }, {
+      cookieHeader: teacherCookieHeader,
+      getSessionUserId: session.getSessionUserId,
+      dispatch: (request) => operations.apiRouter.dispatch(request),
+      setResponseHeader: () => {},
+    });
+    assert.equal(teacherReq.status, 200);
+    const teacherStudents = teacherReq.body.students as any[];
+    assert.ok(Array.isArray(teacherStudents));
+    const teacherStudentIds = teacherStudents.map(s => s.id);
+    assert.ok(teacherStudentIds.includes(studentChild1Id), 'Teacher must see student in assigned group');
+    assert.ok(!teacherStudentIds.includes(studentOtherId), 'Teacher must NOT see student from unassigned group');
+
+    // Also verify Teacher mutation is rejected (non-admin teacher cannot modify/add student)
+    const teacherPostReq = await handleApiRequest({
+      method: 'POST',
+      path: '/api/students',
+      body: { name: 'Attempted Student' }
+    }, {
+      cookieHeader: teacherCookieHeader,
+      getSessionUserId: session.getSessionUserId,
+      dispatch: (request) => operations.apiRouter.dispatch(request),
+      setResponseHeader: () => {},
+    });
+    assert.equal(teacherPostReq.status, 403, 'Non-admin teacher cannot create students');
+  } finally {
+    if (parentCookieHeader) {
+      await session.destroyAuthSession(session.readSessionToken(parentCookieHeader));
+    }
+    if (teacherCookieHeader) {
+      await session.destroyAuthSession(session.readSessionToken(teacherCookieHeader));
+    }
+    if (seeded) {
+      await database.db.delete(schema.students).where(eq(schema.students.id, studentChild1Id));
+      await database.db.delete(schema.students).where(eq(schema.students.id, studentOtherId));
+      await database.db.delete(schema.groupTeachers).where(eq(schema.groupTeachers.id, groupTeacherId));
+      await database.db.delete(schema.groups).where(eq(schema.groups.id, group1Id));
+      await database.db.delete(schema.groups).where(eq(schema.groups.id, group2Id));
+      await database.db.delete(schema.groupTypes).where(eq(schema.groupTypes.id, groupTypeId));
+      await database.db.delete(schema.teachers).where(eq(schema.teachers.id, teacherProfileId));
+      await database.db.delete(schema.parents).where(eq(schema.parents.id, parent1ProfileId));
+      await database.db.delete(schema.parents).where(eq(schema.parents.id, parent2ProfileId));
+      await database.db.delete(schema.users).where(eq(schema.users.id, teacherUserId));
+      await database.db.delete(schema.users).where(eq(schema.users.id, parent1UserId));
+      await database.db.delete(schema.users).where(eq(schema.users.id, parent2UserId));
+    }
+  }
+});
+

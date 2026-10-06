@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Student, Group } from '../../../types';
 import { StudentCard } from '../../../components/common/StudentCard';
+import { useAuth } from '../../../context/AuthContext';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,9 @@ export const Route = createFileRoute('/dashboard/students/')({
 
 function StudentsDirectoryPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isParent = user?.role === 'parent';
   const [students, setStudents] = useState<Student[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,20 +85,24 @@ function StudentsDirectoryPage() {
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
             <User className="w-6 h-6 text-emerald-600" />
-            دليل وسجل الطلاب ({students.length})
+            {isParent ? `قائمة الأبناء (${students.length})` : `دليل وسجل الطلاب (${students.length})`}
           </h1>
           <p className="text-xs text-slate-500">
-            مستويات الحفظ، الانتماء للحلقات، ومعلومات الاتصال لأولياء الأمور.
+            {isParent
+              ? 'مستويات الحفظ، ومتابعة الأبناء المسجلين في المدرسة القرآنية.'
+              : 'مستويات الحفظ، الانتماء للحلقات، ومعلومات الاتصال لأولياء الأمور.'}
           </p>
         </div>
 
-        <Link
-          to="/dashboard/students/new"
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all self-start sm:self-auto cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          تسجيل طالب جديد
-        </Link>
+        {isAdmin && (
+          <Link
+            to="/dashboard/students/new"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all self-start sm:self-auto cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            تسجيل طالب جديد
+          </Link>
+        )}
       </div>
 
       {/* Filter and Search Bar using TanStack Form & Shadcn UI Select */}
@@ -191,13 +199,19 @@ function StudentsDirectoryPage() {
         </div>
       ) : (
         <div className="py-16 text-center bg-white rounded-3xl border border-slate-200/80 p-8 shadow-xs">
-          <p className="text-xs text-slate-500 mb-3">لم يتم العثور على أي طلاب يطابقون معايير البحث.</p>
-          <Link
-            to="/dashboard/students/new"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs inline-block"
-          >
-            تسجيل طالب جديد
-          </Link>
+          <p className="text-xs text-slate-500 mb-3">
+            {isParent
+              ? 'لم يتم العثور على أبناء مسجلين بحسابك.'
+              : 'لم يتم العثور على أي طلاب يطابقون معايير البحث.'}
+          </p>
+          {isAdmin && (
+            <Link
+              to="/dashboard/students/new"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs inline-block"
+            >
+              تسجيل طالب جديد
+            </Link>
+          )}
         </div>
       )}
     </div>

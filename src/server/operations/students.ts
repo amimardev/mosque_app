@@ -5,16 +5,71 @@ import { eq, desc } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
 import { getSurahByNumber } from '../../lib/quranData.js';
 import { calculateAge } from '../../lib/ageUtils.js';
+import { getSessionId } from '../session.js';
 
 export const studentsRouter = new OperationRegistry();
+
+// Helper to authenticate user and resolve effective role
+async function getAuthenticatedUser(c: any) {
+  const sessionId = getSessionId(c);
+  if (!sessionId) return null;
+
+  const user = await db.select().from(schema.users).where(eq(schema.users.id, sessionId)).then(r => r[0]);
+  if (!user) return null;
+
+  let teacherProfile: any = null;
+  let parentProfile: any = null;
+  let role = user.role;
+
+  if (user.role === 'admin' || user.role === 'teacher') {
+    teacherProfile = await db.select().from(schema.teachers).where(eq(schema.teachers.userId, user.id)).then(r => r[0]);
+    if (teacherProfile && teacherProfile.isAdmin) {
+      role = 'admin';
+    }
+  }
+
+  if (user.role === 'parent') {
+    parentProfile = await db.select().from(schema.parents).where(eq(schema.parents.userId, user.id)).then(r => r[0]);
+  }
+
+  return { ...user, role, teacherProfile, parentProfile };
+}
 
 // GET all students (with optional query filter and latest rating)
 studentsRouter.get('/', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user) {
+    return c.json({ error: 'غير مصرح بالدخول، يرجى تسجيل الدخول أولاً' }, 401);
+  }
+
   const q = c.req.query('q')?.trim() || '';
   const groupId = c.req.query('groupId')?.trim() || '';
 
   let allStudents = await db.select().from(schema.students);
+
+  // Role-based visibility filtering:
+  // 1. Parent: only sees their own children
+  if (user.role === 'parent') {
+    const parentId = user.parentProfile?.id;
+    allStudents = parentId ? allStudents.filter(s => s.parentId === parentId) : [];
+  } else if (user.role === 'teacher') {
+    // 2. Non-admin teacher: only sees students in the groups they teach
+    const teacherId = user.teacherProfile?.id;
+    if (teacherId) {
+      const assignedGroupTeachers = await db.select().from(schema.groupTeachers).where(eq(schema.groupTeachers.teacherId, teacherId));
+      const teacherGroupIds = new Set(assignedGroupTeachers.map(gt => gt.groupId));
+      allStudents = allStudents.filter(s => {
+        if (!s.groupId) return false;
+        const studentGroupIds = s.groupId.split(',').map(id => id.trim()).filter(Boolean);
+        return studentGroupIds.some(gid => teacherGroupIds.has(gid));
+      });
+    } else {
+      allStudents = [];
+    }
+  }
+  // 3. Admin: sees all students
+
   const allGroups = await db.select().from(schema.groups);
   const allGroupTypes = await db.select().from(schema.groupTypes);
   const allRatings = await db.select().from(schema.studentRatings).orderBy(desc(schema.studentRatings.createdAt));
@@ -102,11 +157,34 @@ studentsRouter.get('/', async (c) => {
 // GET single student details
 studentsRouter.get('/:id', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user) {
+    return c.json({ error: 'غير مصرح بالدخول، يرجى تسجيل الدخول أولاً' }, 401);
+  }
+
   const id = c.req.param('id');
   const student = await db.select().from(schema.students).where(eq(schema.students.id, id)).then(r => r[0]);
 
   if (!student) {
     return c.json({ error: 'Student not found' }, 404);
+  }
+
+  // Permission check:
+  // Parent can only view their own children
+  if (user.role === 'parent' && student.parentId !== user.parentProfile?.id) {
+    return c.json({ error: 'غير مصرح لك بالاطلاع على بيانات هذا الطالب' }, 403);
+  }
+  // Teacher can only view students in their assigned groups
+  if (user.role === 'teacher') {
+    const teacherId = user.teacherProfile?.id;
+    if (!teacherId) return c.json({ error: 'غير مصرح لك بالاطلاع على بيانات هذا الطالب' }, 403);
+    const assignedGroupTeachers = await db.select().from(schema.groupTeachers).where(eq(schema.groupTeachers.teacherId, teacherId));
+    const teacherGroupIds = new Set(assignedGroupTeachers.map(gt => gt.groupId));
+    const studentGroupIds = student.groupId ? student.groupId.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const hasAccess = studentGroupIds.some(gid => teacherGroupIds.has(gid));
+    if (!hasAccess) {
+      return c.json({ error: 'غير مصرح لك بالاطلاع على بيانات هذا الطالب' }, 403);
+    }
   }
 
   let group: any = null;
@@ -183,9 +261,14 @@ studentsRouter.get('/:id', async (c) => {
   });
 });
 
-// POST new student
+// POST new student - Only Admin is allowed to add students
 studentsRouter.post('/', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user || user.role !== 'admin') {
+    return c.json({ error: 'عذراً، إضافة الطلاب متاحة فقط لإدارة المدرسة' }, 403);
+  }
+
   try {
     const body = await c.req.json();
     const id = body.id || `std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -268,9 +351,14 @@ studentsRouter.post('/', async (c) => {
   }
 });
 
-// PUT edit student
+// PUT edit student - Only Admin is allowed to modify students
 studentsRouter.put('/:id', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user || user.role !== 'admin') {
+    return c.json({ error: 'عذراً، تعديل بيانات الطلاب متاح فقط لإدارة المدرسة' }, 403);
+  }
+
   const id = c.req.param('id');
   try {
     const body = await c.req.json();
@@ -356,9 +444,14 @@ studentsRouter.put('/:id', async (c) => {
   }
 });
 
-// DELETE student
+// DELETE student - Only Admin is allowed to delete students
 studentsRouter.delete('/:id', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user || user.role !== 'admin') {
+    return c.json({ error: 'عذراً، حذف الطلاب متاح فقط لإدارة المدرسة' }, 403);
+  }
+
   const id = c.req.param('id');
   try {
     await db.delete(schema.students).where(eq(schema.students.id, id));
@@ -371,12 +464,32 @@ studentsRouter.delete('/:id', async (c) => {
 // GET /api/students/:id/history - Fetch latest progress (latest present session verse + surah) and latest 5 sessions status
 studentsRouter.get('/:id/history', async (c) => {
   await ensureDatabaseInitialized();
+  const user = await getAuthenticatedUser(c);
+  if (!user) {
+    return c.json({ error: 'غير مصرح بالدخول، يرجى تسجيل الدخول أولاً' }, 401);
+  }
+
   const studentId = c.req.param('id');
 
   try {
     const student = await db.select().from(schema.students).where(eq(schema.students.id, studentId)).then(r => r[0]);
     if (!student) {
       return c.json({ error: 'الطالب غير موجود' }, 404);
+    }
+
+    // Permission check:
+    if (user.role === 'parent' && student.parentId !== user.parentProfile?.id) {
+      return c.json({ error: 'غير مصرح لك بالاطلاع على سجل هذا الطالب' }, 403);
+    }
+    if (user.role === 'teacher') {
+      const teacherId = user.teacherProfile?.id;
+      if (!teacherId) return c.json({ error: 'غير مصرح لك بالاطلاع على سجل هذا الطالب' }, 403);
+      const assignedGroupTeachers = await db.select().from(schema.groupTeachers).where(eq(schema.groupTeachers.teacherId, teacherId));
+      const teacherGroupIds = new Set(assignedGroupTeachers.map(gt => gt.groupId));
+      const studentGroupIds = student.groupId ? student.groupId.split(',').map(s => s.trim()).filter(Boolean) : [];
+      if (!studentGroupIds.some(gid => teacherGroupIds.has(gid))) {
+        return c.json({ error: 'غير مصرح لك بالاطلاع على سجل هذا الطالب' }, 403);
+      }
     }
 
     // 1. Fetch session records for this student joined with sessions
