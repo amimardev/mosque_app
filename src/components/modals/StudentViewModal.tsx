@@ -4,6 +4,7 @@ import { Student, getGroupDisplayName } from '../../types';
 import { QURAN_SURAHS, getSurahByNumber } from '../../lib/quranData';
 import { calculateAge } from '../../lib/ageUtils';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
+import { ProfileImage } from '../common/ProfileImage';
 
 interface StudentViewModalProps {
   isOpen: boolean;
@@ -40,13 +41,10 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden ring-4 ring-emerald-600 shadow-md shrink-0 bg-slate-800">
-              <img
+              <ProfileImage
                 src={student.avatar}
                 alt={student.name}
-                className="w-full h-full object-cover object-center"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(student.name)}`;
-                }}
+                className="w-full h-full object-center"
               />
             </div>
 
@@ -192,10 +190,10 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
                 <div className="space-y-2">
                   {student.group.teachers.map((t) => (
                     <div key={t.id} className="flex items-center gap-2.5">
-                      <img
+                      <ProfileImage
                         src={t.avatar}
                         alt={t.name}
-                        className="w-7 h-7 rounded-full object-cover shrink-0"
+                        className="w-7 h-7 rounded-full shrink-0"
                       />
                       <div className="text-xs">
                         <span className="font-semibold text-slate-900 block">{t.name}</span>

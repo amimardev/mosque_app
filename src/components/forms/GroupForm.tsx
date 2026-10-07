@@ -16,6 +16,7 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Button } from '../ui/button';
+import { ProfileImage } from '../common/ProfileImage';
 import { useDebounce } from '../../hooks/useDebounce';
 
 interface GroupFormProps {
@@ -488,7 +489,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                   {assignedTeachers.map((t) => (
                     <div key={t.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <img src={t.avatar} alt={t.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                        <ProfileImage src={t.avatar} alt={t.name} className="w-9 h-9 rounded-xl shrink-0" />
                         <div className="min-w-0">
                           <span className="block text-xs font-bold text-slate-900 truncate">{t.name}</span>
                         </div>
@@ -548,7 +549,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                   {assignedStudents.map((s) => (
                     <div key={s.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                        <ProfileImage src={s.avatar} alt={s.name} className="w-9 h-9 rounded-xl shrink-0" />
                         <div className="min-w-0">
                           <span className="block text-xs font-bold text-slate-900 truncate">{s.name}</span>
                           <span className="block text-[10px] text-slate-500 truncate">سورة {s.currentSurahName} ({s.currentAyah})</span>
@@ -653,10 +654,10 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                     className="p-3 bg-slate-50 border border-slate-150 hover:border-emerald-500 hover:bg-emerald-50/50 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <ProfileImage
                         src={teacher.avatar}
                         alt={teacher.name}
-                        className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200/80 shadow-2xs"
+                        className="w-10 h-10 rounded-xl shrink-0 border border-slate-200/80 shadow-2xs"
                       />
                       <div className="text-right min-w-0">
                         <span className="block text-xs font-bold text-slate-800 group-hover:text-emerald-900 transition-colors truncate">{teacher.name}</span>
@@ -747,10 +748,10 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                     className="p-3 bg-slate-50 border border-slate-150 hover:border-emerald-500 hover:bg-emerald-50/50 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={student.avatar || "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400"}
+                      <ProfileImage
+                        src={student.avatar}
                         alt={student.name}
-                        className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200/80 shadow-2xs"
+                        className="w-10 h-10 rounded-xl shrink-0 border border-slate-200/80 shadow-2xs"
                       />
                       <div className="text-right min-w-0">
                         <span className="block text-xs font-bold text-slate-800 group-hover:text-emerald-900 transition-colors truncate">{student.name}</span>

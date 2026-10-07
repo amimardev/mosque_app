@@ -5,6 +5,7 @@ import {
   Sparkles, MessageSquare
 } from 'lucide-react';
 import { Student, Group, getGroupDisplayName } from '../../types';
+import { ProfileImage } from '../common/ProfileImage';
 import { calculateAge } from '../../lib/ageUtils';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
@@ -153,13 +154,10 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                   <div className="flex items-start gap-3.5">
                     {/* Profile Picture */}
                     <div className="relative w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-emerald-500/20 shrink-0 bg-slate-100 shadow-xs">
-                      <img
+                      <ProfileImage
                         src={student.avatar}
                         alt={student.name}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(student.name)}`;
-                        }}
+                        className="w-full h-full object-center group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
 

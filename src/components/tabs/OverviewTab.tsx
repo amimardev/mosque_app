@@ -4,6 +4,7 @@ import {
   ArrowUpRight, Plus, Sparkles, TrendingUp, ChevronRight 
 } from 'lucide-react';
 import { Student, Teacher, Group, StudentRating, MadrasaStats, getGroupDisplayName } from '../../types';
+import { ProfileImage } from '../common/ProfileImage';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
 interface OverviewTabProps {
@@ -223,12 +224,12 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     <span className="text-slate-500 text-[11px]">Sheikhs:</span>
                     <div className="flex items-center -space-x-2">
                       {grp.teachers.map((t) => (
-                        <img
+                        <ProfileImage
                           key={t.id}
                           src={t.avatar}
                           alt={t.name}
                           title={t.name}
-                          className="w-6 h-6 rounded-full ring-2 ring-white object-cover"
+                          className="w-6 h-6 rounded-full ring-2 ring-white"
                         />
                       ))}
                     </div>
@@ -273,10 +274,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     {idx + 1}
                   </div>
 
-                  <img
+                  <ProfileImage
                     src={student.avatar}
                     alt={student.name}
-                    className="w-9 h-9 rounded-full object-cover shrink-0"
+                    className="w-9 h-9 rounded-full shrink-0"
                   />
 
                   <div className="flex-1 min-w-0">
@@ -330,10 +331,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   <tr key={rating.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <img
-                          src={rating.student?.avatar || 'https://api.dicebear.com/7.x/micah/svg?seed=student'}
+                        <ProfileImage
+                          src={rating.student?.avatar}
                           alt=""
-                          className="w-7 h-7 rounded-full object-cover shrink-0"
+                          className="w-7 h-7 rounded-full shrink-0"
                         />
                         <span className="font-bold text-slate-900">{rating.student?.name || 'Student'}</span>
                       </div>

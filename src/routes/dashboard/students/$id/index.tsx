@@ -11,6 +11,7 @@ import { ScrollArea } from '../../../../components/ui/scroll-area';
 import { ChangeParentModal } from '../../../../components/modals/ChangeParentModal';
 import { calculateAge, formatArabicAge } from '../../../../lib/ageUtils';
 import { useAuth } from '../../../../context/AuthContext';
+import { ProfileImage } from '../../../../components/common/ProfileImage';
 
 export const Route = createFileRoute('/dashboard/students/$id/')({
   component: StudentDetailsPage,
@@ -250,10 +251,10 @@ function StudentDetailsPage() {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
           {/* Profile Picture */}
           <div className="w-36 sm:w-48 h-48 sm:h-64 rounded-2xl overflow-hidden ring-4 ring-emerald-600/20 shrink-0 bg-slate-100 shadow-md">
-            <img
+            <ProfileImage
               src={student.avatar}
               alt={student.name}
-              className="w-full h-full object-cover object-top"
+              className="w-full h-full object-top"
             />
           </div>
 

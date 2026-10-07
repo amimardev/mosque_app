@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, CheckCircle2, User, Loader2 } from 'lucide-react';
 import api from '@/lib/apiClient';
+import { ProfileImage } from './ProfileImage';
 
 interface AvatarPickerProps {
   id?: string;
@@ -64,8 +65,7 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
     }
   };
 
-  const fallbackAvatar = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(storageKey)}`;
-  const imageSrc = localPreview || value || fallbackAvatar;
+  const imageSrc = localPreview || value;
 
   return (
     <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 text-right" dir="rtl">
@@ -91,13 +91,10 @@ export const AvatarPicker: React.FC<AvatarPickerProps> = ({
       <div className="flex items-center gap-4">
         {/* Avatar Image Preview */}
         <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-slate-200 ring-2 ring-emerald-500/40 shrink-0 shadow-xs">
-          <img
+          <ProfileImage
             src={imageSrc}
             alt="معاينة الصورة"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = fallbackAvatar;
-            }}
+            className="w-full h-full"
           />
         </div>
 

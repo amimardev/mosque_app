@@ -48,7 +48,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
   const form = useForm({
     defaultValues: {
       name: initialData?.name || '',
-      avatar: initialData?.avatar || `https://api.dicebear.com/7.x/micah/svg?seed=${initialData?.id || studentId}`,
+      avatar: initialData?.avatar || '',
       gender: (initialData?.gender || 'male') as 'male' | 'female',
       dateOfBirth: initialData?.dateOfBirth || (typeof initialData?.age === 'string' && initialData.age.includes('-') ? initialData.age : ''),
       parentId: initialData?.parentId || '',
@@ -74,7 +74,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         await onSave({
           id: studentId,
           name: value.name.trim(),
-          avatar: value.avatar.trim() || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(value.name)}`,
+          avatar: value.avatar.trim() || undefined,
           gender: value.gender,
           dateOfBirth: value.dateOfBirth || undefined,
           age: value.dateOfBirth || undefined,

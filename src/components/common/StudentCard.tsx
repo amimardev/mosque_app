@@ -2,6 +2,7 @@ import React from 'react';
 import { Clock, Phone, UserRound } from 'lucide-react';
 import { Student } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
+import { ProfileImage } from './ProfileImage';
 
 interface StudentCardProps {
   student: Student;
@@ -48,17 +49,11 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
               </div>
             </div>
           </div>
-          <img
+          <ProfileImage
             src={student.avatar}
             alt={student.name}
             referrerPolicy="no-referrer"
-            className="w-20 sm:w-24 aspect-[3/4] rounded-2xl object-cover object-top shrink-0 bg-slate-100 ring-2 ring-emerald-600/20 shadow-xs"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              if (!target.src.includes('dicebear')) {
-                target.src = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(student.name)}`;
-              }
-            }}
+            className="w-20 sm:w-24 aspect-[3/4] rounded-2xl object-top shrink-0 bg-slate-100 ring-2 ring-emerald-600/20 shadow-xs"
           />
         </div>
 

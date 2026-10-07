@@ -6,6 +6,7 @@ import {
   Award, Users, Trash2, CheckCircle2 
 } from 'lucide-react';
 import { Teacher } from '../../../../types';
+import { ProfileImage } from '../../../../components/common/ProfileImage';
 
 export const Route = createFileRoute('/dashboard/teachers/$id/')({
   component: TeacherDetailsPage,
@@ -99,10 +100,10 @@ function TeacherDetailsPage() {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
           {/* Profile Picture */}
           <div className="w-36 sm:w-48 h-48 sm:h-64 rounded-2xl overflow-hidden ring-4 ring-emerald-600/20 shrink-0 bg-slate-100 shadow-md">
-            <img
+            <ProfileImage
               src={teacher.avatar}
               alt={teacher.name}
-              className="w-full h-full object-cover object-top"
+              className="w-full h-full object-top"
             />
           </div>
 

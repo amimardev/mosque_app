@@ -11,6 +11,7 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { FormItem, FormLabel } from '../ui/form';
 import { Button } from '../ui/button';
+import { ProfileImage } from '../common/ProfileImage';
 
 interface RecordAttendanceModalProps {
   isOpen: boolean;
@@ -330,10 +331,10 @@ export const RecordAttendanceModal: React.FC<RecordAttendanceModalProps> = ({
                               {/* 1. Student Picture & Name */}
                               <td className="py-3 px-4">
                                 <div className="flex items-center gap-3">
-                                  <img
+                                  <ProfileImage
                                     src={st.avatar}
                                     alt={st.name}
-                                    className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                                    className="w-8 h-8 rounded-full border border-slate-200 shrink-0"
                                   />
                                   <span className="font-bold text-slate-900 text-xs sm:text-sm">
                                     {st.name}
@@ -417,10 +418,10 @@ export const RecordAttendanceModal: React.FC<RecordAttendanceModalProps> = ({
                           {/* Card Header: Picture, Name & Assessment Status Icon */}
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2.5">
-                              <img
+                              <ProfileImage
                                 src={st.avatar}
                                 alt={st.name}
-                                className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                                className="w-8 h-8 rounded-full border border-slate-200 shrink-0"
                               />
                               <span className="font-bold text-slate-900 text-xs">
                                 {st.name}

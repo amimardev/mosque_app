@@ -35,7 +35,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
   const form = useForm({
     defaultValues: {
       name: initialData?.name || '',
-      avatar: initialData?.avatar || `https://api.dicebear.com/7.x/personas/svg?seed=${initialData?.id || teacherId}`,
+      avatar: initialData?.avatar || '',
       phone: initialData?.phone || '',
       password: '',
       isAdmin: !!initialData?.isAdmin,
@@ -56,7 +56,7 @@ export const TeacherForm: React.FC<TeacherFormProps> = ({
         await onSave({
           id: teacherId,
           name: value.name.trim(),
-          avatar: value.avatar.trim() || `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(value.name)}`,
+          avatar: value.avatar.trim() || undefined,
           phone: value.phone.trim() || undefined,
           bio: value.bio.trim() || undefined,
           status: value.status,

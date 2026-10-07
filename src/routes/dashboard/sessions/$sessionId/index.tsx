@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from '../../../../components/ui/button';
 import { FormItem, FormLabel } from '../../../../components/ui/form';
 import { SessionTimeDisplay } from '../../../../components/common/SessionTimeDisplay';
+import { ProfileImage } from '../../../../components/common/ProfileImage';
 
 export const Route = createFileRoute('/dashboard/sessions/$sessionId/')({
   component: SessionAssessmentPage,
@@ -438,10 +439,10 @@ function SessionAssessmentPage() {
                         {/* 1. Student Picture & Name */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <img
-                              src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(rec.studentName)}`}
+                            <ProfileImage
+                              src={rec.studentAvatar}
                               alt={rec.studentName}
-                              className="w-9 h-9 rounded-full object-cover bg-slate-100 border border-slate-200 shrink-0"
+                              className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 shrink-0"
                             />
                             <div>
                               <span className="font-bold text-slate-900 block text-xs sm:text-sm">
@@ -557,10 +558,10 @@ function SessionAssessmentPage() {
                     {/* Card Header: Picture, Name & Assessment Status Icon */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <img
-                          src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(rec.studentName)}`}
+                        <ProfileImage
+                          src={rec.studentAvatar}
                           alt={rec.studentName}
-                          className="w-9 h-9 rounded-full object-cover bg-slate-100 border border-slate-200 shrink-0"
+                          className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 shrink-0"
                         />
                         <div>
                           <span className="font-bold text-slate-900 block text-xs">
@@ -697,8 +698,8 @@ function SessionAssessmentPage() {
             {/* Modal Header */}
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
               <div className="flex items-center gap-2.5">
-                <img
-                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(selectedRecord.studentName)}`}
+                <ProfileImage
+                  src={selectedRecord.studentAvatar}
                   alt={selectedRecord.studentName}
                   className="w-8 h-8 rounded-full border border-slate-200"
                 />

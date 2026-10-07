@@ -4,6 +4,7 @@ import {
   Calendar, User, Trash2, Edit, CheckCircle2, ChevronDown 
 } from 'lucide-react';
 import { StudentRating, Student, Teacher, Group, getGroupDisplayName } from '../../types';
+import { ProfileImage } from '../common/ProfileImage';
 
 interface RatingsTabProps {
   ratings: StudentRating[];
@@ -161,10 +162,10 @@ export const RatingsTab: React.FC<RatingsTabProps> = ({
                       {/* Student Profile */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={rating.student?.avatar || 'https://api.dicebear.com/7.x/micah/svg?seed=student'}
+                          <ProfileImage
+                            src={rating.student?.avatar}
                             alt=""
-                            className="w-9 h-9 rounded-full object-cover shrink-0 ring-2 ring-emerald-500/20"
+                            className="w-9 h-9 rounded-full shrink-0 ring-2 ring-emerald-500/20"
                           />
                           <div>
                             <span

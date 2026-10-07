@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Group, Student, Teacher } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
+import { ProfileImage } from '../common/ProfileImage';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 
 interface GroupsTabProps {
@@ -178,13 +179,10 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                       key={tch.id}
                       className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-xs hover:bg-white/15 transition-colors"
                     >
-                      <img
+                      <ProfileImage
                         src={tch.avatar}
                         alt={tch.name}
-                        className="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-400/40 shrink-0 bg-slate-800"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(tch.name)}`;
-                        }}
+                        className="w-12 h-12 rounded-xl ring-2 ring-emerald-400/40 shrink-0 bg-slate-800"
                       />
                       <div className="flex-1 min-w-0">
                         <span className="font-bold text-sm text-white block truncate">
@@ -263,13 +261,10 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                       {/* Header: Photo, Name, Age/Gender */}
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 rounded-xl overflow-hidden ring-2 ring-emerald-500/20 shrink-0 bg-slate-100 shadow-2xs">
-                          <img
+                          <ProfileImage
                             src={student.avatar}
                             alt={student.name}
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(student.name)}`;
-                            }}
+                            className="w-full h-full object-center group-hover:scale-105 transition-transform"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -461,12 +456,12 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                   {group.teachers && group.teachers.length > 0 ? (
                     <div className="flex items-center -space-x-2">
                       {group.teachers.map((t) => (
-                        <img
+                        <ProfileImage
                           key={t.id}
                           src={t.avatar}
                           alt={t.name}
                           title={t.name}
-                          className="w-7 h-7 rounded-full ring-2 ring-white object-cover shadow-xs"
+                          className="w-7 h-7 rounded-full ring-2 ring-white shadow-xs"
                         />
                       ))}
                     </div>

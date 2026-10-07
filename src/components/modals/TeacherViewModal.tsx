@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, UserCheck, Phone, Mail, Award, Clock, Users, Edit } from 'lucide-react';
 import { Teacher, getGroupDisplayName } from '../../types';
+import { ProfileImage } from '../common/ProfileImage';
 
 interface TeacherViewModalProps {
   isOpen: boolean;
@@ -31,13 +32,10 @@ export const TeacherViewModal: React.FC<TeacherViewModalProps> = ({
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden ring-4 ring-emerald-600 shadow-md shrink-0 bg-slate-800">
-              <img
+              <ProfileImage
                 src={teacher.avatar}
                 alt={teacher.name}
-                className="w-full h-full object-cover object-center"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(teacher.name)}`;
-                }}
+                className="w-full h-full object-center"
               />
             </div>
 
