@@ -3,7 +3,6 @@ import {
   X, 
   MapPin, 
   Clock, 
-  BookOpen, 
   Heart, 
   Compass, 
   Bell, 
@@ -81,8 +80,8 @@ export const MosqueMenuSheet: React.FC<MosqueMenuSheetProps> = ({
             className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-gray-50 text-left transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#1fa38b] flex items-center justify-center">
-                <BookOpen className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl overflow-hidden">
+                <img src="/icon.png" alt="" className="w-full h-full object-cover" />
               </div>
               <div>
                 <strong className="text-xs font-bold text-gray-900 block">Al-Quran & Tajweed</strong>

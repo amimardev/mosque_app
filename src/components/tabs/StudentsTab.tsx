@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, Plus, Eye, Edit, Trash2, Award, 
-  BookOpen, Clock, Phone, User, Star, ChevronRight,
+  Clock, Phone, User, Star, ChevronRight,
   Sparkles, MessageSquare
 } from 'lucide-react';
 import { Student, Group, getGroupDisplayName } from '../../types';
@@ -189,7 +189,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                   {/* Quran Milestone (Surah & Ayah) */}
                   <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-2xl flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <BookOpen className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <img src="/icon.png" alt="" className="w-4 h-4 object-contain shrink-0" />
                       <div className="min-w-0">
                         <span className="text-[10px] text-emerald-800 uppercase font-bold block">Current Surah</span>
                         <span className="text-xs font-bold text-slate-900 truncate block">

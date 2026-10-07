@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Clock, Phone, UserRound } from 'lucide-react';
+import { Clock, Phone, UserRound } from 'lucide-react';
 import { Student } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
 
@@ -66,7 +66,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
         <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+              <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain animate-pulse" />
               <span>مستوى تقدم الحفظ</span>
             </span>
             <span className="font-bold text-slate-900 font-mono">

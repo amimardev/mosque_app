@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Users, UserCheck, BookOpen, Clock, Award, Star, 
+  Users, UserCheck, Clock, Award, Star, 
   ArrowUpRight, Plus, Sparkles, TrendingUp, ChevronRight 
 } from 'lucide-react';
 import { Student, Teacher, Group, StudentRating, MadrasaStats, getGroupDisplayName } from '../../types';

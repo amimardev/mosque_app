@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, UserCheck, Phone, Mail, Award, BookOpen, Clock, Users, Edit } from 'lucide-react';
+import { X, UserCheck, Phone, Mail, Award, Clock, Users, Edit } from 'lucide-react';
 import { Teacher, getGroupDisplayName } from '../../types';
 
 interface TeacherViewModalProps {

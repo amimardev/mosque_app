@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { 
   ArrowRight, Clock, User, Check, X, Search, 
-  Award, AlertCircle, Save, BookOpen, MessageSquare,
+  Award, AlertCircle, Save, MessageSquare,
   CheckCircle2, Calendar as CalendarIcon, UserCheck, Sparkles,
   History, Eye
 } from 'lucide-react';
@@ -999,4 +999,3 @@ function SessionAssessmentPage() {
     </div>
   );
 }
-

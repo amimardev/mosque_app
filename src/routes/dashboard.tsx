@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useLocation, Link, useNavigate } from '@tansta
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/apiClient';
 import { 
-  PanelLeft, RefreshCw, BookOpen, LayoutDashboard, 
+  PanelLeft, RefreshCw, LayoutDashboard, 
   User, UserCheck, Clock, ChevronLeft, ChevronRight, 
   ShieldCheck, X, UserX, Users, LogOut, Bell, CheckCheck
 } from 'lucide-react';
@@ -229,8 +229,8 @@ function DashboardLayout() {
           }}
           className="flex items-center gap-3 min-w-0 group"
         >
-          <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0 font-extrabold group-hover:bg-emerald-700 transition-colors">
-            <BookOpen className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-sm shrink-0">
+            <img src="/icon.png" alt="" className="w-full h-full object-cover" />
           </div>
 
           {(isMobile || !isDesktopCollapsed) && (

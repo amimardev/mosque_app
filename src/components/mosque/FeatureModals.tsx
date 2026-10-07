@@ -17,7 +17,6 @@ import {
   Users,
   MessageCircle,
   Volume2,
-  BookOpen
 } from 'lucide-react';
 import { FeatureType } from './FeatureGrid';
 import type { DuaItem, DonationProject, HadithItem, QuranSurah, Scholar, WallpaperItem } from './types';
@@ -125,8 +124,8 @@ export const FeatureModals: React.FC<FeatureModalsProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white sticky top-0 z-20">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              {activeFeature === 'quran' && <BookOpen className="w-4 h-4" />}
+            <div className={`w-8 h-8 rounded-full overflow-hidden ${activeFeature === 'quran' ? '' : 'bg-emerald-50 text-emerald-700 flex items-center justify-center'}`}>
+              {activeFeature === 'quran' && <img src="/icon.png" alt="" className="w-full h-full object-cover" />}
               {activeFeature === 'tasbih' && <Sparkles className="w-4 h-4" />}
               {activeFeature === 'donation' && <Heart className="w-4 h-4" />}
               {activeFeature === 'zakat' && <Calculator className="w-4 h-4" />}

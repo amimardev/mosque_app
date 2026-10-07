@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, User, Phone, Mail, Calendar, BookOpen, Users, Clock, Award, Star, Edit, Plus, CheckCircle2 } from 'lucide-react';
+import { X, User, Phone, Mail, Calendar, Users, Clock, Award, Star, Edit, Plus, CheckCircle2 } from 'lucide-react';
 import { Student, getGroupDisplayName } from '../../types';
 import { QURAN_SURAHS, getSurahByNumber } from '../../lib/quranData';
 import { calculateAge } from '../../lib/ageUtils';
@@ -109,7 +109,7 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
                 <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <BookOpen className="w-4 h-4 text-emerald-600" />
+                  <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
                   Current Memorization Progress
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">

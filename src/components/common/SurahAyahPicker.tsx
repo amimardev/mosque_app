@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { QURAN_SURAHS, SurahInfo } from '../../lib/quranData';
-import { BookOpen } from 'lucide-react';
 
 interface SurahAyahPickerProps {
   surahNumber?: number;
@@ -86,7 +85,7 @@ export const SurahAyahPicker: React.FC<SurahAyahPickerProps> = ({
   return (
     <div className="space-y-2 text-right" dir="rtl">
       <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 flex-row-reverse justify-end">
-        <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+        <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
         <span>{label}</span>
       </label>
 

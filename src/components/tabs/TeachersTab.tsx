@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, Plus, Eye, Edit, Trash2, UserCheck, 
-  Phone, Mail, BookOpen, Clock, Users, ChevronRight, Award
+  Phone, Mail, Clock, Users, ChevronRight, Award
 } from 'lucide-react';
 import { Teacher, Group, getGroupDisplayName } from '../../types';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';

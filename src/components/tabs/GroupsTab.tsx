@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Users, Plus, Clock, MapPin, Award, Eye, Edit, Trash2, 
-  ArrowLeft, BookOpen, Phone, User, CheckCircle2, ChevronRight, Sparkles 
+  ArrowLeft, Phone, User, CheckCircle2, ChevronRight, Sparkles 
 } from 'lucide-react';
 import { Group, Student, Teacher } from '../../types';
 import { calculateAge } from '../../lib/ageUtils';
@@ -288,7 +288,7 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                       {/* Quran Progress */}
                       <div className="p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <BookOpen className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
                           <span className="font-semibold text-slate-900 truncate">
                             Surah {student.currentSurahName || 'Al-Fatihah'}
                           </span>

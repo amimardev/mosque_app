@@ -80,7 +80,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           }}
           className="flex items-center gap-3 min-w-0 group"
         >
-          <div className="w-10 h-10 rounded-2xl overflow-hidden bg-emerald-600 flex items-center justify-center shadow-md shrink-0 group-hover:bg-emerald-500 transition-colors">
+          <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md shrink-0">
             <img
               src="/icon.png"
               alt="بوابة المدرسة القرآنية"

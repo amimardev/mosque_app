@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Eye, EyeOff, BookOpen, AlertCircle } from 'lucide-react';
+import { Phone, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -56,8 +56,8 @@ function LoginPage() {
 
         {/* Top Header */}
         <div className="p-6 sm:p-8 text-center border-b border-slate-100 bg-slate-50/50">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl shadow-md shadow-emerald-600/10 mb-3">
-            <BookOpen className="w-8 h-8" />
+          <div className="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-md shadow-emerald-600/10 mb-3">
+            <img src="/icon.png" alt="" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">مدرستنا القرآنية</h1>
           <p className="text-xs text-slate-500 mt-1 font-medium">نظام المتابعة، والتقويم اليومي للأداء والحصص</p>

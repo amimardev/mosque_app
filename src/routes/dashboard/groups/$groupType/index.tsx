@@ -4,7 +4,7 @@ import api from '@/lib/apiClient';
 import { 
   Users, Clock, Plus, Edit, Trash2, 
   ChevronRight, UserCheck, ArrowRight,
-  LayoutGrid, BookOpen, Sun, Calendar, MapPin
+  LayoutGrid, Sun, Calendar, MapPin
 } from 'lucide-react';
 import { Group, GroupType, formatSessionTimeArabic } from '../../../../types';
 import { BulkTimingModal } from '../../../../components/modals/BulkTimingModal';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { useForm } from '@tanstack/react-form';
-import { User, Phone, BookOpen, Save, ArrowRight, UserCheck } from 'lucide-react';
+import { User, Phone, Save, ArrowRight, UserCheck } from 'lucide-react';
 import { Student, Parent } from '../../types';
 import { AvatarPicker } from '../common/AvatarPicker';
 import { SurahAyahPicker } from '../common/SurahAyahPicker';
@@ -273,7 +273,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
         {/* 2. Quran Surah & Ayah Progress */}
         <div className="space-y-4 pt-4 border-t border-slate-100">
           <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 flex-row-reverse justify-end">
-            <BookOpen className="w-4 h-4 text-emerald-600" />
+            <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
             <span>2. مرحلة الحفظ الحالية (السورة والآية)</span>
           </h2>
 

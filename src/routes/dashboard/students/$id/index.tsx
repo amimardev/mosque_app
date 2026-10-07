@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useParams } from '@tanstack/react-r
 import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { 
-  ArrowRight, Edit, Award, BookOpen, Clock, Phone, 
+  ArrowRight, Edit, Award, Clock, Phone, 
   Users, Star, Plus, Trash2, X, Check, Calendar 
 } from 'lucide-react';
 import { Student, Teacher, StudentRating } from '../../../../types';
@@ -341,7 +341,7 @@ function StudentDetailsPage() {
       {/* Quran Progress & Milestone */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4">
         <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-emerald-600" />
+          <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
           <span>مرحلة الحفظ الحالية والهدف المنشود</span>
         </h2>
 

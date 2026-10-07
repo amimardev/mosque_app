@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Award, Star, Plus, Filter, Search, BookOpen, 
+  Award, Star, Plus, Filter, Search, 
   Calendar, User, Trash2, Edit, CheckCircle2, ChevronDown 
 } from 'lucide-react';
 import { StudentRating, Student, Teacher, Group, getGroupDisplayName } from '../../types';
@@ -191,7 +191,7 @@ export const RatingsTab: React.FC<RatingsTabProps> = ({
                       <td className="py-3.5 px-4">
                         {rating.surahEvaluated ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-900 font-semibold">
-                            <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                            <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain" />
                             <span>Surah {rating.surahEvaluated}</span>
                             {rating.ayahStart && rating.ayahEnd && (
                               <span className="text-[10px] font-mono text-emerald-700">
