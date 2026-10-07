@@ -90,7 +90,7 @@ function LoginPage() {
               </label>
               <div className="relative">
                 <input
-                  type="tel"
+                  type="number"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
