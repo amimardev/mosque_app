@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { 
   LayoutDashboard, User, UserCheck, 
-  BookOpen, Clock, X, ChevronLeft, ChevronRight, 
+  Clock, X, ChevronLeft, ChevronRight, 
   ShieldCheck 
 } from 'lucide-react';
 
@@ -80,8 +80,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           }}
           className="flex items-center gap-3 min-w-0 group"
         >
-          <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0 font-extrabold group-hover:bg-emerald-500 transition-colors">
-            <BookOpen className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-2xl overflow-hidden bg-emerald-600 flex items-center justify-center shadow-md shrink-0 group-hover:bg-emerald-500 transition-colors">
+            <img
+              src="/icon.png"
+              alt="بوابة المدرسة القرآنية"
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {(isMobileSheet || !isDesktopCollapsed) && (
