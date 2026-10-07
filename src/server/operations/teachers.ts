@@ -114,10 +114,12 @@ teachersRouter.get('/:id', async (c) => {
   const groupIds = assignedGroups.map((g: any) => g.id);
   const assignedStudents = allStudents.filter(s => s.groupId && groupIds.includes(s.groupId)).map(s => ({
     ...s,
-    avatar: `/api/storage/student-${s.id}`
+    avatar: s.avatar || `/api/storage/student-${s.id}`
   }));
 
-  const avatar = `/api/storage/teacher-${teacher.id}`;
+  // Keep the detail response consistent with the teachers directory.
+  // Uploaded avatars include their cache-busting version in teacher.avatar.
+  const avatar = teacher.avatar || `/api/storage/teacher-${teacher.id}`;
   const user = teacher.userId
     ? await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, teacher.userId)).then(r => r[0])
     : null;

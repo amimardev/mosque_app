@@ -147,19 +147,6 @@ var Bell = createLucideIcon("bell", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var BookOpen = createLucideIcon("book-open", [["path", {
-	d: "M12 7v14",
-	key: "1akyts"
-}], ["path", {
-	d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
-	key: "ruj8y"
-}]]);
-/**
-* @license lucide-react v0.546.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var CalendarRange = createLucideIcon("calendar-range", [
 	["rect", {
 		width: "18",
@@ -1243,4 +1230,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { Check as $, LoaderCircle as A, FolderPlus as B, Phone as C, MessageSquare as D, OctagonAlert as E, KeyRound as F, Download as G, FileText as H, Info as I, CircleAlert as J, Clock as K, History as L, LayoutGrid as M, LayoutDashboard as N, MapPin as O, Layers as P, ChevronDown as Q, GraduationCap as R, Plus as S, PanelLeft as T, Eye as U, FolderOpen as V, EyeOff as W, ChevronRight as X, ChevronUp as Y, ChevronLeft as Z, ShieldCheck as _, UserMinus as a, BellRing as at, Save as b, Upload as c, Sun as d, CheckCheck as et, Star as f, Sparkles as g, SquareCheckBig as h, UserRound as i, Bell as it, List as j, LogOut as k, TriangleAlert as l, SquarePen as m, Users as n, CalendarRange as nt, UserPlus as o, Award as ot, Square as p, CircleCheck as q, User as r, BookOpen as rt, UserCheck as s, ArrowRight as st, X as t, Calendar as tt, Trash2 as u, ShieldAlert as v, PenLine as w, RefreshCw as x, Search as y, Funnel as z };
+export { Check as $, LoaderCircle as A, FolderPlus as B, Phone as C, MessageSquare as D, OctagonAlert as E, KeyRound as F, Download as G, FileText as H, Info as I, CircleAlert as J, Clock as K, History as L, LayoutGrid as M, LayoutDashboard as N, MapPin as O, Layers as P, ChevronDown as Q, GraduationCap as R, Plus as S, PanelLeft as T, Eye as U, FolderOpen as V, EyeOff as W, ChevronRight as X, ChevronUp as Y, ChevronLeft as Z, ShieldCheck as _, UserMinus as a, Award as at, Save as b, Upload as c, Sun as d, CheckCheck as et, Star as f, Sparkles as g, SquareCheckBig as h, UserRound as i, BellRing as it, List as j, LogOut as k, TriangleAlert as l, SquarePen as m, Users as n, CalendarRange as nt, UserPlus as o, ArrowRight as ot, Square as p, CircleCheck as q, User as r, Bell as rt, UserCheck as s, X as t, Calendar as tt, Trash2 as u, ShieldAlert as v, PenLine as w, RefreshCw as x, Search as y, Funnel as z };

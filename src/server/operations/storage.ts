@@ -33,12 +33,12 @@ export async function getStorageImageResponse(key: string): Promise<Response> {
 
     const headers = new Headers({
       'Content-Type': object.ContentType || 'application/octet-stream',
-      'Cache-Control': 'private, max-age=300',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       'X-Content-Type-Options': 'nosniff',
     });
     if (object.ContentLength !== undefined) headers.set('Content-Length', String(object.ContentLength));
-    if (object.ETag) headers.set('ETag', object.ETag);
-    if (object.LastModified) headers.set('Last-Modified', object.LastModified.toUTCString());
 
     return new Response(object.Body.transformToWebStream() as ReadableStream<Uint8Array>, { headers });
   } catch (error) {
@@ -115,7 +115,7 @@ storageRouter.get('/:key', async (c) => {
         const mimeType = s3Res.ContentType || detectMimeType(buffer);
 
         c.header('Content-Type', mimeType);
-        c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         c.header('Pragma', 'no-cache');
         c.header('Expires', '0');
         return c.body(buffer);
@@ -139,7 +139,7 @@ storageRouter.get('/:key', async (c) => {
   </svg>`;
 
   c.header('Content-Type', 'image/svg+xml');
-  c.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   c.header('Pragma', 'no-cache');
   c.header('Expires', '0');
   return c.body(svg);

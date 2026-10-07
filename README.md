@@ -11,6 +11,11 @@ npm install
 npm run dev
 ```
 
+The application requires a Neon/PostgreSQL database. Set `DATABASE_URL` to a
+`postgres://` or `postgresql://` connection string before starting the
+development server. Local database implementations, including SQLite, are not
+supported.
+
 Build with `npm run build` and run the Nitro Node output with `npm run start`.
 
 ## Migration notes

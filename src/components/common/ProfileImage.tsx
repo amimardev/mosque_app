@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface ProfileImageProps {
   src?: string | null;
@@ -16,7 +16,12 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
   referrerPolicy,
 }) => {
   const [hasError, setHasError] = useState(false);
-  const showFallback = !src || hasError;
+  const isGeneratedPlaceholder = src?.includes('api.dicebear.com') ?? false;
+  const showFallback = !src || isGeneratedPlaceholder || hasError;
+
+  useEffect(() => {
+    setHasError(false);
+  }, [src]);
 
   return (
     <img

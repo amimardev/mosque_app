@@ -222,7 +222,11 @@ studentsRouter.get('/:id', async (c) => {
 
       groupTeachersList = gTeachers.map(gt => {
         const t = allTeachers.find(item => item.id === gt.teacherId);
-        return t ? { ...t, avatar: `/api/storage/teacher-${t.id}`, role: gt.role } : null;
+        return t ? {
+          ...t,
+          avatar: t.avatar || `/api/storage/teacher-${t.id}`,
+          role: gt.role
+        } : null;
       }).filter(Boolean);
 
       group = {
