@@ -1,0 +1,74 @@
+name: Scanner Agent — Build & Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scanner-agent/**'
+    tags:
+      - 'scanner-agent-v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & package (Windows)
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: scanner-agent
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Rust build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            scanner-agent/target
+          key: windows-cargo-${{ hashFiles('scanner-agent/Cargo.lock') }}
+          restore-keys: windows-cargo-
+
+      - name: Install Rust stable (MSVC target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer-rust.iss
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScannerAgentSetup-Rust
+          path: scanner-agent/installer-output/ScannerAgentSetup-Rust.exe
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/scanner-agent-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Scanner Agent ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: scanner-agent/installer-output/ScannerAgentSetup-Rust.exe
+          body: |
+            ## Windows Scanner Agent installer
+
+            Download and run **ScannerAgentSetup-Rust.exe** on the Windows machine connected to the scanner.
+
+            After installation, open `%LOCALAPPDATA%\ScannerAgent\.env` and set:
+            - `SCANNER_AGENT_TOKEN` — a random secret of at least 32 characters (enter this same value in the website dialog)
+            - `MOSQUE_APP_ORIGINS` — the deployed website origin, e.g. `https://your-app.vercel.app`
+
+            Then restart the agent. See `scanner-agent/README.md` for full instructions.
+

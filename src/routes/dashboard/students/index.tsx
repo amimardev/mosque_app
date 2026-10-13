@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import api from '@/lib/apiClient';
 import { useForm, useStore } from '@tanstack/react-form';
 import { 
-  Search, Plus, User
+  Search, Plus, User, ScanLine
 } from 'lucide-react';
 import { Student, Group } from '../../../types';
 import { StudentCard } from '../../../components/common/StudentCard';
 import { useAuth } from '../../../context/AuthContext';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { StudentDocumentScanDialog } from '../../../components/modals/StudentDocumentScanDialog';
 import {
   Select,
   SelectContent,
@@ -29,6 +30,8 @@ function StudentsDirectoryPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDocumentScanOpen, setIsDocumentScanOpen] = useState(false);
+  const [createdWarning, setCreatedWarning] = useState('');
 
   // Initialize TanStack Form for high-performance filter state management
   const filterForm = useForm({
@@ -100,15 +103,38 @@ function StudentsDirectoryPage() {
         </div>
 
         {isAdmin && (
-          <Link
-            to="/dashboard/students/new"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all self-start sm:self-auto cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            تسجيل طالب جديد
-          </Link>
+          <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setIsDocumentScanOpen(true)}
+              className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <ScanLine className="w-4 h-4" />
+              إنشاء طالب من وثيقة
+            </button>
+            <Link
+              to="/dashboard/students/new"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              تسجيل طالب جديد
+            </Link>
+          </div>
         )}
       </div>
+
+      {createdWarning && <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">{createdWarning}</div>}
+
+      <StudentDocumentScanDialog
+        open={isDocumentScanOpen}
+        onClose={() => setIsDocumentScanOpen(false)}
+        onCreated={(parentDataNotLinked) => {
+          setCreatedWarning(parentDataNotLinked
+            ? 'تم حفظ الطالب، لكن رقم ولي الأمر والعنوان لم يرتبطا بملف ولي أمر موجود. أضف أو اربط ولي الأمر من صفحة أولياء الأمور.'
+            : 'تم حفظ الطالب بنجاح.');
+          void fetchData();
+        }}
+      />
 
       {/* Filter and Search Bar using TanStack Form & Shadcn UI Select */}
       <div className="p-3.5 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-center gap-4">

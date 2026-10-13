@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly ONESIGNAL_APP_ID: string;
+  readonly VITE_SCANNER_AGENT_URL?: string;
 }
 
 declare module '*.jpg' {

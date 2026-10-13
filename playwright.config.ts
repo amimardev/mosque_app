@@ -32,6 +32,7 @@ export default defineConfig({
       DATABASE_URL: testDatabaseUrl,
       PLAYWRIGHT_TEST: 'true',
       NODE_ENV: 'test',
+      GEMINI_API_KEY: '',
     },
   },
 });

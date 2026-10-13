@@ -18,6 +18,19 @@ const s3Client = hasS3Config ? new S3Client({
 
 const S3_BUCKET = process.env.AWS_S3_BUCKET || 'uploads';
 
+export async function uploadStorageImage(key: string, buffer: Buffer, contentType: string) {
+  const safeKey = key.replace(/[^a-zA-Z0-9_.-]/g, '');
+  if (!safeKey || safeKey !== key) throw new Error('Invalid storage key');
+  if (!s3Client) throw new Error('Object storage is not configured');
+  await s3Client.send(new PutObjectCommand({
+    Bucket: S3_BUCKET,
+    Key: safeKey,
+    Body: buffer,
+    ContentType: contentType,
+  }));
+  return safeKey;
+}
+
 export async function getStorageImageResponse(key: string): Promise<Response> {
   const safeKey = key.replace(/[^a-zA-Z0-9_.-]/g, '');
   if (!safeKey || safeKey !== key) {
