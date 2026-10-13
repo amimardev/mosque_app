@@ -20,6 +20,13 @@ const studentReview = z.object({
   photo_box_1000: z.array(z.number().int()).length(4).nullable().default(null),
 });
 
+const DEFAULT_MODEL = 'gemini-3.8-flash';
+const FALLBACK_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+];
+
 const prompt = `Read this scanned student registration document. Return only JSON with keys:
 name, dateOfBirth, gender, level, address, guardianPhone, photo_box_1000.
 Use null for unreadable/missing values. Preserve the student's name and address in the script used on the document. dateOfBirth must be YYYY-MM-DD when readable. gender must be "male" or "female" when readable. Map study level to primary, middle, or secondary; use null if uncertain. guardianPhone is the parent/guardian phone, not the student's phone. photo_box_1000 is null when no student portrait exists; otherwise return [ymin,xmin,ymax,xmax] normalized to integers 0..1000 and covering only the portrait.`;
@@ -60,25 +67,50 @@ export const extractStudentDocumentFn = createServerFn({ method: 'POST' })
       throw new Error('صيغة صورة الوثيقة غير صالحة');
     }
     const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-      contents: [{
-        role: 'user',
-        parts: [
-          { text: prompt },
-          { inlineData: { mimeType: data.mimeType, data: image.toString('base64') } },
-        ],
-      }],
-      config: { responseMimeType: 'application/json' },
-    });
+    const primaryModel = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+    const modelsToTry = [primaryModel, ...FALLBACK_MODELS.filter((m) => m !== primaryModel)];
 
-    const raw = response.text;
-    if (!raw) throw new Error('لم يتمكن Gemini من قراءة بيانات الوثيقة');
-    let parsed: z.infer<typeof studentReview>;
-    try {
-      parsed = studentReview.parse(JSON.parse(raw));
-    } catch {
-      throw new Error('تعذر فهم البيانات المستخرجة. أعد المسح أو أدخل البيانات يدوياً');
+    let parsed: z.infer<typeof studentReview> | null = null;
+    let lastError: unknown;
+
+    for (const model of modelsToTry) {
+      try {
+        console.info(`[StudentDocuments] Trying extraction with model: ${model}`);
+        const response = await ai.models.generateContent({
+          model,
+          contents: [{
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: data.mimeType, data: image.toString('base64') } },
+            ],
+          }],
+          config: { responseMimeType: 'application/json' },
+        });
+
+        const raw = response.text;
+        if (!raw) {
+          console.warn(`[StudentDocuments] Model ${model} returned empty response. Trying next fallback...`);
+          continue;
+        }
+
+        try {
+          parsed = studentReview.parse(JSON.parse(raw));
+          console.info(`[StudentDocuments] Successfully extracted document data using model: ${model}`);
+          break;
+        } catch (validationError) {
+          console.warn(`[StudentDocuments] Model ${model} response did not match expected schema:`, validationError);
+          lastError = validationError;
+        }
+      } catch (apiError) {
+        console.warn(`[StudentDocuments] Model ${model} failed:`, apiError, 'Trying next fallback...');
+        lastError = apiError;
+      }
+    }
+
+    if (!parsed) {
+      const detail = lastError instanceof Error ? `: ${lastError.message}` : '';
+      throw new Error(`تعذر استخراج بيانات الوثيقة بعد تجربة جميع نماذج الذكاء الاصطناعي المتاحة${detail}`);
     }
 
     let profileImage: { mimeType: 'image/jpeg'; imageBase64: string } | null = null;
