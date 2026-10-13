@@ -10,10 +10,6 @@ interface StudentCardProps {
 }
 
 export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) => {
-  const targetJuz = student.targetJuz || 30;
-  const memorized = student.memorizedJuzCount || 0;
-  const progressPercent = Math.min(100, Math.round((memorized / targetJuz) * 100));
-
   const levelLabel = student.level === 'primary' ? 'ابتدائي' : student.level === 'secondary' ? 'ثانوي' : 'متوسط';
 
   return (
@@ -57,36 +53,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) =>
           />
         </div>
 
-        {/* 2. Quran Memorization Progress */}
-        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-              <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain animate-pulse" />
-              <span>مستوى تقدم الحفظ</span>
-            </span>
-            <span className="font-bold text-slate-900 font-mono">
-              {memorized} / {targetJuz} جزء <span className="text-emerald-700">({progressPercent}%)</span>
-            </span>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-emerald-600 rounded-full transition-all duration-300"
-              style={{ width: `${Math.max(progressPercent, 4)}%` }}
-            />
-          </div>
-
-          {/* Current Bookmark */}
-          <div className="flex items-center justify-between pt-1 text-[11px] text-slate-600">
-            <span>الحفظ الحالي: <strong>سورة {student.currentSurahName || 'الفاتحة'}</strong></span>
-            <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-800">
-              آية {student.currentAyah || 1}
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Study Circle & Parent Contact */}
+        {/* 2. Study Circle & Parent Contact */}
         <div className="space-y-2 text-xs">
           {/* Circle */}
           <div className="flex items-center justify-between text-slate-700">

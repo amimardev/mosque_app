@@ -56,8 +56,6 @@ ratingsRouter.get('/', async (c) => {
         id: student.id,
         name: student.name,
         avatar: student.avatar,
-        currentSurahName: student.currentSurahName,
-        currentAyah: student.currentAyah,
         age: calculateAge(student.dateOfBirth || student.age)
       } : null,
       teacher: teacher ? {
@@ -122,18 +120,6 @@ ratingsRouter.post('/', async (c) => {
     }
 
     await db.insert(schema.studentRatings).values(newRating);
-
-    // If update student current surah / ayah was requested
-    if (body.updateStudentSurah && body.surahEvaluated) {
-      const student = await db.select().from(schema.students).where(eq(schema.students.id, newRating.studentId)).then(r => r[0]);
-      if (student) {
-        await db.update(schema.students).set({
-          currentSurahName: body.surahEvaluated,
-          currentAyah: body.ayahEnd || student.currentAyah,
-          updatedAt: new Date()
-        }).where(eq(schema.students.id, student.id));
-      }
-    }
 
     return c.json({ success: true, rating: newRating }, 201);
   } catch (err: any) {

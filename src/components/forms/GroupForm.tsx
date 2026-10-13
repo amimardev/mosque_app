@@ -552,7 +552,6 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                         <ProfileImage src={s.avatar} alt={s.name} className="w-9 h-9 rounded-xl shrink-0" />
                         <div className="min-w-0">
                           <span className="block text-xs font-bold text-slate-900 truncate">{s.name}</span>
-                          <span className="block text-[10px] text-slate-500 truncate">سورة {s.currentSurahName} ({s.currentAyah})</span>
                         </div>
                       </div>
                       <button
@@ -755,7 +754,7 @@ export const GroupForm: React.FC<GroupFormProps> = ({
                       />
                       <div className="text-right min-w-0">
                         <span className="block text-xs font-bold text-slate-800 group-hover:text-emerald-900 transition-colors truncate">{student.name}</span>
-                        <span className="block text-[10px] text-slate-500 font-medium truncate">المستوى: {LEVEL_LABELS[student.level] || student.level} · سورة {student.currentSurahName} (آية {student.currentAyah})</span>
+                        <span className="block text-[10px] text-slate-500 font-medium truncate">المستوى: {LEVEL_LABELS[student.level] || student.level}</span>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-1 rounded-lg shrink-0">

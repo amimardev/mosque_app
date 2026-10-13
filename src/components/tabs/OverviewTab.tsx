@@ -240,67 +240,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
         </div>
 
-        {/* Top Memorizers Leaderboard */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-500" />
-              Top Hifz Progress
-            </h2>
-            <button
-              onClick={() => onNavigateTab('students')}
-              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
-            >
-              All Students
-            </button>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 divide-y divide-slate-100 shadow-xs">
-            {students
-              .slice()
-              .sort((a, b) => (b.memorizedJuzCount || 0) - (a.memorizedJuzCount || 0))
-              .slice(0, 5)
-              .map((student, idx) => (
-                <div
-                  key={student.id}
-                  onClick={() => onViewStudent(student)}
-                  className="py-3 first:pt-0 last:pb-0 flex items-center gap-3 hover:bg-slate-50 p-2 rounded-xl transition-colors cursor-pointer"
-                >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                    idx === 0 ? 'bg-amber-200 text-amber-900 font-extrabold ring-1 ring-amber-400' :
-                    idx === 1 ? 'bg-slate-200 text-slate-800 font-bold' :
-                    idx === 2 ? 'bg-amber-100 text-amber-800' : 'text-slate-400 bg-slate-100'
-                  }`}>
-                    {idx + 1}
-                  </div>
-
-                  <ProfileImage
-                    src={student.avatar}
-                    alt={student.name}
-                    className="w-9 h-9 rounded-full shrink-0"
-                  />
-
-                  <div className="flex-1 min-w-0">
-                    <span className="font-bold text-slate-900 text-xs block truncate">
-                      {student.name}
-                    </span>
-                    <span className="text-[11px] text-emerald-700 font-medium truncate block">
-                      Surah {student.currentSurahName} (Ayah {student.currentAyah})
-                    </span>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-extrabold text-slate-900 block">
-                      {student.memorizedJuzCount || 0} Juz
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      / {student.targetJuz || 30} Target
-                    </span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
       </div>
 
       {/* Recent Monthly Ratings Table */}
@@ -318,7 +257,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="py-3.5 px-4">Student</th>
-                  <th className="py-3.5 px-4">Current Progress</th>
+                  <th className="py-3.5 px-4">Evaluated Quran Portion</th>
                   <th className="py-3.5 px-4">Month</th>
                   <th className="py-3.5 px-4 text-center">Hifz</th>
                   <th className="py-3.5 px-4 text-center">Tajweed</th>
@@ -341,7 +280,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     </td>
                     <td className="py-3 px-4">
                       <span className="font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
-                        Surah {rating.student?.currentSurahName || 'Al-Baqarah'} : {rating.student?.currentAyah || 1}
+                        Surah {rating.surahEvaluated || '—'} {rating.ayahStart && rating.ayahEnd ? `(${rating.ayahStart}-${rating.ayahEnd})` : ''}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-slate-600 font-medium">

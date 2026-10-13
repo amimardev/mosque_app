@@ -93,22 +93,12 @@ statsRouter.get('/', async (c) => {
     ? Math.round(allRatings.reduce((acc, r) => acc + r.overallScore, 0) / allRatings.length)
     : 92;
 
-  // Total Juz memorized combined
-  const totalJuzMemorized = allStudents.reduce((acc, s) => acc + (s.memorizedJuzCount || 0), 0);
-
-  // Top performers
-  const topStudents = [...allStudents]
-    .sort((a, b) => (b.memorizedJuzCount || 0) - (a.memorizedJuzCount || 0))
-    .slice(0, 5);
-
   return c.json({
     stats: {
       totalStudents,
       totalTeachers,
       totalGroups,
       averageRating,
-      totalJuzMemorized,
-      topStudents
     }
   });
 });

@@ -175,7 +175,7 @@ export const RatingsTab: React.FC<RatingsTabProps> = ({
                               {rating.student?.name || 'Student'}
                             </span>
                             <span className="text-[11px] text-slate-400">
-                              Current: Surah {rating.student?.currentSurahName} : {rating.student?.currentAyah}
+                              Evaluated: Surah {rating.surahEvaluated || '—'} {rating.ayahStart && rating.ayahEnd ? `(${rating.ayahStart}-${rating.ayahEnd})` : ''}
                             </span>
                           </div>
                         </div>

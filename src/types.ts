@@ -29,8 +29,6 @@ export interface StudentRating {
     id: string;
     name: string;
     avatar: string;
-    currentSurahName?: string;
-    currentAyah?: number;
     age?: number;
   } | null;
   teacher?: {
@@ -260,8 +258,6 @@ export interface Group {
     id: string;
     name: string;
     avatar: string;
-    currentSurahName: string;
-    currentAyah: number;
   }[];
   createdAt?: string;
   updatedAt?: string;
@@ -297,11 +293,6 @@ export interface Student {
   phone?: string | null;
   parent?: Parent | null;
   groupId?: string | null;
-  currentSurahNumber: number;
-  currentSurahName: string;
-  currentAyah: number;
-  targetJuz: number;
-  memorizedJuzCount: number;
   level: 'primary' | 'middle' | 'secondary';
   notes?: string | null;
   group?: {
@@ -346,6 +337,4 @@ export interface MadrasaStats {
   totalTeachers: number;
   totalGroups: number;
   averageRating: number;
-  totalJuzMemorized: number;
-  topStudents: Student[];
 }

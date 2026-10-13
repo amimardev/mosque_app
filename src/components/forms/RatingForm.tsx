@@ -47,7 +47,7 @@ export const RatingForm: React.FC<RatingFormProps> = ({
       murajaahScore: initialData?.murajaahScore ?? 92,
       attendanceScore: initialData?.attendanceScore ?? 95,
       behaviorScore: initialData?.behaviorScore ?? 100,
-      surahEvaluated: initialData?.surahEvaluated || matchedStudent?.currentSurahName || 'Al-Baqarah',
+      surahEvaluated: initialData?.surahEvaluated || 'Al-Baqarah',
       ayahStart: initialData?.ayahStart ?? 1,
       ayahEnd: initialData?.ayahEnd ?? 20,
       notes: initialData?.notes || '',
@@ -221,8 +221,6 @@ export const RatingForm: React.FC<RatingFormProps> = ({
                       field.handleChange(val);
                       const s = students.find(item => item.id === val);
                       if (s) {
-                        form.setFieldValue('surahEvaluated', s.currentSurahName || 'Al-Baqarah');
-                        form.setFieldValue('ayahEnd', s.currentAyah || 20);
                       }
                     }}
                   >

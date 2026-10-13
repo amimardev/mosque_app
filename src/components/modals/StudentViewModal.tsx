@@ -1,7 +1,6 @@
 import React from 'react';
 import { X, User, Phone, Mail, Calendar, Users, Clock, Award, Star, Edit, Plus, CheckCircle2 } from 'lucide-react';
 import { Student, getGroupDisplayName } from '../../types';
-import { QURAN_SURAHS, getSurahByNumber } from '../../lib/quranData';
 import { calculateAge } from '../../lib/ageUtils';
 import { SessionTimeDisplay } from '../common/SessionTimeDisplay';
 import { ProfileImage } from '../common/ProfileImage';
@@ -22,10 +21,6 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
   onAddRating
 }) => {
   if (!isOpen || !student) return null;
-
-  const surahInfo = getSurahByNumber(student.currentSurahNumber);
-  const totalQuranAyahs = 6236;
-  const juzProgress = Math.min(100, Math.round(((student.memorizedJuzCount || 0) / 30) * 100));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -102,53 +97,6 @@ export const StudentViewModal: React.FC<StudentViewModalProps> = ({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Current Quran Progress Card */}
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
-                  Current Memorization Progress
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-xl font-extrabold text-slate-900 font-sans">
-                    Surah {student.currentSurahName || 'Al-Fatihah'}
-                  </span>
-                  <span className="text-sm font-arabic font-bold text-emerald-700">
-                    ({surahInfo?.nameArabic || ''})
-                  </span>
-                  <span className="text-sm font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-lg">
-                    Ayah {student.currentAyah || 1} {surahInfo ? `/ ${surahInfo.totalAyahs}` : ''}
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-right">
-                <span className="text-xs font-bold text-emerald-800">
-                  {student.memorizedJuzCount || 0} of 30 Juz Memorized
-                </span>
-                <span className="text-[11px] text-slate-500 block">
-                  Target: {student.targetJuz || 30} Juz
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="w-full h-3 bg-emerald-100 rounded-full overflow-hidden p-0.5">
-                <div
-                  className="h-full bg-emerald-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(juzProgress, 5)}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                <span>Juz 1 (Start)</span>
-                <span>{juzProgress}% of Complete Quran</span>
-                <span>Juz 30 (Khatm)</span>
-              </div>
-            </div>
-          </div>
-
           {/* Group & Study Schedule & Teachers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">

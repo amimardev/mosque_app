@@ -163,10 +163,6 @@ sessionsRouter.get('/', async (c) => {
                 sessionId: sessionId,
                 studentId: student.id,
                 attendanceStatus: 'present',
-                surahNumber: student.currentSurahNumber,
-                surahName: student.currentSurahName,
-                ayahStart: student.currentAyah,
-                ayahEnd: student.currentAyah ? student.currentAyah + 10 : 10,
                 teacherRemarque: '',
                 isAssessed: false
               }).onConflictDoNothing();
@@ -339,10 +335,6 @@ sessionsRouter.post('/exception', async (c) => {
         sessionId: sessionId,
         studentId: student.id,
         attendanceStatus: 'present', // Default to present
-        surahNumber: student.currentSurahNumber,
-        surahName: student.currentSurahName,
-        ayahStart: student.currentAyah,
-        ayahEnd: student.currentAyah + 10,
         teacherRemarque: '',
         isAssessed: false
       });
@@ -487,15 +479,6 @@ sessionsRouter.post('/:id/records', async (c) => {
 
       await notifyParentOfAttendanceChange(sessionId, rec.studentId, rec.attendanceStatus || 'present', previous?.attendanceStatus);
 
-      // Synchronize latest Quran surah and ayah progress to student table directly!
-      if (rec.attendanceStatus === 'present' && rec.surahName) {
-        await db.update(schema.students).set({
-          currentSurahName: rec.surahName,
-          currentSurahNumber: rec.surahNumber || 1,
-          currentAyah: rec.ayahEnd || rec.ayahStart || 1,
-          updatedAt: new Date()
-        }).where(eq(schema.students.id, rec.studentId));
-      }
     }
 
     // Update general session state if specified
@@ -563,15 +546,6 @@ sessionsRouter.post('/:id/records/:recordId', async (c) => {
       await notifyParentOfAttendanceChange(sessionId, rec.studentId, rec.attendanceStatus || 'present', previous?.attendanceStatus);
     }
 
-    // Synchronize latest Quran surah and ayah progress to student table directly if present
-    if (rec.attendanceStatus === 'present' && rec.surahName && rec.studentId) {
-      await db.update(schema.students).set({
-        currentSurahName: rec.surahName,
-        currentSurahNumber: rec.surahNumber || 1,
-        currentAyah: rec.ayahEnd || rec.ayahStart || 1,
-        updatedAt: new Date()
-      }).where(eq(schema.students.id, rec.studentId));
-    }
 
     return c.json({ success: true, message: 'تم حفظ تقييم الطالب بنجاح', isAssessed });
   } catch (err: any) {

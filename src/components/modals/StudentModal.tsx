@@ -22,7 +22,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 text-right my-auto">
         <StudentForm
           title={student ? 'تعديل بيانات الطالب' : 'تسجيل طالب جديد'}
-          subtitle="تعديل أو إدخال البيانات الشخصية والقرآنية ومستوى الطالب"
+          subtitle="تعديل أو إدخال البيانات الشخصية ومستوى الطالب"
           initialData={student}
           onSave={async (data) => {
             await onSave(data);

@@ -3,7 +3,6 @@ import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
 import { eq, desc } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
-import { getSurahByNumber } from '../../lib/quranData.js';
 import { calculateAge } from '../../lib/ageUtils.js';
 import { getSessionId } from '../session.js';
 
@@ -108,7 +107,6 @@ studentsRouter.get('/', async (c) => {
     const studentGroup = assignedGroups[0] || null;
     const matchedType = studentGroup ? typeMap.get(studentGroup.typeId) : null;
     const latestRating = allRatings.find(r => r.studentId === student.id) || null;
-    const surahData = getSurahByNumber(student.currentSurahNumber);
     const parentObj = student.parentId ? parentMap.get(student.parentId) : null;
 
     // Avatar format: student.avatar or fallback to /api/storage/student-{id}
@@ -149,7 +147,6 @@ studentsRouter.get('/', async (c) => {
         surahEvaluated: latestRating.surahEvaluated,
         notes: latestRating.notes
       } : null,
-      surahDetails: surahData || null
     };
   });
 
@@ -159,8 +156,7 @@ studentsRouter.get('/', async (c) => {
     result = result.filter(s => 
       s.name.toLowerCase().includes(lower) ||
       (s.parentName && s.parentName.toLowerCase().includes(lower)) ||
-      (s.parentPhone && s.parentPhone.toLowerCase().includes(lower)) ||
-      (s.currentSurahName && s.currentSurahName.toLowerCase().includes(lower))
+      (s.parentPhone && s.parentPhone.toLowerCase().includes(lower))
     );
   }
 
@@ -260,7 +256,6 @@ studentsRouter.get('/:id', async (c) => {
   .where(eq(schema.sessionStudentRecords.studentId, id))
   .orderBy(desc(schema.sessions.date));
 
-  const surahData = getSurahByNumber(student.currentSurahNumber);
   const parentObj = await getParentWithPhone(student.parentId);
 
   const avatar = student.avatar || `/api/storage/student-${student.id}`;
@@ -281,7 +276,6 @@ studentsRouter.get('/:id', async (c) => {
       group: group || null,
       ratings,
       sessions: studentSessions,
-      surahDetails: surahData || null
     }
   });
 });
@@ -299,13 +293,6 @@ studentsRouter.post('/', async (c) => {
     const id = body.id || `std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const avatar = body.avatar || `/api/storage/student-${id}`;
-
-    let surahNumber = parseInt(body.currentSurahNumber, 10) || 1;
-    let surahName = body.currentSurahName || 'Al-Fatihah';
-    const matchedSurah = getSurahByNumber(surahNumber);
-    if (matchedSurah) {
-      surahName = matchedSurah.nameEnglish;
-    }
 
     const studentGender = body.gender || 'male';
 
@@ -341,11 +328,6 @@ studentsRouter.post('/', async (c) => {
       parentId,
       phone: body.phone?.trim() || null,
       groupId: body.groupId || null,
-      currentSurahNumber: surahNumber,
-      currentSurahName: surahName,
-      currentAyah: parseInt(body.currentAyah, 10) || 1,
-      targetJuz: parseInt(body.targetJuz, 10) || 30,
-      memorizedJuzCount: parseInt(body.memorizedJuzCount, 10) || 1,
       level,
       notes: body.notes || null,
       createdAt: new Date(),
@@ -396,13 +378,6 @@ studentsRouter.put('/:id', async (c) => {
       return c.json({ error: 'Student not found' }, 404);
     }
 
-    let surahNumber = body.currentSurahNumber !== undefined ? parseInt(body.currentSurahNumber, 10) : existing.currentSurahNumber;
-    let surahName = body.currentSurahName || existing.currentSurahName;
-    if (body.currentSurahNumber !== undefined) {
-      const matched = getSurahByNumber(surahNumber);
-      if (matched) surahName = matched.nameEnglish;
-    }
-
     const avatar = body.avatar || existing.avatar || `/api/storage/student-${id}`;
 
     const targetGender = body.gender ?? existing.gender;
@@ -440,11 +415,6 @@ studentsRouter.put('/:id', async (c) => {
       parentId: targetParentId,
       phone: body.phone !== undefined ? body.phone?.trim() || null : existing.phone,
       groupId: targetGroupId,
-      currentSurahNumber: surahNumber,
-      currentSurahName: surahName,
-      currentAyah: body.currentAyah !== undefined ? parseInt(body.currentAyah, 10) : existing.currentAyah,
-      targetJuz: body.targetJuz !== undefined ? parseInt(body.targetJuz, 10) : existing.targetJuz,
-      memorizedJuzCount: body.memorizedJuzCount !== undefined ? parseInt(body.memorizedJuzCount, 10) : existing.memorizedJuzCount,
       level: targetLevel,
       notes: body.notes !== undefined ? body.notes : existing.notes,
       updatedAt: new Date()
@@ -561,15 +531,7 @@ studentsRouter.get('/:id/history', async (c) => {
       ayahEnd: lastPresentSession.ayahEnd,
       date: lastPresentSession.date,
       teacherRemarque: lastPresentSession.teacherRemarque || null
-    } : {
-      surahName: student.currentSurahName || 'الفاتحة',
-      surahNumber: student.currentSurahNumber || 1,
-      latestVerse: student.currentAyah || 1,
-      ayahStart: 1,
-      ayahEnd: student.currentAyah || 1,
-      date: null,
-      teacherRemarque: student.notes || null
-    };
+    } : null;
 
     // 3. Collect combined unique latest 5 sessions
     const sessionsList: Array<{
@@ -626,8 +588,6 @@ studentsRouter.get('/:id/history', async (c) => {
         id: student.id,
         name: student.name,
         avatar: student.avatar,
-        currentSurahName: student.currentSurahName,
-        currentAyah: student.currentAyah
       },
       lastProgress,
       latestSessions: sessionsList.slice(0, 5)

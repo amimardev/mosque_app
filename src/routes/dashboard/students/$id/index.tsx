@@ -60,8 +60,6 @@ function StudentDetailsPage() {
       setTeachers(teachersRes.data.teachers || []);
 
       if (stData) {
-        setEvalSurah(stData.currentSurahName || 'Al-Baqarah');
-        setEvalAyahEnd(stData.currentAyah || 50);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load student details');
@@ -91,8 +89,6 @@ function StudentDetailsPage() {
     setEvalAttendance(95);
     setEvalBehavior(100);
     if (student) {
-      setEvalSurah(student.currentSurahName || 'Al-Baqarah');
-      setEvalAyahEnd(student.currentAyah || 50);
     }
     setEvalNotes('');
     setIsRatingModalOpen(true);
@@ -150,7 +146,6 @@ function StudentDetailsPage() {
         ayahStart: Number(evalAyahStart) || undefined,
         ayahEnd: Number(evalAyahEnd) || undefined,
         notes: evalNotes.trim() || undefined,
-        updateStudentSurah: true
       };
 
       if (editingRating) {
@@ -193,8 +188,6 @@ function StudentDetailsPage() {
       </div>
     );
   }
-
-  const juzProgress = Math.min(100, Math.round(((student.memorizedJuzCount || 0) / (student.targetJuz || 30)) * 100));
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16 text-right" dir="rtl">
@@ -335,53 +328,6 @@ function StudentDetailsPage() {
               </div>
 
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quran Progress & Milestone */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-          <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
-          <span>مرحلة الحفظ الحالية والهدف المنشود</span>
-        </h2>
-
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span className="text-xs uppercase font-bold text-emerald-800">السورة الحالية</span>
-            <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">
-              سورة {student.currentSurahName || 'الفاتحة'}
-            </h3>
-            {student.surahDetails && (
-              <span className="text-xs text-slate-500 block">
-                سورة رقم {student.surahDetails.number} • {student.surahDetails.type === 'Meccan' ? 'مكية' : 'مدنية'}
-              </span>
-            )}
-          </div>
-
-          <div className="text-left sm:border-r sm:border-emerald-200 sm:pr-6" dir="ltr">
-            <span className="text-xs text-emerald-800 font-bold block uppercase">موضع الحفظ الحالي</span>
-            <span className="text-2xl font-mono font-extrabold text-emerald-950">
-              الآية {student.currentAyah || 1}
-            </span>
-          </div>
-        </div>
-
-        {/* Juz Progress Bar */}
-        <div className="space-y-2 pt-2">
-          <div className="flex justify-between items-center text-xs">
-            <span className="font-bold text-slate-800">
-              إجمالي المحفوظ: <strong className="text-emerald-700 font-extrabold">{student.memorizedJuzCount || 0} أجزاء</strong>
-            </span>
-            <span className="font-bold text-slate-500">
-              الهدف: {student.targetJuz || 30} جزء ({juzProgress}%)
-            </span>
-          </div>
-          <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-            <div
-              className="h-full bg-emerald-600 rounded-full transition-all duration-500"
-              style={{ width: `${Math.max(juzProgress, 5)}%` }}
-            />
           </div>
         </div>
       </div>

@@ -274,23 +274,7 @@ export const GroupsTab: React.FC<GroupsTabProps> = ({
                           <span className="text-[11px] text-slate-400 block">
                             {calculateAge(student.dateOfBirth || student.age) !== null ? `${calculateAge(student.dateOfBirth || student.age)} سنة • ` : ''}{student.gender === 'male' ? 'طالب (ذكر)' : 'طالبة (أنثى)'}
                           </span>
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block">
-                            {student.memorizedJuzCount || 0} / {student.targetJuz || 30} Juz
-                          </span>
                         </div>
-                      </div>
-
-                      {/* Quran Progress */}
-                      <div className="p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <img src="/icon.png" alt="" className="w-3.5 h-3.5 object-contain shrink-0" />
-                          <span className="font-semibold text-slate-900 truncate">
-                            Surah {student.currentSurahName || 'Al-Fatihah'}
-                          </span>
-                        </div>
-                        <span className="font-mono font-bold bg-emerald-200/80 text-emerald-950 px-2 py-0.5 rounded-md text-[11px] shrink-0">
-                          Ayah {student.currentAyah || 1}
-                        </span>
                       </div>
 
                       {/* Parent Phone */}

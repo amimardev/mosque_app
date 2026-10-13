@@ -3,7 +3,6 @@ import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
 import { eq, desc, inArray } from 'drizzle-orm';
 import { ensureDatabaseInitialized } from '../../db/init.js';
-import { getSurahByNumber } from '../../lib/quranData.js';
 
 export const groupsRouter = new OperationRegistry();
 
@@ -43,8 +42,6 @@ groupsRouter.get('/', async (c) => {
         id: s.id,
         name: s.name,
         avatar: s.avatar,
-        currentSurahName: s.currentSurahName,
-        currentAyah: s.currentAyah
       }))
     };
   });
@@ -99,11 +96,9 @@ groupsRouter.get('/by-type-and-number/:typeSlug/:groupNumber', async (c) => {
 
   const enrichedStudents = studentsList.map(s => {
     const latestRating = allRatings.find(r => r.studentId === s.id) || null;
-    const surahData = getSurahByNumber(s.currentSurahNumber);
     return {
       ...s,
       latestRating,
-      surahDetails: surahData || null
     };
   });
 
@@ -149,11 +144,9 @@ groupsRouter.get('/:id', async (c) => {
 
   const enrichedStudents = studentsList.map(s => {
     const latestRating = allRatings.find(r => r.studentId === s.id) || null;
-    const surahData = getSurahByNumber(s.currentSurahNumber);
     return {
       ...s,
       latestRating,
-      surahDetails: surahData || null
     };
   });
 

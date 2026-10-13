@@ -4,7 +4,6 @@ import { useForm } from '@tanstack/react-form';
 import { User, Phone, Save, ArrowRight, UserCheck } from 'lucide-react';
 import { Student, Parent } from '../../types';
 import { AvatarPicker } from '../common/AvatarPicker';
-import { SurahAyahPicker } from '../common/SurahAyahPicker';
 import { DatePicker } from '../ui/date-picker';
 import { calculateAge } from '../../lib/ageUtils';
 import { Input } from '../ui/input';
@@ -53,11 +52,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
       dateOfBirth: initialData?.dateOfBirth || (typeof initialData?.age === 'string' && initialData.age.includes('-') ? initialData.age : ''),
       parentId: initialData?.parentId || '',
       phone: initialData?.phone || '',
-      currentSurahNumber: initialData?.currentSurahNumber || 1,
-      currentSurahName: initialData?.currentSurahName || 'Al-Fatihah',
-      currentAyah: initialData?.currentAyah || 1,
-      targetJuz: initialData?.targetJuz ?? 30,
-      memorizedJuzCount: initialData?.memorizedJuzCount ?? 1,
       level: (initialData?.level || 'middle') as 'primary' | 'middle' | 'secondary',
       notes: initialData?.notes || ''
     },
@@ -80,11 +74,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           age: value.dateOfBirth || undefined,
           parentId: value.parentId || undefined,
           phone: value.phone.trim() || undefined,
-          currentSurahNumber: Number(value.currentSurahNumber),
-          currentSurahName: value.currentSurahName,
-          currentAyah: Number(value.currentAyah),
-          targetJuz: Number(value.targetJuz) || 30,
-          memorizedJuzCount: Number(value.memorizedJuzCount) || 0,
           level: value.level,
           notes: value.notes.trim() || undefined
         });
@@ -270,74 +259,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({
           </div>
         </div>
 
-        {/* 2. Quran Surah & Ayah Progress */}
-        <div className="space-y-4 pt-4 border-t border-slate-100">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 flex-row-reverse justify-end">
-            <img src="/icon.png" alt="" className="w-4 h-4 object-contain" />
-            <span>2. مرحلة الحفظ الحالية (السورة والآية)</span>
-          </h2>
-
-          <form.Subscribe
-            selector={(state) => [state.values.currentSurahNumber, state.values.currentAyah]}
-            children={([surahNum, ayahNum]) => (
-              <SurahAyahPicker
-                surahNumber={Number(surahNum) || 1}
-                currentSurahNumber={Number(surahNum) || 1}
-                ayah={Number(ayahNum) || 1}
-                currentAyah={Number(ayahNum) || 1}
-                onSurahChange={(num, name) => {
-                  form.setFieldValue('currentSurahNumber', num);
-                  form.setFieldValue('currentSurahName', name);
-                }}
-                onAyahChange={(ayah) => form.setFieldValue('currentAyah', ayah)}
-              />
-            )}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <form.Field
-              name="memorizedJuzCount"
-              children={(field) => (
-                <FormItem>
-                  <FormLabel htmlFor={field.name}>عدد الأجزاء المحفوظة</FormLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="number"
-                    min={0}
-                    max={30}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                    className="text-center font-bold"
-                  />
-                </FormItem>
-              )}
-            />
-
-            <form.Field
-              name="targetJuz"
-              children={(field) => (
-                <FormItem>
-                  <FormLabel htmlFor={field.name}>الهدف المنشود (الأجزاء المستهدفة)</FormLabel>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                    className="text-center font-bold"
-                  />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* 3. Parent / Guardian Contact Details via Foreign Key */}
+        {/* 2. Parent / Guardian Contact Details via Foreign Key */}
         <div className="space-y-4 pt-4 border-t border-slate-100">
           <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 flex-row-reverse justify-end">
             <Phone className="w-4 h-4 text-emerald-600" />

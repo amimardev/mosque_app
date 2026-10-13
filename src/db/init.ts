@@ -124,11 +124,6 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           parent_id TEXT REFERENCES parents(id) ON DELETE SET NULL,
           phone TEXT,
           group_id TEXT REFERENCES groups(id) ON DELETE SET NULL,
-          current_surah_number INTEGER DEFAULT 1 NOT NULL,
-          current_surah_name TEXT DEFAULT 'Al-Fatihah' NOT NULL,
-          current_ayah INTEGER DEFAULT 1 NOT NULL,
-          target_juz INTEGER DEFAULT 30,
-          memorized_juz_count INTEGER DEFAULT 1 NOT NULL,
           level TEXT DEFAULT 'middle' NOT NULL,
           notes TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -152,6 +147,11 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='phone') THEN
             ALTER TABLE students ADD COLUMN phone TEXT;
           END IF;
+          ALTER TABLE students DROP COLUMN IF EXISTS current_surah_number;
+          ALTER TABLE students DROP COLUMN IF EXISTS current_surah_name;
+          ALTER TABLE students DROP COLUMN IF EXISTS current_ayah;
+          ALTER TABLE students DROP COLUMN IF EXISTS target_juz;
+          ALTER TABLE students DROP COLUMN IF EXISTS memorized_juz_count;
           IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='status') THEN
             ALTER TABLE students DROP COLUMN status;
           END IF;

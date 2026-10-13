@@ -56,8 +56,6 @@ parentsRouter.get('/', async (c) => {
         age: calculateAge(st.dateOfBirth || st.age),
         dateOfBirth: st.dateOfBirth || st.age,
         groupId: st.groupId,
-        memorizedJuzCount: st.memorizedJuzCount,
-        currentSurahName: st.currentSurahName
       }))
     };
   });

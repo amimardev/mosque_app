@@ -39,7 +39,6 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
       const matchesSearch = searchQuery === '' || 
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (student.parentName && student.parentName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (student.currentSurahName && student.currentSurahName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (student.parentPhone && student.parentPhone.includes(searchQuery));
 
       const matchesGroup = selectedGroupFilter === 'all' || 
@@ -72,7 +71,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             Students Directory ({students.length})
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            Student cards displaying Quran milestone, assigned circle, and parent contact.
+            Student cards displaying personal details, assigned circle, ratings, and parent contact.
           </p>
         </div>
 
@@ -94,7 +93,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by student full name, parent, or Surah..."
+            placeholder="Search by student full name or parent..."
             className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-800"
           />
           {searchQuery && (
@@ -177,28 +176,7 @@ export const StudentsTab: React.FC<StudentsTabProps> = ({
                         <span>{student.gender === 'male' ? 'Male (طالب)' : 'Female (طالبة)'}</span>
                       </div>
 
-                      {/* Memorized Juz Count */}
-                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md mt-1.5 inline-block">
-                        {student.memorizedJuzCount || 0} / {student.targetJuz || 30} Juz Memorized
-                      </span>
                     </div>
-                  </div>
-
-                  {/* Quran Milestone (Surah & Ayah) */}
-                  <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-2xl flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <img src="/icon.png" alt="" className="w-4 h-4 object-contain shrink-0" />
-                      <div className="min-w-0">
-                        <span className="text-[10px] text-emerald-800 uppercase font-bold block">Current Surah</span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">
-                          Surah {student.currentSurahName || 'Al-Fatihah'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <span className="text-xs font-mono font-bold bg-emerald-200/80 text-emerald-950 px-2.5 py-1 rounded-xl shrink-0">
-                      Ayah {student.currentAyah || 1}
-                    </span>
                   </div>
 
                   {/* Group & Study Time */}

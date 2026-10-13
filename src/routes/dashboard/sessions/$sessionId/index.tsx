@@ -62,8 +62,6 @@ interface StudentHistoryData {
     id: string;
     name: string;
     avatar: string;
-    currentSurahName?: string;
-    currentAyah?: number;
   };
   lastProgress: {
     surahName: string;
@@ -73,7 +71,7 @@ interface StudentHistoryData {
     ayahEnd?: number | null;
     date?: string | null;
     teacherRemarque?: string | null;
-  };
+  } | null;
   latestSessions: Array<{
     date: string;
     status: string;
@@ -908,24 +906,31 @@ function SessionAssessmentPage() {
                     <span className="text-xs text-slate-500 font-bold block">
                       آخر تقدّم (آخر حصة حضر فيها الطالب):
                     </span>
-                    <div className="text-sm font-black text-slate-900">
-                      سورة {historyData.lastProgress.surahName} • الآية {historyData.lastProgress.latestVerse}
-                    </div>
-                    {historyData.lastProgress.date && (
-                      <span className="text-[11px] text-slate-400 block font-medium">
-                        تاريخ الحصة: {formatArabicDate(historyData.lastProgress.date)}
-                      </span>
-                    )}
-
-                    {/* Comment from teacher on that session assessment */}
-                    {historyData.lastProgress.teacherRemarque && (
-                      <div className="pt-2 border-t border-slate-200/70">
-                        <span className="text-[11px] font-bold text-slate-500 block mb-1">
-                          ملاحظة المعلم على الحفظ في تلك الحصة:
-                        </span>
-                        <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 font-medium leading-relaxed">
-                          "{historyData.lastProgress.teacherRemarque}"
+                    {historyData.lastProgress ? (
+                      <>
+                        <div className="text-sm font-black text-slate-900">
+                          سورة {historyData.lastProgress.surahName} • الآية {historyData.lastProgress.latestVerse}
                         </div>
+                        {historyData.lastProgress.date && (
+                          <span className="text-[11px] text-slate-400 block font-medium">
+                            تاريخ الحصة: {formatArabicDate(historyData.lastProgress.date)}
+                          </span>
+                        )}
+
+                        {historyData.lastProgress.teacherRemarque && (
+                          <div className="pt-2 border-t border-slate-200/70">
+                            <span className="text-[11px] font-bold text-slate-500 block mb-1">
+                              ملاحظة المعلم على الحفظ في تلك الحصة:
+                            </span>
+                            <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 font-medium leading-relaxed">
+                              "{historyData.lastProgress.teacherRemarque}"
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-sm font-medium text-slate-500">
+                        لا يوجد تقدّم قرآني مسجّل في الحصص السابقة
                       </div>
                     )}
                   </div>

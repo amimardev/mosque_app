@@ -67,11 +67,6 @@ export const students = pgTable('students', {
   parentId: text('parent_id').references(() => parents.id, { onDelete: 'set null' }),
   phone: text('phone'),
   groupId: text('group_id').references(() => groups.id, { onDelete: 'set null' }),
-  currentSurahNumber: integer('current_surah_number').default(1).notNull(),
-  currentSurahName: text('current_surah_name').default('Al-Fatihah').notNull(),
-  currentAyah: integer('current_ayah').default(1).notNull(),
-  targetJuz: integer('target_juz').default(30),
-  memorizedJuzCount: integer('memorized_juz_count').default(1).notNull(),
   level: text('level').default('middle').notNull(), // 'primary' | 'middle' | 'secondary'
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
