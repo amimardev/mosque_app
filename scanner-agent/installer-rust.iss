@@ -14,7 +14,7 @@ PrivilegesRequired=lowest
 
 [Files]
 Source: "target\release\scanner-agent.exe"; DestDir: "{app}"; DestName: "ScannerAgent.exe"; Flags: ignoreversion
-Source: ".env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist
+Source: ".env.example"; DestDir: "{app}"; DestName: ".env"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Scanner Agent"; Filename: "{app}\ScannerAgent.exe"

@@ -66,11 +66,7 @@ jobs:
           body: |
             ## Windows Scanner Agent installer
 
-            Download and run **ScannerAgentSetup-Rust.exe** on the Windows machine connected to the scanner.
+            Download and run **ScannerAgentSetup-Rust.exe** on the Windows PC connected to the scanner.
 
-            After installation, open `%LOCALAPPDATA%\ScannerAgent\.env` and set:
-            - `SCANNER_AGENT_TOKEN` — a random secret of at least 32 characters (enter this same value in the website dialog)
-            - `MOSQUE_APP_ORIGINS` — the deployed website origin, e.g. `https://your-app.vercel.app`
-
-            Then restart the agent. See `scanner-agent/README.md` for full instructions.
+            Once installed, the agent runs in the background and is immediately ready to communicate with https://mosque-app-pi.vercel.app.
 

@@ -1,21 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Download, LoaderCircle, RefreshCw, ScanLine, Upload, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertCircle, Download, LoaderCircle, RefreshCw, ScanLine, Upload, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from '../ui/toast';
 import { extractStudentDocumentFn, createScannedStudentFn } from '../../server/functions/studentDocuments';
 
-/** Stable URL — always resolves to the latest released installer. */
+/** Stable download URL for latest installer released via GitHub Actions */
 const SCANNER_AGENT_INSTALLER_URL =
   'https://github.com/amimardev/mosque_app/releases/latest/download/ScannerAgentSetup-Rust.exe';
 
 type Phase =
-  | 'checking'        // auto health-check on open
-  | 'agent_missing'   // connection refused → show install panel
-  | 'needs_token'     // agent running, waiting for token input
-  | 'loading_scanners'// fetching scanner list
+  | 'checking'        // checking connection & loading scanners
+  | 'agent_missing'   // agent not installed or not running
+  | 'no_scanners'     // agent running but no scanners detected
   | 'ready'           // scanner selected, ready to scan
-  | 'scanning'        // scan + extraction in progress
-  | 'reviewing';      // scan done, user reviews extracted data
+  | 'scanning'        // currently scanning document
+  | 'reviewing';      // document scanned, reviewing & editing data
 
 type Scanner = { id: string; name: string };
 type Review = {
@@ -28,7 +27,12 @@ type Review = {
 };
 
 const defaultReview: Review = {
-  name: '', dateOfBirth: '', gender: 'male', level: 'middle', address: '', guardianPhone: '',
+  name: '',
+  dateOfBirth: '',
+  gender: 'male',
+  level: 'middle',
+  address: '',
+  guardianPhone: '',
 };
 
 function base64ToBlob(data: string, mimeType: string) {
@@ -77,8 +81,6 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
   );
 
   const [phase, setPhase] = useState<Phase>('checking');
-  const [token, setToken] = useState('');
-  const [tokenError, setTokenError] = useState('');
   const [scanners, setScanners] = useState<Scanner[]>([]);
   const [scannerId, setScannerId] = useState('');
   const [error, setError] = useState('');
@@ -88,54 +90,83 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
   const [profileImage, setProfileImage] = useState<{ mimeType: 'image/jpeg'; imageBase64: string } | null>(null);
   const [review, setReview] = useState<Review>(defaultReview);
   const [duplicateMatches, setDuplicateMatches] = useState<{ id: string; name: string }[]>([]);
-
-  const busy = phase === 'checking' || phase === 'loading_scanners' || phase === 'scanning';
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    return () => { if (documentUrl) URL.revokeObjectURL(documentUrl); };
+    return () => {
+      if (documentUrl) URL.revokeObjectURL(documentUrl);
+    };
   }, [documentUrl]);
 
-  // ── Auto health-check on every open ───────────────────────────────────────
-  const checkHealth = useCallback(async () => {
+  // ── Auto-discover agent and load scanners seamlessly ───────────────────────
+  const initScannerAgent = useCallback(async () => {
     setPhase('checking');
     setError('');
+    setNotice('');
+
     try {
-      const health = await fetch(`${agentUrl}/health`, { cache: 'no-store' });
-      if (!health.ok) {
-        setError('الخدمة تعمل لكن ردّت بخطأ. أعد تشغيلها وحاول مجدداً.');
-        setPhase('needs_token');
+      // 1. Health check to test if local agent is running
+      let healthRes: Response;
+      try {
+        healthRes = await fetch(`${agentUrl}/health`, { cache: 'no-store' });
+      } catch {
+        setPhase('agent_missing');
+        toast.add({
+          type: 'error',
+          title: 'برنامج الماسح غير متصل',
+          description: 'تأكد من تثبيت وتشغيل برنامج الماسح على جهاز Windows.',
+        });
         return;
       }
-      const status = await health.json();
-      if (!status.token_configured) {
-        setError('رمز الخدمة غير مضبوط. افتح ملف .env في مجلد التثبيت وأضف SCANNER_AGENT_TOKEN.');
-        setPhase('needs_token');
+
+      if (!healthRes.ok) {
+        setPhase('agent_missing');
         return;
       }
-      setPhase('needs_token');
-    } catch {
-      // connection refused → agent not installed / not running
-      setPhase('agent_missing');
-      toast.add({
-        type: 'error',
-        title: 'خدمة الماسح غير متوفرة',
-        description: 'تعذر الاتصال بخدمة الماسح المحلية. تأكد من تثبيتها وتشغيلها.',
+
+      // 2. Fetch scanners list automatically
+      const scannersRes = await fetch(`${agentUrl}/scanners`, {
+        cache: 'no-store',
       });
+
+      if (!scannersRes.ok) {
+        const body = await scannersRes.json().catch(() => ({}));
+        throw new Error(body.detail || 'تعذر تحميل قائمة الماسحات');
+      }
+
+      const body = await scannersRes.json();
+      const list: Scanner[] = body.scanners || [];
+      setScanners(list);
+
+      if (list.length === 0) {
+        setPhase('no_scanners');
+      } else {
+        setScannerId(list[0].id);
+        setPhase('ready');
+      }
+    } catch (cause) {
+      const isNet = cause instanceof TypeError;
+      const msg = isNet
+        ? 'انقطع الاتصال ببرنامج الماسح المحلي.'
+        : cause instanceof Error
+          ? cause.message
+          : 'تعذر الاتصال بالماسح';
+      setError(msg);
+      toast.add({ type: 'error', title: 'خطأ في الاتصال', description: msg });
+      setPhase('agent_missing');
     }
   }, [agentUrl]);
 
   useEffect(() => {
     if (open) {
-      void checkHealth();
+      void initScannerAgent();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initScannerAgent]);
 
-  const resetToStart = () => {
+  const close = () => {
+    if (phase === 'scanning' || submitting) return;
     if (documentUrl) URL.revokeObjectURL(documentUrl);
     setDocumentUrl('');
-    setToken('');
-    setTokenError('');
     setScanners([]);
     setScannerId('');
     setScanId('');
@@ -144,86 +175,41 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
     setDuplicateMatches([]);
     setError('');
     setNotice('');
-  };
-
-  const close = (force = false) => {
-    if (busy && !force) return;
-    resetToStart();
     onClose();
   };
 
-  // ── Load scanners (called after valid token entered) ──────────────────────
-  const loadScanners = async () => {
-    if (token.length < 32) {
-      setTokenError('الرمز يجب أن يكون 32 حرفاً على الأقل');
-      return;
-    }
-    setTokenError('');
-    setPhase('loading_scanners');
-    setError('');
-    try {
-      let response: Response;
-      try {
-        response = await fetch(`${agentUrl}/scanners`, {
-          headers: { 'X-Scanner-Agent-Token': token },
-          cache: 'no-store',
-        });
-      } catch {
-        const msg = 'انقطع الاتصال بالخدمة أثناء تحميل الماسحات.';
-        setError(msg);
-        toast.add({ type: 'error', title: 'خطأ في الشبكة', description: msg });
-        setPhase('needs_token');
-        return;
-      }
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const msg = response.status === 401
-          ? 'الرمز غير صحيح. أدخل الرمز المضبوط في ملف .env.'
-          : body.detail || 'تعذر تحميل قائمة الماسحات';
-        setError(msg);
-        toast.add({ type: 'error', title: 'تعذر تحميل الماسحات', description: msg });
-        setPhase('needs_token');
-        return;
-      }
-      const list: Scanner[] = body.scanners || [];
-      setScanners(list);
-      setScannerId(list[0]?.id || '');
-      if (list.length === 0) {
-        setNotice('لم يُعثر على ماسح ضوئي متصل. تأكد من توصيل الجهاز وإعداده كجهاز WIA.');
-      }
-      setPhase('ready');
-    } catch {
-      setPhase('needs_token');
-    }
-  };
-
-  // ── Scan ──────────────────────────────────────────────────────────────────
-  const scan = async () => {
+  // ── Scan document ──────────────────────────────────────────────────────────
+  const startScan = async () => {
     if (!scannerId) return;
     setPhase('scanning');
     setError('');
     setNotice('');
     setDuplicateMatches([]);
+
     try {
       let response: Response;
       try {
         response = await fetch(`${agentUrl}/scan`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Scanner-Agent-Token': token },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ scanner_id: scannerId }),
         });
       } catch {
-        const msg = 'انقطع الاتصال بالخدمة أثناء المسح. تحقق من إذن الشبكة المحلية في Chrome.';
+        const msg = 'انقطع الاتصال ببرنامج الماسح أثناء المسح.';
         setError(msg);
-        toast.add({ type: 'error', title: 'خطأ في الشبكة', description: msg });
+        toast.add({ type: 'error', title: 'خطأ في الاتصال', description: msg });
         setPhase('ready');
         return;
       }
+
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const msg = response.status === 504
-          ? 'انتهت مهلة الماسح. تحقق من توصيل الجهاز وحاول مرة أخرى.'
-          : result.detail || 'فشل مسح الوثيقة';
+        const msg =
+          response.status === 504
+            ? 'انتهت مهلة الماسح. تحقق من جاهزية الجهاز وحاول مرة أخرى.'
+            : result.detail || 'فشل مسح الوثيقة';
         setError(msg);
         toast.add({
           type: response.status === 504 ? 'warning' : 'error',
@@ -233,6 +219,7 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
         setPhase('ready');
         return;
       }
+
       const blob = base64ToBlob(result.image_base64, result.mime_type);
       if (documentUrl) URL.revokeObjectURL(documentUrl);
       setDocumentUrl(URL.createObjectURL(blob));
@@ -240,7 +227,8 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
       setProfileImage(null);
       setReview(defaultReview);
       setPhase('reviewing');
-      // Extract in background — don't block the review UI
+
+      // AI document extraction
       try {
         const compressed = await compressForServer(blob);
         const extracted = await extractStudentDocumentFn({ data: compressed });
@@ -253,7 +241,9 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
           guardianPhone: extracted.student.guardianPhone || '',
         });
         setProfileImage(extracted.profileImage);
-        setNotice(extracted.warnings.join(' '));
+        if (extracted.warnings?.length) {
+          setNotice(extracted.warnings.join(' '));
+        }
       } catch (cause) {
         const isNet = cause instanceof TypeError;
         toast.add({
@@ -261,16 +251,18 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
           title: isNet ? 'خطأ في الاتصال بالخادم' : 'تعذر تحليل الوثيقة',
           description: isNet
             ? 'تعذر الاتصال بالخادم لتحليل الوثيقة. تحقق من اتصالك بالإنترنت.'
-            : cause instanceof Error ? cause.message : 'تعذر تحليل الوثيقة',
+            : cause instanceof Error
+              ? cause.message
+              : 'تعذر تحليل الوثيقة تلقائياً',
         });
-        setError('تعذر استخراج البيانات تلقائياً. يمكنك إدخالها يدوياً.');
+        setError('تعذر استخراج البيانات تلقائياً، يرجى كتابتها يدوياً.');
       }
     } catch {
       setPhase('ready');
     }
   };
 
-  // ── Photo picker ──────────────────────────────────────────────────────────
+  // ── Manual photo upload ────────────────────────────────────────────────────
   const selectPhoto = async (file?: File) => {
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
@@ -287,9 +279,14 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
   };
 
   // ── Create student ────────────────────────────────────────────────────────
-  const create = async (allowDuplicate = false) => {
-    if (!review.name.trim()) { setError('أدخل اسم الطالب قبل الحفظ'); return; }
+  const createStudent = async (allowDuplicate = false) => {
+    if (!review.name.trim()) {
+      setError('أدخل اسم الطالب قبل الحفظ');
+      return;
+    }
+    setSubmitting(true);
     setError('');
+
     try {
       const result = await createScannedStudentFn({
         data: {
@@ -305,28 +302,35 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
           allowDuplicate,
         },
       });
+
       if (result.status === 'duplicate') {
         setDuplicateMatches(result.matches);
         return;
       }
+
       onCreated(result.parentDataNotLinked);
-      close(true);
+      close();
     } catch (cause) {
       const isNet = cause instanceof TypeError;
       const msg = isNet
         ? 'تعذر الاتصال بالخادم لحفظ الطالب. تحقق من اتصالك بالإنترنت.'
-        : cause instanceof Error ? cause.message : 'تعذر حفظ الطالب';
+        : cause instanceof Error
+          ? cause.message
+          : 'تعذر حفظ الطالب';
       setError(msg);
       toast.add({
         type: 'error',
         title: isNet ? 'خطأ في الاتصال بالخادم' : 'تعذر حفظ الطالب',
         description: msg,
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const update = <K extends keyof Review>(key: K, value: Review[K]) =>
     setReview((current) => ({ ...current, [key]: value }));
+
   const profileUrl = profileImage
     ? `data:${profileImage.mimeType};base64,${profileImage.imageBase64}`
     : '';
@@ -347,13 +351,15 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
             <h2 id="scan-dialog-title" className="text-lg font-extrabold text-slate-900">
               إنشاء طالب من وثيقة
             </h2>
-            <p className="text-xs text-slate-500">امسح الوثيقة ثم راجع البيانات قبل الحفظ</p>
+            <p className="text-xs text-slate-500">
+              امسح الوثيقة عبر الماسح الضوئي ثم راجع البيانات قبل الحفظ
+            </p>
           </div>
           <button
             type="button"
             aria-label="إغلاق"
-            onClick={() => close()}
-            disabled={busy}
+            onClick={close}
+            disabled={phase === 'scanning' || submitting}
             className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
           >
             <X className="h-5 w-5" />
@@ -361,39 +367,43 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
         </header>
 
         <div className="space-y-4 overflow-y-auto p-5">
-
-          {/* ── Checking health ── */}
+          {/* ── Checking agent & loading scanners ── */}
           {phase === 'checking' && (
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-              <LoaderCircle className="h-5 w-5 animate-spin text-slate-400" />
-              جارٍ التحقق من خدمة الماسح…
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
+              <LoaderCircle className="h-8 w-8 animate-spin text-emerald-600" />
+              <p className="text-sm font-bold text-slate-800">جارٍ الاتصال بالماسح الضوئي…</p>
+              <p className="text-xs text-slate-500">التحقق من برنامج الماسح على جهاز الكمبيوتر</p>
             </div>
           )}
 
           {/* ── Agent not installed / not running ── */}
           {phase === 'agent_missing' && (
-            <div className="space-y-4 rounded-2xl border border-rose-200 bg-rose-50 p-5">
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-rose-900">خدمة الماسح غير مثبتة أو لا تعمل</p>
-                <p className="text-xs leading-6 text-rose-700">
-                  يلزم تثبيت خدمة الماسح المحلية على جهاز Windows المتصل بالماسح الضوئي.
-                  بعد التثبيت، افتح{' '}
-                  <span className="rounded bg-rose-100 px-1 font-mono">
-                    %LOCALAPPDATA%\ScannerAgent\.env
-                  </span>{' '}
-                  وأدخل رمز الخدمة وعنوان الموقع، ثم أعد تشغيل الخدمة.
-                </p>
+            <div className="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/60 p-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-rose-950">برنامج الماسح الضوئي غير متصل</h3>
+                  <p className="text-xs leading-6 text-rose-800">
+                    لمسح الوثائق مباشرة من المتصفح، يلزم تثبيت وتشغيل برنامج الماسح على جهاز Windows المتصل بالماسح الضوئي.
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+
+              <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-rose-200/60">
                 <a
                   href={SCANNER_AGENT_INSTALLER_URL}
                   download
-                  className="inline-flex items-center gap-2 rounded-xl bg-rose-700 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-rose-800"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
                 >
                   <Download className="h-4 w-4" />
-                  تنزيل المثبّت (Windows)
+                  تنزيل وتثبيت البرنامج (Windows)
                 </a>
-                <Button type="button" variant="outline" onClick={checkHealth}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={initScannerAgent}
+                  className="border-slate-300"
+                >
                   <RefreshCw className="h-4 w-4" />
                   إعادة المحاولة
                 </Button>
@@ -401,108 +411,92 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
             </div>
           )}
 
-          {/* ── Token input (agent is running, needs auth) ── */}
-          {phase === 'needs_token' && (
-            <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div>
-                <p className="text-sm font-bold text-slate-800">أدخل رمز خدمة الماسح</p>
-                <p className="text-xs leading-6 text-slate-500">
-                  الرمز هو قيمة{' '}
-                  <span className="font-mono">SCANNER_AGENT_TOKEN</span>{' '}
-                  في ملف{' '}
-                  <span className="font-mono">%LOCALAPPDATA%\ScannerAgent\.env</span>.
-                </p>
+          {/* ── No scanners found ── */}
+          {phase === 'no_scanners' && (
+            <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-amber-950">لم يتم العثور على أي ماسح ضوئي</h3>
+                  <p className="text-xs leading-6 text-amber-800">
+                    برنامج الماسح يعمل بنجاح، لكن لم يتعرف النظام على ماسح ضوئي متصل. يرجى التأكد من توصيل كابل الماسح وتشغيله.
+                  </p>
+                </div>
               </div>
-              <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
-                <span>رمز الخدمة</span>
-                <input
-                  type="password"
-                  autoComplete="off"
-                  autoFocus
-                  value={token}
-                  onChange={(e) => { setToken(e.target.value); setTokenError(''); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') void loadScanners(); }}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                />
-                {tokenError && <span className="text-rose-600">{tokenError}</span>}
-              </label>
-              <Button
-                type="button"
-                onClick={loadScanners}
-                disabled={token.length < 32}
-                className="w-full"
-              >
-                تحميل قائمة الماسحات
-              </Button>
+
+              <div className="pt-2 border-t border-amber-200/60">
+                <Button type="button" onClick={initScannerAgent} className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  إعادة البحث عن الماسحات
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* ── Loading scanners ── */}
-          {phase === 'loading_scanners' && (
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-              <LoaderCircle className="h-5 w-5 animate-spin text-slate-400" />
-              جارٍ تحميل قائمة الماسحات…
-            </div>
-          )}
-
-          {/* ── Ready: scanner select + scan button ── */}
+          {/* ── Ready to scan ── */}
           {phase === 'ready' && (
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              {scanners.length === 0 ? (
-                <p className="text-sm text-slate-600">
-                  لم يُعثر على ماسح ضوئي متصل. تأكد من توصيل الجهاز وإعداده كجهاز WIA ثم أعد المحاولة.
-                </p>
-              ) : (
-                <>
-                  <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
-                    <span>اختر الماسح الضوئي</span>
-                    <select
-                      value={scannerId}
-                      onChange={(e) => setScannerId(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-                    >
-                      {scanners.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <Button
-                    type="button"
-                    onClick={scan}
-                    disabled={!scannerId}
-                    className="w-full"
-                  >
-                    <ScanLine className="h-4 w-4" />
-                    مسح الوثيقة
-                  </Button>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => { setScanners([]); setScannerId(''); void loadScanners(); }}
-                className="text-xs text-slate-400 hover:text-slate-600 underline"
+              <div className="flex items-center justify-between">
+                <label htmlFor="scanner-select" className="text-xs font-bold text-slate-800">
+                  اختر الماسح الضوئي:
+                </label>
+                <button
+                  type="button"
+                  onClick={initScannerAgent}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  تحديث القائمة
+                </button>
+              </div>
+
+              <select
+                id="scanner-select"
+                value={scannerId}
+                onChange={(e) => setScannerId(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               >
-                إعادة تحميل الماسحات
-              </button>
+                {scanners.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+
+              <Button
+                type="button"
+                onClick={startScan}
+                disabled={!scannerId}
+                className="w-full py-3 text-sm gap-2 bg-emerald-600 hover:bg-emerald-700"
+              >
+                <ScanLine className="h-5 w-5" />
+                بدء مسح الوثيقة
+              </Button>
             </div>
           )}
 
           {/* ── Scanning in progress ── */}
           {phase === 'scanning' && (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center">
-              <LoaderCircle className="h-8 w-8 animate-spin text-emerald-600" />
-              <p className="text-sm font-semibold text-slate-700">جارٍ مسح الوثيقة وتحليلها…</p>
-              <p className="text-xs text-slate-400">قد يستغرق ذلك حتى دقيقة واحدة</p>
+            <div className="flex flex-col items-center justify-center gap-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-12 text-center">
+              <LoaderCircle className="h-10 w-10 animate-spin text-emerald-600" />
+              <div className="space-y-1">
+                <p className="text-base font-bold text-slate-900">جارٍ مسح الوثيقة واستخراج البيانات…</p>
+                <p className="text-xs text-slate-500">يرجى الانتظار، قد يستغرق ذلك بضع ثوانٍ</p>
+              </div>
             </div>
           )}
 
-          {/* ── Review scanned document ── */}
+          {/* ── Reviewing scanned document & extracted fields ── */}
           {phase === 'reviewing' && documentUrl && (
             <>
               <div className="space-y-2">
-                <h3 className="text-sm font-bold text-slate-800">الوثيقة الممسوحة</h3>
-                <div className="max-h-[38vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-2 text-center">
-                  <img src={documentUrl} alt="الوثيقة الممسوحة" className="mx-auto max-h-[34vh] max-w-full object-contain" />
+                <h3 className="text-sm font-bold text-slate-800">صورة الوثيقة الممسوحة</h3>
+                <div className="max-h-[36vh] overflow-auto rounded-2xl border border-slate-200 bg-slate-100 p-2 text-center">
+                  <img
+                    src={documentUrl}
+                    alt="الوثيقة الممسوحة"
+                    className="mx-auto max-h-[32vh] max-w-full object-contain rounded-lg"
+                  />
                 </div>
               </div>
 
@@ -510,10 +504,18 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                 {/* Profile photo */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-bold text-slate-800">الصورة الشخصية</h3>
-                  {profileUrl
-                    ? <img src={profileUrl} alt="الصورة الشخصية المستخرجة" className="h-40 w-40 rounded-2xl border border-slate-200 object-cover" />
-                    : <div className="flex h-40 w-40 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-center text-xs text-slate-500">لا توجد صورة<br />اختر صورة يدوياً</div>
-                  }
+                  {profileUrl ? (
+                    <img
+                      src={profileUrl}
+                      alt="الصورة المستخرجة"
+                      className="h-40 w-40 rounded-2xl border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-40 w-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-xs text-slate-500">
+                      <span>لا توجد صورة شخصية</span>
+                      <span className="text-[10px] text-slate-400 mt-1">يمكنك اختيار صورة يدوياً</span>
+                    </div>
+                  )}
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                     <Upload className="h-4 w-4" />
                     اختيار صورة
@@ -526,21 +528,37 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                   </label>
                 </div>
 
-                {/* Editable fields */}
+                {/* Editable review fields */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-slate-800">راجع المعلومات المستخرجة وعدّلها عند الحاجة</h3>
+                  <h3 className="text-sm font-bold text-slate-800">
+                    مراجعة وتعديل بيانات الطالب
+                  </h3>
                   <label className="block space-y-1 text-xs font-semibold">
                     <span>اسم الطالب *</span>
-                    <input value={review.name} onChange={(e) => update('name', e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2.5" />
+                    <input
+                      value={review.name}
+                      onChange={(e) => update('name', e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                      placeholder="الاسم الكامل"
+                    />
                   </label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="block space-y-1 text-xs font-semibold">
                       <span>تاريخ الميلاد</span>
-                      <input type="date" value={review.dateOfBirth} onChange={(e) => update('dateOfBirth', e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2.5" />
+                      <input
+                        type="date"
+                        value={review.dateOfBirth}
+                        onChange={(e) => update('dateOfBirth', e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                      />
                     </label>
                     <label className="block space-y-1 text-xs font-semibold">
-                      <span>المستوى</span>
-                      <select value={review.level} onChange={(e) => update('level', e.target.value as Review['level'])} className="w-full rounded-xl border border-slate-300 px-3 py-2.5">
+                      <span>المستوى التعليمي</span>
+                      <select
+                        value={review.level}
+                        onChange={(e) => update('level', e.target.value as Review['level'])}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                      >
                         <option value="primary">ابتدائي</option>
                         <option value="middle">متوسط</option>
                         <option value="secondary">ثانوي</option>
@@ -548,28 +566,59 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                     </label>
                     <label className="block space-y-1 text-xs font-semibold">
                       <span>الجنس</span>
-                      <select value={review.gender} onChange={(e) => update('gender', e.target.value as Review['gender'])} className="w-full rounded-xl border border-slate-300 px-3 py-2.5">
+                      <select
+                        value={review.gender}
+                        onChange={(e) => update('gender', e.target.value as Review['gender'])}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                      >
                         <option value="male">ذكر</option>
                         <option value="female">أنثى</option>
                       </select>
                     </label>
                     <label className="block space-y-1 text-xs font-semibold">
                       <span>هاتف ولي الأمر</span>
-                      <input type="tel" dir="ltr" value={review.guardianPhone} onChange={(e) => update('guardianPhone', e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-left" />
+                      <input
+                        type="tel"
+                        dir="ltr"
+                        value={review.guardianPhone}
+                        onChange={(e) => update('guardianPhone', e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-left text-sm"
+                        placeholder="05XXXXXXXX"
+                      />
                     </label>
                   </div>
                   <label className="block space-y-1 text-xs font-semibold">
                     <span>العنوان</span>
-                    <textarea value={review.address} onChange={(e) => update('address', e.target.value)} rows={2} className="w-full rounded-xl border border-slate-300 px-3 py-2.5" />
+                    <textarea
+                      value={review.address}
+                      onChange={(e) => update('address', e.target.value)}
+                      rows={2}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    />
                   </label>
-                  <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                    <Button type="button" onClick={() => void create(false)} disabled={!review.name.trim()}>
-                      موافق وحفظ الطالب
+
+                  <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-3">
+                    <Button
+                      type="button"
+                      onClick={() => void createStudent(false)}
+                      disabled={submitting || !review.name.trim()}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
+                      حفظ وتأكيد الطالب
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => { setDocumentUrl(''); setScanId(''); setDuplicateMatches([]); setReview(defaultReview); setProfileImage(null); setPhase('ready'); }}
+                      onClick={() => {
+                        setDocumentUrl('');
+                        setScanId('');
+                        setDuplicateMatches([]);
+                        setReview(defaultReview);
+                        setProfileImage(null);
+                        setPhase('ready');
+                      }}
+                      disabled={submitting}
                     >
                       إعادة المسح
                     </Button>
@@ -580,7 +629,7 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
             </>
           )}
 
-          {/* Notices, errors, duplicates */}
+          {/* Notices & general errors */}
           {notice && (
             <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
               {notice}
@@ -591,6 +640,8 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
               {error}
             </div>
           )}
+
+          {/* Duplicate student warnings */}
           {duplicateMatches.length > 0 && (
             <div role="alertdialog" aria-label="طالب بنفس الاسم موجود" className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 p-4">
               <h3 className="font-bold text-amber-950">يوجد طالب مسجل بالاسم نفسه</h3>
@@ -603,10 +654,11 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                 تحقق من الوثيقة. يمكنك إلغاء العملية أو المتابعة وإضافة طالب آخر بالاسم نفسه.
               </p>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setDuplicateMatches([])}>
+                <Button type="button" variant="outline" onClick={() => setDuplicateMatches([])} disabled={submitting}>
                   إلغاء
                 </Button>
-                <Button type="button" onClick={() => void create(true)}>
+                <Button type="button" onClick={() => void createStudent(true)} disabled={submitting}>
+                  {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
                   إنشاء على أي حال
                 </Button>
               </div>

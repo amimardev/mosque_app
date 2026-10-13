@@ -16,7 +16,6 @@ use axum::{Json, Router};
 use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use subtle::ConstantTimeEq;
 use tokio::sync::Mutex;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing::{error, info, warn};
@@ -25,11 +24,11 @@ use tracing_subscriber::util::SubscriberInitExt;
 
 const MAX_SCAN_BYTES: usize = 15 * 1024 * 1024;
 const DEFAULT_NAPS2_PATH: &str = r"C:\Program Files\NAPS2\NAPS2.Console.exe";
+const DEFAULT_APP_ORIGINS: &str = "https://mosque-app-pi.vercel.app,http://localhost:3000,http://127.0.0.1:3000";
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[derive(Clone)]
 struct AppState {
-    token: String,
     allowed_origins: Vec<String>,
     naps2_path: PathBuf,
     scan_lock: Arc<Mutex<()>>,
@@ -104,32 +103,6 @@ fn require_local_request(headers: &HeaderMap, allowed_origins: &[String]) -> Res
     Ok(())
 }
 
-fn require_token(headers: &HeaderMap, state: &AppState) -> Result<(), AppError> {
-    require_local_request(headers, &state.allowed_origins)?;
-
-    let expected = &state.token;
-    let provided = headers
-        .get("x-scanner-agent-token")
-        .and_then(|v| v.to_str().ok());
-
-    let is_valid = match provided {
-        Some(token) => {
-            expected.len() >= 32
-                && expected.len() == token.len()
-                && bool::from(expected.as_bytes().ct_eq(token.as_bytes()))
-        }
-        None => false,
-    };
-
-    if !is_valid {
-        return Err(AppError::new(
-            StatusCode::UNAUTHORIZED,
-            "Scanner agent token is invalid",
-        ));
-    }
-
-    Ok(())
-}
 
 fn run_command_with_timeout(
     mut cmd: Command,
@@ -318,11 +291,9 @@ async fn health_handler(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     require_local_request(&headers, &state.allowed_origins)?;
-    let configured = state.token.len() >= 32;
     Ok(Json(json!({
-        "ok": configured,
-        "version": "1.0.0",
-        "token_configured": configured
+        "ok": true,
+        "version": "1.0.0"
     })))
 }
 
@@ -330,7 +301,7 @@ async fn scanners_handler(
     headers: HeaderMap,
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    require_token(&headers, &state)?;
+    require_local_request(&headers, &state.allowed_origins)?;
     let naps2_path = state.naps2_path.clone();
 
     let scanners = tokio::task::spawn_blocking(move || list_scanners_sync(&naps2_path))
@@ -345,7 +316,7 @@ async fn scan_handler(
     State(state): State<AppState>,
     Json(body): Json<ScanRequest>,
 ) -> Result<Json<ScanImage>, AppError> {
-    require_token(&headers, &state)?;
+    require_local_request(&headers, &state.allowed_origins)?;
 
     if body.scanner_id.is_empty() || body.scanner_id.len() > 512 {
         return Err(AppError::new(StatusCode::BAD_REQUEST, "Invalid scanner_id"));
@@ -400,8 +371,14 @@ async fn main() {
     info!("Starting Mosque Student Scanner Agent (Rust)");
 
     // 4. Read configuration
-    let token = std::env::var("SCANNER_AGENT_TOKEN").unwrap_or_default();
-    let configured_origins = std::env::var("MOSQUE_APP_ORIGINS").unwrap_or_default();
+    let configured_origins = std::env::var("MOSQUE_APP_ORIGINS")
+        .unwrap_or_else(|_| DEFAULT_APP_ORIGINS.to_string());
+    let configured_origins = if configured_origins.trim().is_empty() {
+        DEFAULT_APP_ORIGINS.to_string()
+    } else {
+        configured_origins
+    };
+
     let allowed_origins: Vec<String> = configured_origins
         .split(',')
         .map(str::trim)
@@ -419,7 +396,6 @@ async fn main() {
         .unwrap_or(8765);
 
     let state = AppState {
-        token,
         allowed_origins: allowed_origins.clone(),
         naps2_path,
         scan_lock: Arc::new(Mutex::new(())),
@@ -428,10 +404,7 @@ async fn main() {
     // 5. Build CORS layer
     let mut cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-        .allow_headers([
-            header::CONTENT_TYPE,
-            header::HeaderName::from_static("x-scanner-agent-token"),
-        ])
+        .allow_headers([header::CONTENT_TYPE])
         .max_age(Duration::from_secs(300));
 
     if allowed_origins.is_empty() {
