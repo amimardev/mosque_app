@@ -9,6 +9,21 @@ export async function ensureDatabaseInitialized(): Promise<void> {
 
   initializingPromise = (async () => {
     try {
+      // 0. Quick check: if schema is already initialized, skip all DDL statements
+      const checkMigration = await sql`
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'schema_migrations'
+      `;
+      if (Array.isArray(checkMigration) && checkMigration.length > 0) {
+        const applied = await sql`
+          SELECT 1 FROM schema_migrations WHERE version = 'v1_initial_schema' LIMIT 1
+        `;
+        if (Array.isArray(applied) && applied.length > 0) {
+          initialized = true;
+          return;
+        }
+      }
+
       // Automatic migration check
       await sql`
         DO $$
@@ -87,8 +102,13 @@ export async function ensureDatabaseInitialized(): Promise<void> {
           -- Clean any orphan groups with NULL type_id by assigning to 'gt_1'
           UPDATE groups SET type_id = 'gt_1' WHERE type_id IS NULL OR type_id = '';
 
-          -- Enforce NOT NULL constraint
-          ALTER TABLE groups ALTER COLUMN type_id SET NOT NULL;
+          -- Enforce NOT NULL constraint only if column is currently nullable
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name='groups' AND column_name='type_id' AND is_nullable='YES'
+          ) THEN
+            ALTER TABLE groups ALTER COLUMN type_id SET NOT NULL;
+          END IF;
         END $$;
       `;
 
@@ -379,6 +399,19 @@ export async function ensureDatabaseInitialized(): Promise<void> {
         END $$;
       `;
 
+      // Record migration version to prevent re-running DDL on subsequent cold starts
+      await sql`
+        CREATE TABLE IF NOT EXISTS schema_migrations (
+          version TEXT PRIMARY KEY,
+          applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+      `;
+      await sql`
+        INSERT INTO schema_migrations (version)
+        VALUES ('v1_initial_schema')
+        ON CONFLICT (version) DO NOTHING;
+      `;
+
       initialized = true;
     } catch (err) {
       console.error('Failed to initialize Madrasa database:', err);
@@ -388,4 +421,18 @@ export async function ensureDatabaseInitialized(): Promise<void> {
   })();
 
   return initializingPromise;
+}
+
+const isDirectRun = process.argv[1] && (process.argv[1].endsWith('init.ts') || process.argv[1].endsWith('init.js'));
+if (isDirectRun) {
+  console.log('Running database migrations...');
+  ensureDatabaseInitialized()
+    .then(() => {
+      console.log('Database migrations completed successfully.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Database migration failed:', err);
+      process.exit(1);
+    });
 }
