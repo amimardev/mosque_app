@@ -50,6 +50,31 @@ show a Local Network Access permission prompt. The user must allow the site to
 reach the local scanner agent; the site cannot grant this browser permission
 itself.
 
+## Releasing a new version
+
+The GitHub Actions workflow (`.github/workflows/scanner-agent.yml`) builds the
+Rust binary and packages the installer automatically on every push to `main`
+that touches files under `scanner-agent/`. **The build runs on every push, but
+a GitHub Release is only created when you push a version tag.**
+
+To publish a new installer to the stable download URL used by the website:
+
+```bash
+git tag scanner-agent-v1.0.1
+git push origin scanner-agent-v1.0.1
+```
+
+This triggers the same build, then creates a GitHub Release named
+`scanner-agent-v1.0.1` with `ScannerAgentSetup-Rust.exe` attached. The stable
+download URL never changes:
+
+```
+https://github.com/amimardev/mosque_app/releases/latest/download/ScannerAgentSetup-Rust.exe
+```
+
+The website's **agent not installed** dialog always points to this URL, so
+users automatically get the latest installer without any frontend changes.
+
 ## Troubleshooting
 
 - If health reports `token_configured: false`, set a 32-character-or-longer
