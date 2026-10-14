@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Download, ExternalLink, LoaderCircle, RefreshCw, ScanLine, Upload, X } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from '../ui/toast';
 import { extractStudentDocumentFn, createScannedStudentFn } from '../../server/functions/studentDocuments';
 import { cropPhotoFromBlob } from '../../lib/warpQuad';
@@ -466,8 +467,12 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
               </div>
 
               <div className="pt-2 border-t border-amber-200/60">
-                <Button type="button" onClick={initScannerAgent} className="gap-2">
-                  <RefreshCw className="h-4 w-4" />
+                <Button
+                  type="button"
+                  onClick={initScannerAgent}
+                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs cursor-pointer"
+                >
+                  <RefreshCw className="h-4 w-4 text-white" />
                   إعادة البحث عن الماسحات
                 </Button>
               </div>
@@ -476,7 +481,7 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
 
           {/* ── Ready to scan ── */}
           {phase === 'ready' && (
-            <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="space-y-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 shadow-2xs">
               <div className="flex items-center justify-between">
                 <label htmlFor="scanner-select" className="text-xs font-bold text-slate-800">
                   اختر الماسح الضوئي:
@@ -484,33 +489,36 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                 <button
                   type="button"
                   onClick={initScannerAgent}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 transition-colors cursor-pointer"
                 >
                   <RefreshCw className="h-3 w-3" />
                   تحديث القائمة
                 </button>
               </div>
 
-              <select
-                id="scanner-select"
-                value={scannerId}
-                onChange={(e) => setScannerId(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              >
-                {scanners.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              <Select value={scannerId} onValueChange={(val) => setScannerId(val)} dir="rtl">
+                <SelectTrigger
+                  id="scanner-select"
+                  className="w-full bg-white text-right border-slate-200 shadow-2xs text-slate-800 hover:border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500/20"
+                >
+                  <SelectValue placeholder="اختر الماسح الضوئي" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {scanners.map((s) => (
+                    <SelectItem key={s.id} value={s.id} className="text-right">
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               <Button
                 type="button"
                 onClick={startScan}
                 disabled={!scannerId}
-                className="w-full py-3 text-sm gap-2 bg-emerald-600 hover:bg-emerald-700"
+                className="w-full py-3 text-sm gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50"
               >
-                <ScanLine className="h-5 w-5" />
+                <ScanLine className="h-5 w-5 text-white" />
                 بدء مسح الوثيقة
               </Button>
             </div>
@@ -714,9 +722,9 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                         type="button"
                         onClick={() => void createStudent(false)}
                         disabled={submitting || !review.name.trim()}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs cursor-pointer"
                       >
-                        {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
+                        {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2 text-white" /> : null}
                         حفظ وتأكيد الطالب
                       </Button>
                       <Button
@@ -774,8 +782,13 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                 <Button type="button" variant="outline" onClick={() => setDuplicateMatches([])} disabled={submitting}>
                   إلغاء
                 </Button>
-                <Button type="button" onClick={() => void createStudent(true)} disabled={submitting}>
-                  {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
+                <Button
+                  type="button"
+                  onClick={() => void createStudent(true)}
+                  disabled={submitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs cursor-pointer"
+                >
+                  {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2 text-white" /> : null}
                   إنشاء على أي حال
                 </Button>
               </div>
