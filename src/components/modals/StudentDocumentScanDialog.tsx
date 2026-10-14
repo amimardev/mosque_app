@@ -3,6 +3,7 @@ import { AlertCircle, Download, LoaderCircle, RefreshCw, ScanLine, Upload, X } f
 import { Button } from '../ui/button';
 import { toast } from '../ui/toast';
 import { extractStudentDocumentFn, createScannedStudentFn } from '../../server/functions/studentDocuments';
+import { cropPhotoFromBlob } from '../../lib/warpQuad';
 
 /** Stable download URL for latest installer released via GitHub Actions */
 const SCANNER_AGENT_INSTALLER_URL =
@@ -240,7 +241,17 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
           address: extracted.student.address || '',
           guardianPhone: extracted.student.guardianPhone || '',
         });
-        setProfileImage(extracted.profileImage);
+        // Crop student portrait photo directly in the browser using native Canvas API
+        if (extracted.photo_box_1000) {
+          try {
+            const cropped = await cropPhotoFromBlob(blob, extracted.photo_box_1000);
+            if (cropped) {
+              setProfileImage(cropped);
+            }
+          } catch (cropErr) {
+            console.warn('Failed to crop portrait photo in browser:', cropErr);
+          }
+        }
         if (extracted.warnings?.length) {
           setNotice(extracted.warnings.join(' '));
         }

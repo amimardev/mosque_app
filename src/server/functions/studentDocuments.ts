@@ -1,8 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { GoogleGenAI } from '@google/genai';
-import sharp from 'sharp';
 import { z } from 'zod';
-import { getDuplicateNameWarning, getPhotoCropBounds } from '../studentDocumentUtils.js';
+import { getDuplicateNameWarning } from '../studentDocumentUtils.js';
 
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const imageInput = z.object({
@@ -30,6 +29,23 @@ const FALLBACK_MODELS = [
 const prompt = `Read this scanned student registration document. Return only JSON with keys:
 name, dateOfBirth, gender, level, address, guardianPhone, photo_box_1000.
 Use null for unreadable/missing values. Preserve the student's name and address in the script used on the document. dateOfBirth must be YYYY-MM-DD when readable. gender must be "male" or "female" when readable. Map study level to primary, middle, or secondary; use null if uncertain. guardianPhone is the parent/guardian phone, not the student's phone. photo_box_1000 is null when no student portrait exists; otherwise return [ymin,xmin,ymax,xmax] normalized to integers 0..1000 and covering only the portrait.`;
+
+function isValidImageFormat(bytes: Buffer, mimeType: string) {
+  if (bytes.length < 12) return false;
+  if (mimeType === 'image/jpeg') {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (mimeType === 'image/png') {
+    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+  }
+  if (mimeType === 'image/webp') {
+    return (
+      bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+    );
+  }
+  return false;
+}
 
 function decodeImage(imageBase64: string) {
   const bytes = Buffer.from(imageBase64, 'base64');
@@ -61,9 +77,7 @@ export const extractStudentDocumentFn = createServerFn({ method: 'POST' })
     if (!apiKey) throw new Error('GEMINI_API_KEY غير مضبوط على الخادم');
 
     const image = decodeImage(data.imageBase64);
-    const imageMetadata = await sharp(image).metadata();
-    const expectedFormat = { 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp' }[data.mimeType];
-    if (!imageMetadata.width || !imageMetadata.height || imageMetadata.format !== expectedFormat) {
+    if (!isValidImageFormat(image, data.mimeType)) {
       throw new Error('صيغة صورة الوثيقة غير صالحة');
     }
     const ai = new GoogleGenAI({ apiKey });
@@ -113,31 +127,24 @@ export const extractStudentDocumentFn = createServerFn({ method: 'POST' })
       throw new Error(`تعذر استخراج بيانات الوثيقة بعد تجربة جميع نماذج الذكاء الاصطناعي المتاحة${detail}`);
     }
 
-    let profileImage: { mimeType: 'image/jpeg'; imageBase64: string } | null = null;
+    const { photo_box_1000, ...fields } = parsed;
     const warnings: string[] = [];
-    if (parsed.photo_box_1000) {
-      try {
-        const metadata = await sharp(image).metadata();
-        if (!metadata.width || !metadata.height) throw new Error('Invalid image dimensions');
-        const crop = getPhotoCropBounds(parsed.photo_box_1000, metadata.width, metadata.height);
-        if (!crop) throw new Error('Invalid photo bounds');
-        const cropped = await sharp(image).extract(crop).jpeg({ quality: 88 }).toBuffer();
-        profileImage = { mimeType: 'image/jpeg', imageBase64: cropped.toString('base64') };
-      } catch (error) {
-        console.warn('Unable to crop student portrait:', error);
-        warnings.push('لم نتمكن من قص الصورة الشخصية تلقائياً؛ يمكنك اختيار صورة يدوياً.');
-      }
-    } else {
+    if (!photo_box_1000) {
       warnings.push('لم يتم العثور على صورة شخصية واضحة في الوثيقة.');
     }
 
-    const { photo_box_1000: _photoBox, ...fields } = parsed;
     if (!fields.name?.trim()) warnings.push('تعذر قراءة اسم الطالب؛ أدخله يدوياً.');
     if (!fields.level) warnings.push('المستوى غير واضح؛ اختر المستوى الصحيح يدوياً.');
     if (!fields.gender) warnings.push('جنس الطالب غير واضح؛ اختره يدوياً.');
     const dateOfBirth = normalizeDate(fields.dateOfBirth);
     if (fields.dateOfBirth && !dateOfBirth) warnings.push('تاريخ الميلاد غير واضح؛ أدخله يدوياً.');
-    return { student: { ...fields, dateOfBirth }, profileImage, warnings };
+
+    return {
+      student: { ...fields, dateOfBirth },
+      photo_box_1000,
+      profileImage: null,
+      warnings,
+    };
   });
 
 const createInput = z.object({
