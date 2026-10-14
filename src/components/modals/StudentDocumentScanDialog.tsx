@@ -92,6 +92,9 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
   const [review, setReview] = useState<Review>(defaultReview);
   const [duplicateMatches, setDuplicateMatches] = useState<{ id: string; name: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [scannedBlob, setScannedBlob] = useState<Blob | null>(null);
+  const [aiStatus, setAiStatus] = useState<'idle' | 'extracting' | 'success' | 'error'>('idle');
+  const [aiError, setAiError] = useState('');
 
   useEffect(() => {
     return () => {
@@ -168,12 +171,15 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
     if (phase === 'scanning' || submitting) return;
     if (documentUrl) URL.revokeObjectURL(documentUrl);
     setDocumentUrl('');
+    setScannedBlob(null);
     setScanners([]);
     setScannerId('');
     setScanId('');
     setProfileImage(null);
     setReview(defaultReview);
     setDuplicateMatches([]);
+    setAiStatus('idle');
+    setAiError('');
     setError('');
     setNotice('');
     onClose();
@@ -224,52 +230,64 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
       const blob = base64ToBlob(result.image_base64, result.mime_type);
       if (documentUrl) URL.revokeObjectURL(documentUrl);
       setDocumentUrl(URL.createObjectURL(blob));
+      setScannedBlob(blob);
       setScanId(result.scan_id);
       setProfileImage(null);
       setReview(defaultReview);
       setPhase('reviewing');
 
-      // AI document extraction
-      try {
-        const compressed = await compressForServer(blob);
-        const extracted = await extractStudentDocumentFn({ data: compressed });
-        setReview({
-          name: extracted.student.name || '',
-          dateOfBirth: extracted.student.dateOfBirth || '',
-          gender: extracted.student.gender || 'male',
-          level: extracted.student.level || 'middle',
-          address: extracted.student.address || '',
-          guardianPhone: extracted.student.guardianPhone || '',
-        });
-        // Crop student portrait photo directly in the browser using native Canvas API
-        if (extracted.photo_box_1000) {
-          try {
-            const cropped = await cropPhotoFromBlob(blob, extracted.photo_box_1000);
-            if (cropped) {
-              setProfileImage(cropped);
-            }
-          } catch (cropErr) {
-            console.warn('Failed to crop portrait photo in browser:', cropErr);
-          }
-        }
-        if (extracted.warnings?.length) {
-          setNotice(extracted.warnings.join(' '));
-        }
-      } catch (cause) {
-        const isNet = cause instanceof TypeError;
-        toast.add({
-          type: 'error',
-          title: isNet ? 'خطأ في الاتصال بالخادم' : 'تعذر تحليل الوثيقة',
-          description: isNet
-            ? 'تعذر الاتصال بالخادم لتحليل الوثيقة. تحقق من اتصالك بالإنترنت.'
-            : cause instanceof Error
-              ? cause.message
-              : 'تعذر تحليل الوثيقة تلقائياً',
-        });
-        setError('تعذر استخراج البيانات تلقائياً، يرجى كتابتها يدوياً.');
-      }
+      await extractDocumentData(blob);
     } catch {
       setPhase('ready');
+    }
+  };
+
+  const extractDocumentData = async (blob: Blob) => {
+    setAiStatus('extracting');
+    setAiError('');
+    setError('');
+    setNotice('');
+
+    try {
+      const compressed = await compressForServer(blob);
+      const extracted = await extractStudentDocumentFn({ data: compressed });
+      setReview({
+        name: extracted.student.name || '',
+        dateOfBirth: extracted.student.dateOfBirth || '',
+        gender: extracted.student.gender || 'male',
+        level: extracted.student.level || 'middle',
+        address: extracted.student.address || '',
+        guardianPhone: extracted.student.guardianPhone || '',
+      });
+      // Crop student portrait photo directly in the browser using native Canvas API
+      if (extracted.photo_box_1000) {
+        try {
+          const cropped = await cropPhotoFromBlob(blob, extracted.photo_box_1000);
+          if (cropped) {
+            setProfileImage(cropped);
+          }
+        } catch (cropErr) {
+          console.warn('Failed to crop portrait photo in browser:', cropErr);
+        }
+      }
+      if (extracted.warnings?.length) {
+        setNotice(extracted.warnings.join(' '));
+      }
+      setAiStatus('success');
+    } catch (cause) {
+      const isNet = cause instanceof TypeError;
+      const msg = isNet
+        ? 'تعذر الاتصال بالخادم لتحليل الوثيقة. تحقق من اتصالك بالإنترنت.'
+        : cause instanceof Error
+          ? cause.message
+          : 'تعذر تحليل الوثيقة تلقائياً';
+      setAiError(msg);
+      setAiStatus('error');
+      toast.add({
+        type: 'error',
+        title: isNet ? 'خطأ في الاتصال بالخادم' : 'تعذر تحليل الوثيقة',
+        description: msg,
+      });
     }
   };
 
@@ -491,13 +509,13 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
             <div className="flex flex-col items-center justify-center gap-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-12 text-center">
               <LoaderCircle className="h-10 w-10 animate-spin text-emerald-600" />
               <div className="space-y-1">
-                <p className="text-base font-bold text-slate-900">جارٍ مسح الوثيقة واستخراج البيانات…</p>
-                <p className="text-xs text-slate-500">يرجى الانتظار، قد يستغرق ذلك بضع ثوانٍ</p>
+                <p className="text-base font-bold text-slate-900">جارٍ مسح الوثيقة عبر الماسح الضوئي…</p>
+                <p className="text-xs text-slate-500">يرجى الانتظار حتى ينتهي الماسح من سحب وتصوير الوثيقة</p>
               </div>
             </div>
           )}
 
-          {/* ── Reviewing scanned document & extracted fields ── */}
+          {/* ── Reviewing scanned document ── */}
           {phase === 'reviewing' && documentUrl && (
             <>
               <div className="space-y-2">
@@ -511,132 +529,208 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                 </div>
               </div>
 
-              <div className="grid gap-5 border-t border-slate-100 pt-4 md:grid-cols-[180px_1fr]">
-                {/* Profile photo */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-slate-800">الصورة الشخصية</h3>
-                  {profileUrl ? (
-                    <img
-                      src={profileUrl}
-                      alt="الصورة المستخرجة"
-                      className="h-40 w-40 rounded-2xl border border-slate-200 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-40 w-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-xs text-slate-500">
-                      <span>لا توجد صورة شخصية</span>
-                      <span className="text-[10px] text-slate-400 mt-1">يمكنك اختيار صورة يدوياً</span>
-                    </div>
-                  )}
-                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                    <Upload className="h-4 w-4" />
-                    اختيار صورة
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
-                      onChange={(e) => void selectPhoto(e.target.files?.[0])}
-                    />
-                  </label>
-                </div>
-
-                {/* Editable review fields */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    مراجعة وتعديل بيانات الطالب
-                  </h3>
-                  <label className="block space-y-1 text-xs font-semibold">
-                    <span>اسم الطالب *</span>
-                    <input
-                      value={review.name}
-                      onChange={(e) => update('name', e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                      placeholder="الاسم الكامل"
-                    />
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block space-y-1 text-xs font-semibold">
-                      <span>تاريخ الميلاد</span>
-                      <input
-                        type="date"
-                        value={review.dateOfBirth}
-                        onChange={(e) => update('dateOfBirth', e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                      />
-                    </label>
-                    <label className="block space-y-1 text-xs font-semibold">
-                      <span>المستوى التعليمي</span>
-                      <select
-                        value={review.level}
-                        onChange={(e) => update('level', e.target.value as Review['level'])}
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                      >
-                        <option value="primary">ابتدائي</option>
-                        <option value="middle">متوسط</option>
-                        <option value="secondary">ثانوي</option>
-                      </select>
-                    </label>
-                    <label className="block space-y-1 text-xs font-semibold">
-                      <span>الجنس</span>
-                      <select
-                        value={review.gender}
-                        onChange={(e) => update('gender', e.target.value as Review['gender'])}
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                      >
-                        <option value="male">ذكر</option>
-                        <option value="female">أنثى</option>
-                      </select>
-                    </label>
-                    <label className="block space-y-1 text-xs font-semibold">
-                      <span>هاتف ولي الأمر</span>
-                      <input
-                        type="tel"
-                        dir="ltr"
-                        value={review.guardianPhone}
-                        onChange={(e) => update('guardianPhone', e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-left text-sm"
-                        placeholder="05XXXXXXXX"
-                      />
-                    </label>
+              {/* ── AI Loading State: show spinning circle with clear waiting explanation ── */}
+              {aiStatus === 'extracting' && (
+                <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
+                  <LoaderCircle className="h-10 w-10 animate-spin text-emerald-600" />
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-bold text-slate-800">
+                      جارٍ تحليل الوثيقة واستخراج بيانات الطالب بالذكاء الاصطناعي…
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      يرجى الانتظار، يجري التعرف على نصوص الوثيقة وتحديد الصورة الشخصية تلقائياً
+                    </p>
                   </div>
-                  <label className="block space-y-1 text-xs font-semibold">
-                    <span>العنوان</span>
-                    <textarea
-                      value={review.address}
-                      onChange={(e) => update('address', e.target.value)}
-                      rows={2}
-                      className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
-                    />
-                  </label>
+                </div>
+              )}
 
-                  <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-3">
-                    <Button
-                      type="button"
-                      onClick={() => void createStudent(false)}
-                      disabled={submitting || !review.name.trim()}
-                      className="bg-emerald-600 hover:bg-emerald-700"
-                    >
-                      {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
-                      حفظ وتأكيد الطالب
-                    </Button>
+              {/* ── AI Error State: show error message directly instead of the form ── */}
+              {aiStatus === 'error' && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center space-y-3.5">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-rose-950">فشل تحليل الوثيقة</h4>
+                    <p className="text-xs text-rose-800 leading-relaxed max-w-md mx-auto">
+                      {aiError || 'تعذر استخراج بيانات الطالب من الوثيقة تلقائياً.'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {scannedBlob && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void extractDocumentData(scannedBlob)}
+                        className="text-xs gap-1.5"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        إعادة محاولة التحليل
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => {
+                        if (documentUrl) URL.revokeObjectURL(documentUrl);
                         setDocumentUrl('');
+                        setScannedBlob(null);
                         setScanId('');
                         setDuplicateMatches([]);
                         setReview(defaultReview);
                         setProfileImage(null);
+                        setAiStatus('idle');
+                        setAiError('');
                         setPhase('ready');
                       }}
-                      disabled={submitting}
+                      className="text-xs gap-1.5"
                     >
                       إعادة المسح
                     </Button>
+                    <button
+                      type="button"
+                      onClick={() => setAiStatus('success')}
+                      className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 underline"
+                    >
+                      أو إدخال البيانات يدوياً
+                    </button>
                   </div>
-                  {scanId && <p className="text-[10px] text-slate-400">رقم المسح: {scanId}</p>}
                 </div>
-              </div>
+              )}
+
+              {/* ── Extracted Data Form: only shown when AI extraction succeeds ── */}
+              {aiStatus === 'success' && (
+                <div className="grid gap-5 border-t border-slate-100 pt-4 md:grid-cols-[180px_1fr]">
+                  {/* Profile photo */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-slate-800">الصورة الشخصية</h3>
+                    {profileUrl ? (
+                      <img
+                        src={profileUrl}
+                        alt="الصورة المستخرجة"
+                        className="h-40 w-40 rounded-2xl border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-40 w-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-3 text-center text-xs text-slate-500">
+                        <span>لا توجد صورة شخصية</span>
+                        <span className="text-[10px] text-slate-400 mt-1">يمكنك اختيار صورة يدوياً</span>
+                      </div>
+                    )}
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                      <Upload className="h-4 w-4" />
+                      اختيار صورة
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={(e) => void selectPhoto(e.target.files?.[0])}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Editable review fields */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      مراجعة وتعديل بيانات الطالب
+                    </h3>
+                    <label className="block space-y-1 text-xs font-semibold">
+                      <span>اسم الطالب *</span>
+                      <input
+                        value={review.name}
+                        onChange={(e) => update('name', e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                        placeholder="الاسم الكامل"
+                      />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>تاريخ الميلاد</span>
+                        <input
+                          type="date"
+                          value={review.dateOfBirth}
+                          onChange={(e) => update('dateOfBirth', e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                        />
+                      </label>
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>المستوى التعليمي</span>
+                        <select
+                          value={review.level}
+                          onChange={(e) => update('level', e.target.value as Review['level'])}
+                          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                        >
+                          <option value="primary">ابتدائي</option>
+                          <option value="middle">متوسط</option>
+                          <option value="secondary">ثانوي</option>
+                        </select>
+                      </label>
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>الجنس</span>
+                        <select
+                          value={review.gender}
+                          onChange={(e) => update('gender', e.target.value as Review['gender'])}
+                          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                        >
+                          <option value="male">ذكر</option>
+                          <option value="female">أنثى</option>
+                        </select>
+                      </label>
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>هاتف ولي الأمر</span>
+                        <input
+                          type="tel"
+                          dir="ltr"
+                          value={review.guardianPhone}
+                          onChange={(e) => update('guardianPhone', e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-left text-sm"
+                          placeholder="05XXXXXXXX"
+                        />
+                      </label>
+                    </div>
+                    <label className="block space-y-1 text-xs font-semibold">
+                      <span>العنوان</span>
+                      <textarea
+                        value={review.address}
+                        onChange={(e) => update('address', e.target.value)}
+                        rows={2}
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                      />
+                    </label>
+
+                    <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-3">
+                      <Button
+                        type="button"
+                        onClick={() => void createStudent(false)}
+                        disabled={submitting || !review.name.trim()}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        {submitting ? <LoaderCircle className="h-4 w-4 animate-spin ml-2" /> : null}
+                        حفظ وتأكيد الطالب
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          if (documentUrl) URL.revokeObjectURL(documentUrl);
+                          setDocumentUrl('');
+                          setScannedBlob(null);
+                          setScanId('');
+                          setDuplicateMatches([]);
+                          setReview(defaultReview);
+                          setProfileImage(null);
+                          setAiStatus('idle');
+                          setAiError('');
+                          setPhase('ready');
+                        }}
+                        disabled={submitting}
+                      >
+                        إعادة المسح
+                      </Button>
+                    </div>
+                    {scanId && <p className="text-[10px] text-slate-400">رقم المسح: {scanId}</p>}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
