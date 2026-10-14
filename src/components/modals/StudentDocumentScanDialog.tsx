@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Download, LoaderCircle, RefreshCw, ScanLine, Upload, X } from 'lucide-react';
+import { AlertCircle, Download, ExternalLink, LoaderCircle, RefreshCw, ScanLine, Upload, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { toast } from '../ui/toast';
 import { extractStudentDocumentFn, createScannedStudentFn } from '../../server/functions/studentDocuments';
@@ -8,6 +8,9 @@ import { cropPhotoFromBlob } from '../../lib/warpQuad';
 /** Stable download URL for latest installer released via GitHub Actions */
 const SCANNER_AGENT_INSTALLER_URL =
   'https://github.com/amimardev/mosque_app/releases/latest/download/ScannerAgentSetup-Rust.exe';
+
+/** Official download URL for NAPS2 scanning driver */
+const NAPS2_DOWNLOAD_URL = 'https://www.naps2.com/download';
 
 type Phase =
   | 'checking'        // checking connection & loading scanners
@@ -425,13 +428,22 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
                 >
                   <Download className="h-4 w-4" />
-                  تنزيل وتثبيت البرنامج (Windows)
+                  تنزيل برنامج الماسح (Windows)
+                </a>
+                <a
+                  href={NAPS2_DOWNLOAD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
+                  تثبيت مشغل NAPS2
                 </a>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={initScannerAgent}
-                  className="border-slate-300"
+                  className="border-slate-300 text-xs"
                 >
                   <RefreshCw className="h-4 w-4" />
                   إعادة المحاولة
