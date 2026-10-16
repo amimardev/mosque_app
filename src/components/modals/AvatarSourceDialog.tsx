@@ -16,7 +16,6 @@ import {
   Camera,
   ScanLine,
   RefreshCw,
-  SwitchCamera,
   LoaderCircle,
   FileImage,
   AlertCircle,
@@ -56,9 +55,6 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string>('');
   const [isCameraStarting, setIsCameraStarting] = useState(false);
 
@@ -70,6 +66,13 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
       (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent))
     );
   }, []);
+
+  // Ensure mobile never stays on desktop camera tab
+  useEffect(() => {
+    if (isMobile && activeTab === 'camera') {
+      setActiveTab('upload');
+    }
+  }, [isMobile, activeTab]);
 
   // ── Scanner Agent States ───────────────────────────────────────────────────
   const agentUrl = useMemo(
@@ -124,160 +127,69 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     }
   }, [cameraStream]);
 
-  // Helpers to inspect camera labels
-  const isEnvironmentLabel = (label: string) => /back|rear|environment|خلف/i.test(label);
-  const isUserLabel = (label: string) => /front|user|selfie|وجه|أمام/i.test(label);
-
   // ── Camera Initializer ───────────────────────────────────────────────────────
-  const startCamera = useCallback(
-    async (targetFacingMode?: 'user' | 'environment', targetDeviceId?: string) => {
-      setIsCameraStarting(true);
-      setCameraError('');
+  const startCamera = useCallback(async () => {
+    setIsCameraStarting(true);
+    setCameraError('');
 
-      const desiredFacingMode = targetFacingMode ?? facingMode;
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('الكاميرا غير مدعومة على هذا المتصفح أو تتطلب اتصال HTTPS آمن.');
+      }
 
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error('الكاميرا غير مدعومة على هذا المتصفح أو تتطلب اتصال HTTPS آمن.');
-        }
+      // Synchronously stop previous tracks if active
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((t) => t.stop());
+        setCameraStream(null);
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
 
-        // Synchronously stop all previous tracks to release the camera hardware
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((t) => t.stop());
-          streamRef.current = null;
-        }
-        if (cameraStream) {
-          cameraStream.getTracks().forEach((t) => t.stop());
-          setCameraStream(null);
-        }
-        if (videoRef.current) {
-          videoRef.current.srcObject = null;
-        }
-
-        // Build video constraints
-        const videoConstraints: MediaTrackConstraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      setCameraStream(stream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          void videoRef.current?.play().catch(() => {});
         };
-
-        if (targetDeviceId) {
-          videoConstraints.deviceId = { ideal: targetDeviceId };
-        }
-        if (desiredFacingMode) {
-          videoConstraints.facingMode = { ideal: desiredFacingMode };
-        }
-
-        let stream: MediaStream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: videoConstraints,
-            audio: false,
-          });
-        } catch (err: any) {
-          // Fallback: If deviceId caused an issue (common when ID is randomized on iOS Safari/Android),
-          // fall back to pure facingMode constraint
-          console.warn('Initial camera stream failed, trying fallback with facingMode:', err);
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: desiredFacingMode
-              ? { facingMode: { ideal: desiredFacingMode } }
-              : true,
-            audio: false,
-          });
-        }
-
-        streamRef.current = stream;
-        setCameraStream(stream);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            void videoRef.current?.play().catch(() => {});
-          };
-          void videoRef.current.play().catch(() => {});
-        }
-
-        // Enumerate cameras
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-        setCameraDevices(videoInputs);
-
-        // Track active device settings
-        const activeTrack = stream.getVideoTracks()[0];
-        const settings = activeTrack?.getSettings();
-
-        // Update facingMode if reported by track settings
-        if (settings?.facingMode === 'user' || settings?.facingMode === 'environment') {
-          setFacingMode(settings.facingMode);
-        } else if (desiredFacingMode) {
-          setFacingMode(desiredFacingMode);
-        }
-
-        if (settings?.deviceId) {
-          setSelectedCameraId(settings.deviceId);
-        } else if (targetDeviceId) {
-          setSelectedCameraId(targetDeviceId);
-        } else if (videoInputs.length > 0 && !selectedCameraId) {
-          setSelectedCameraId(videoInputs[0].deviceId);
-        }
-      } catch (err: any) {
-        console.warn('Camera access failed:', err);
-        let msg = 'تعذر تشغيل الكاميرا. يرجى التحقق من إذن الوصول للكاميرا في إعدادات المتصفح.';
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          msg = 'تم رفض الإذن بالوصول إلى الكاميرا. يرجى السماح بها من شريط العنوان في المتصفح.';
-        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-          msg = 'لم يتم العثور على أي كاميرا متصلة بالجهاز.';
-        } else if (err.message) {
-          msg = err.message;
-        }
-        setCameraError(msg);
-      } finally {
-        setIsCameraStarting(false);
+        void videoRef.current.play().catch(() => {});
       }
-    },
-    [facingMode, cameraStream, selectedCameraId]
-  );
+    } catch (err: any) {
+      console.warn('Camera access failed:', err);
+      let msg = 'تعذر تشغيل الكاميرا. يرجى التحقق من إذن الوصول للكاميرا في إعدادات المتصفح.';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        msg = 'تم رفض الإذن بالوصول إلى الكاميرا. يرجى السماح بها من شريط العنوان في المتصفح.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        msg = 'لم يتم العثور على أي كاميرا متصلة بالجهاز.';
+      } else if (err.message) {
+        msg = err.message;
+      }
+      setCameraError(msg);
+    } finally {
+      setIsCameraStarting(false);
+    }
+  }, [cameraStream]);
 
-  // Start camera when entering the camera tab
+  // Start camera when entering the camera tab (desktop only)
   useEffect(() => {
-    if (open && activeTab === 'camera' && !cameraStream && !cameraError) {
+    if (!isMobile && open && activeTab === 'camera' && !cameraStream && !cameraError) {
       void startCamera();
     }
-  }, [open, activeTab, cameraStream, cameraError, startCamera]);
-
-  // Toggle/Switch Camera (supports mobile front/back camera and desktop webcams)
-  const handleSwitchCamera = () => {
-    if (isCameraStarting) return;
-
-    if (isMobile) {
-      // On mobile devices, toggle facingMode
-      const nextFacing = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(nextFacing);
-
-      // Check if any enumerated device has a matching label
-      const matchingDevice = cameraDevices.find((d) =>
-        nextFacing === 'environment' ? isEnvironmentLabel(d.label) : isUserLabel(d.label)
-      );
-
-      if (matchingDevice) {
-        setSelectedCameraId(matchingDevice.deviceId);
-        void startCamera(nextFacing, matchingDevice.deviceId);
-      } else {
-        void startCamera(nextFacing);
-      }
-    } else if (cameraDevices.length > 1) {
-      // On desktop with multiple webcams, cycle through device IDs
-      const currentIndex = cameraDevices.findIndex((d) => d.deviceId === selectedCameraId);
-      const nextIndex = (currentIndex + 1) % cameraDevices.length;
-      const nextDevice = cameraDevices[nextIndex];
-      setSelectedCameraId(nextDevice.deviceId);
-      void startCamera(facingMode, nextDevice.deviceId);
-    } else {
-      // Fallback: toggle facingMode
-      const nextFacing = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(nextFacing);
-      void startCamera(nextFacing);
-    }
-  };
+  }, [isMobile, open, activeTab, cameraStream, cameraError, startCamera]);
 
   // Capture Snapshot from Camera
   const handleCaptureSnapshot = () => {
@@ -422,32 +334,47 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
           onValueChange={(val) => setActiveTab(val as typeof activeTab)}
           className="w-full pt-1"
         >
-          <TabsList className="grid grid-cols-3">
+          <TabsList className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
             <TabsTrigger value="upload" className="gap-1.5">
-              <Upload className="w-4 h-4" />
-              <span>ملف من الجهاز</span>
+              {isMobile ? (
+                <>
+                  <Camera className="w-4 h-4" />
+                  <span>صورة أو كاميرا الهاتف</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4" />
+                  <span>ملف من الجهاز</span>
+                </>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="camera" className="gap-1.5">
-              <Camera className="w-4 h-4" />
-              <span>الكاميرا</span>
-            </TabsTrigger>
+            {!isMobile && (
+              <TabsTrigger value="camera" className="gap-1.5">
+                <Camera className="w-4 h-4" />
+                <span>كاميرا الويب</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="scanner" className="gap-1.5">
               <ScanLine className="w-4 h-4" />
               <span>ماسح ضوئي A4</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* ── TAB 1: File Upload ── */}
+          {/* ── TAB 1: File Upload / Mobile Unified Picker ── */}
           <TabsContent value="upload" className="space-y-4 pt-3">
             <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl cursor-pointer transition-all text-center group">
               <div className="w-12 h-12 rounded-2xl bg-white group-hover:bg-emerald-100 text-slate-500 group-hover:text-emerald-700 flex items-center justify-center shadow-xs mb-3 transition-colors">
-                <FileImage className="w-6 h-6" />
+                {isMobile ? <Camera className="w-6 h-6" /> : <FileImage className="w-6 h-6" />}
               </div>
               <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-900 mb-1">
-                اضغط لاختيار صورة من هاتفك أو جهازك
+                {isMobile
+                  ? 'اضغط لالتقاط صورة بالكاميرا أو اختيارها من الهاتف'
+                  : 'اضغط لاختيار صورة من جهازك'}
               </span>
               <span className="text-xs text-slate-400">
-                يدعم صيغ JPG، PNG، WebP، أو HEIC
+                {isMobile
+                  ? 'سيفتح لك الهاتف خيار التقاط صورة بالكاميرا أو اختيار صورة من المعرض'
+                  : 'يدعم صيغ JPG، PNG، WebP، أو HEIC'}
               </span>
               <input
                 type="file"
@@ -458,83 +385,61 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
             </label>
           </TabsContent>
 
-          {/* ── TAB 2: Camera ── */}
-          <TabsContent value="camera" keepMounted className="space-y-3 pt-3">
-            {cameraError ? (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 text-right">
-                <div className="flex items-start gap-2.5">
-                  <VideoOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-rose-800 font-semibold leading-relaxed">
-                    {cameraError}
-                  </p>
+          {/* ── TAB 2: Camera (Desktop Only) ── */}
+          {!isMobile && (
+            <TabsContent value="camera" keepMounted className="space-y-3 pt-3">
+              {cameraError ? (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 text-right">
+                  <div className="flex items-start gap-2.5">
+                    <VideoOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-rose-800 font-semibold leading-relaxed">
+                      {cameraError}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void startCamera()}
+                    className="w-full text-xs font-bold gap-2"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    إعادة محاولة تشغيل الكاميرا
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void startCamera()}
-                  className="w-full text-xs font-bold gap-2"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  إعادة محاولة تشغيل الكاميرا
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Viewfinder */}
-                <div className="relative w-full aspect-4/3 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`w-full h-full object-cover transition-transform duration-200 ${
-                      facingMode === 'user' ? 'scale-x-[-1]' : 'scale-x-1'
-                    }`}
-                  />
+              ) : (
+                <div className="space-y-3">
+                  {/* Viewfinder */}
+                  <div className="relative w-full aspect-4/3 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
 
-                  {isCameraStarting && (
-                    <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center gap-2 text-white text-xs">
-                      <LoaderCircle className="w-6 h-6 animate-spin text-emerald-400" />
-                      <span>جارٍ تشغيل الكاميرا…</span>
-                    </div>
-                  )}
+                    {isCameraStarting && (
+                      <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center gap-2 text-white text-xs">
+                        <LoaderCircle className="w-6 h-6 animate-spin text-emerald-400" />
+                        <span>جارٍ تشغيل الكاميرا…</span>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* Switch camera button (for phones with front/back camera or multiple webcams) */}
-                  {(cameraDevices.length > 1 || isMobile) && (
-                    <button
-                      type="button"
-                      onClick={handleSwitchCamera}
-                      disabled={isCameraStarting}
-                      className="absolute top-3 left-3 px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-900 active:scale-95 disabled:opacity-50 text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 backdrop-blur-xs border border-white/10"
-                      title={
-                        facingMode === 'user'
-                          ? 'التبديل إلى الكاميرا الخلفية'
-                          : 'التبديل إلى الكاميرا الأمامية'
-                      }
-                    >
-                      <SwitchCamera
-                        className={`w-4 h-4 ${isCameraStarting ? 'animate-spin' : ''}`}
-                      />
-                      <span className="text-[11px] font-medium hidden sm:inline">
-                        {facingMode === 'user' ? 'خلفية' : 'أمامية'}
-                      </span>
-                    </button>
-                  )}
+                  {/* Capture Button */}
+                  <Button
+                    type="button"
+                    onClick={handleCaptureSnapshot}
+                    disabled={isCameraStarting || !cameraStream}
+                    className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs gap-2 shadow-xs cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>التقاط الصورة الآن</span>
+                  </Button>
                 </div>
-
-                {/* Capture Button */}
-                <Button
-                  type="button"
-                  onClick={handleCaptureSnapshot}
-                  disabled={isCameraStarting || !cameraStream}
-                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs gap-2 shadow-xs cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>التقاط الصورة الآن</span>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
+              )}
+            </TabsContent>
+          )}
 
           {/* ── TAB 3: Scanner Agent ── */}
           <TabsContent value="scanner" className="space-y-4 pt-3">
