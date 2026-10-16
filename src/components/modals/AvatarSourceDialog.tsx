@@ -58,13 +58,10 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
   const [cameraError, setCameraError] = useState<string>('');
   const [isCameraStarting, setIsCameraStarting] = useState(false);
 
-  // Detect mobile or touch environment
+  // Detect mobile device
   const isMobile = useMemo(() => {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-    return (
-      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent))
-    );
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }, []);
 
   const mobileCameraInputRef = useRef<HTMLInputElement>(null);
@@ -87,14 +84,11 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop());
-      setCameraStream(null);
-    }
+    setCameraStream(null);
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, [cameraStream]);
+  }, []);
 
   // Stop camera when dialog closes or user leaves camera tab
   useEffect(() => {
@@ -103,24 +97,27 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     }
   }, [open, activeTab, stopCamera]);
 
-  // Clean up on unmount
+  // Clean up strictly on unmount
   useEffect(() => {
     return () => {
-      stopCamera();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
     };
-  }, [stopCamera]);
+  }, []);
 
-  // Attach stream to video element whenever cameraStream updates or video element mounts
-  useEffect(() => {
-    if (videoRef.current && cameraStream) {
-      const video = videoRef.current;
-      video.srcObject = cameraStream;
+  // Callback ref to reliably attach stream whenever video DOM element mounts
+  const setVideoRef = useCallback((video: HTMLVideoElement | null) => {
+    videoRef.current = video;
+    if (video && streamRef.current) {
+      video.srcObject = streamRef.current;
       video.onloadedmetadata = () => {
         void video.play().catch(() => {});
       };
       void video.play().catch(() => {});
     }
-  }, [cameraStream]);
+  }, []);
 
   // ── Camera Initializer ───────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
@@ -137,21 +134,27 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
-      if (cameraStream) {
-        cameraStream.getTracks().forEach((t) => t.stop());
-        setCameraStream(null);
-      }
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: { ideal: 'user' },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback for webcams with strict or limited constraints
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
 
       streamRef.current = stream;
       setCameraStream(stream);
@@ -177,7 +180,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     } finally {
       setIsCameraStarting(false);
     }
-  }, [cameraStream]);
+  }, []);
 
   // Start camera when entering the camera tab (desktop only)
   useEffect(() => {
@@ -428,11 +431,11 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
                 {/* Viewfinder */}
                 <div className="relative w-full aspect-4/3 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
                   <video
-                    ref={videoRef}
+                    ref={setVideoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-x-[-1]"
                   />
 
                   {isCameraStarting && (
