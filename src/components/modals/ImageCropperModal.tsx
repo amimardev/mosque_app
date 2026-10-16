@@ -41,6 +41,80 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   const [cropBox, setCropBox] = useState<CropBox>({ x: 10, y: 10, width: 80, height: 80 });
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Auto-zoom transform state (zoom & centering translation)
+  const [transform, setTransform] = useState<{
+    zoom: number;
+    panX: number;
+    panY: number;
+    animate: boolean;
+  }>({
+    zoom: 1.0,
+    panX: 0,
+    panY: 0,
+    animate: false,
+  });
+
+  // Calculate auto-zoom & centering pan to comfortably fit the crop area
+  const computeAutoZoom = useCallback(
+    (
+      box: CropBox,
+      dSize = displayedSize
+    ): { zoom: number; panX: number; panY: number } => {
+      if (!containerRef.current || !dSize) {
+        return { zoom: 1.0, panX: 0, panY: 0 };
+      }
+
+      const container = containerRef.current;
+      const contW = container.clientWidth;
+      const contH = container.clientHeight;
+
+      if (contW <= 0 || contH <= 0 || dSize.width <= 0 || dSize.height <= 0) {
+        return { zoom: 1.0, panX: 0, panY: 0 };
+      }
+
+      const boxPxW = (box.width / 100) * dSize.width;
+      const boxPxH = (box.height / 100) * dSize.height;
+
+      if (boxPxW <= 0 || boxPxH <= 0) {
+        return { zoom: 1.0, panX: 0, panY: 0 };
+      }
+
+      // Target viewport coverage (72% of viewport container for comfortable framing)
+      const targetW = contW * 0.72;
+      const targetH = contH * 0.72;
+
+      const scaleX = targetW / boxPxW;
+      const scaleY = targetH / boxPxH;
+      const rawZoom = Math.min(scaleX, scaleY);
+
+      // Clamp zoom between 1.0x (full view) and 6.0x (fine precision on small regions)
+      const zoom = Math.max(1.0, Math.min(6.0, rawZoom));
+
+      if (zoom <= 1.05) {
+        return { zoom: 1.0, panX: 0, panY: 0 };
+      }
+
+      // Center of the crop box in unscaled image coordinates
+      const boxCenterX = ((box.x + box.width / 2) / 100) * dSize.width;
+      const boxCenterY = ((box.y + box.height / 2) / 100) * dSize.height;
+
+      // Center of the unscaled image
+      const imgCenterX = dSize.width / 2;
+      const imgCenterY = dSize.height / 2;
+
+      // Displacement from image center
+      const deltaX = boxCenterX - imgCenterX;
+      const deltaY = boxCenterY - imgCenterY;
+
+      // Translate stage so crop box center matches container center
+      const panX = -zoom * deltaX;
+      const panY = -zoom * deltaY;
+
+      return { zoom, panX, panY };
+    },
+    [displayedSize]
+  );
+
   // Interaction tracking state
   const dragRef = useRef<{
     action: 'move' | 'nw' | 'ne' | 'se' | 'sw' | null;
@@ -67,46 +141,43 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     setDisplayedSize({ width: dw, height: dh });
 
     // Auto-fit default algorithm:
-    // Determine the image's inherent aspect ratio
     const imgAspect = nw / nh;
 
     let initW: number;
     let initH: number;
 
     if (imgAspect >= aspectRatio) {
-      // Image is wider than crop aspect ratio:
-      // Default to making the height take the full length (or 92% of it for margin)
       initH = 92;
-      // In pixel space: width_px = height_px * aspectRatio
-      // In percentage space: (initW / 100 * dw) = (initH / 100 * dh) * aspectRatio
-      // Therefore: initW = initH * (dh / dw) * aspectRatio
       initW = Math.min(96, initH * (nh / nw) * aspectRatio);
     } else {
-      // Image is taller than crop aspect ratio (e.g. A4 document):
-      // Default to making the width take the full length (or 92% of it for margin)
       initW = 92;
-      initH = Math.min(96, initW * (nw / nh) / aspectRatio);
+      initH = Math.min(96, (initW * (nw / nh)) / aspectRatio);
     }
 
     const initX = Math.max(0, (100 - initW) / 2);
     const initY = Math.max(0, (100 - initH) / 2);
 
-    setCropBox({
+    const initialBox = {
       x: initX,
       y: initY,
       width: initW,
       height: initH,
-    });
+    };
+
+    setCropBox(initialBox);
+
+    // Initial zoom framing
+    const initialTransform = computeAutoZoom(initialBox, { width: dw, height: dh });
+    setTransform({ ...initialTransform, animate: false });
   };
 
   // Re-measure displayed image on window resize
   useEffect(() => {
     const updateSize = () => {
       if (imageRef.current) {
-        setDisplayedSize({
-          width: imageRef.current.clientWidth,
-          height: imageRef.current.clientHeight,
-        });
+        const dw = imageRef.current.clientWidth;
+        const dh = imageRef.current.clientHeight;
+        setDisplayedSize({ width: dw, height: dh });
       }
     };
     window.addEventListener('resize', updateSize);
@@ -122,6 +193,9 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     e.stopPropagation();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
+    // Disable animation immediately during interaction for instant 1:1 response
+    setTransform((prev) => ({ ...prev, animate: false }));
+
     dragRef.current = {
       action,
       startX: e.clientX,
@@ -134,12 +208,12 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     if (!dragRef.current.action || !displayedSize) return;
 
     const { action, startX, startY, startCrop } = dragRef.current;
-    const deltaX = ((e.clientX - startX) / displayedSize.width) * 100;
-    const deltaY = ((e.clientY - startY) / displayedSize.height) * 100;
+    const currentZoom = transform.zoom || 1.0;
 
-    // Convert aspect ratio into percentage ratio:
-    // (width% * displayedWidth) / (height% * displayedHeight) = aspectRatio
-    // width% = height% * (displayedHeight / displayedWidth) * aspectRatio
+    // Compensate for active zoom scale so movement maps 1:1 underneath cursor/finger
+    const deltaX = ((e.clientX - startX) / (displayedSize.width * currentZoom)) * 100;
+    const deltaY = ((e.clientY - startY) / (displayedSize.height * currentZoom)) * 100;
+
     const percentAspectFactor = (displayedSize.height / displayedSize.width) * aspectRatio;
 
     let next = { ...startCrop };
@@ -148,8 +222,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       next.x = Math.max(0, Math.min(100 - startCrop.width, startCrop.x + deltaX));
       next.y = Math.max(0, Math.min(100 - startCrop.height, startCrop.y + deltaY));
     } else if (action === 'se') {
-      // Dragging south-east corner: deltaX controls sizing
-      let newW = Math.max(15, Math.min(100 - startCrop.x, startCrop.width + deltaX));
+      let newW = Math.max(10, Math.min(100 - startCrop.x, startCrop.width + deltaX));
       let newH = newW / percentAspectFactor;
       if (startCrop.y + newH > 100) {
         newH = 100 - startCrop.y;
@@ -158,7 +231,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       next.width = newW;
       next.height = newH;
     } else if (action === 'sw') {
-      let newW = Math.max(15, Math.min(startCrop.x + startCrop.width, startCrop.width - deltaX));
+      let newW = Math.max(10, Math.min(startCrop.x + startCrop.width, startCrop.width - deltaX));
       let newH = newW / percentAspectFactor;
       if (startCrop.y + newH > 100) {
         newH = 100 - startCrop.y;
@@ -168,7 +241,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       next.width = newW;
       next.height = newH;
     } else if (action === 'ne') {
-      let newW = Math.max(15, Math.min(100 - startCrop.x, startCrop.width + deltaX));
+      let newW = Math.max(10, Math.min(100 - startCrop.x, startCrop.width + deltaX));
       let newH = newW / percentAspectFactor;
       if (startCrop.y + startCrop.height - newH < 0) {
         newH = startCrop.y + startCrop.height;
@@ -178,7 +251,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       next.width = newW;
       next.height = newH;
     } else if (action === 'nw') {
-      let newW = Math.max(15, Math.min(startCrop.x + startCrop.width, startCrop.width - deltaX));
+      let newW = Math.max(10, Math.min(startCrop.x + startCrop.width, startCrop.width - deltaX));
       let newH = newW / percentAspectFactor;
       if (startCrop.y + startCrop.height - newH < 0) {
         newH = startCrop.y + startCrop.height;
@@ -201,6 +274,13 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       } catch {
         // Ignored
       }
+
+      // Smoothly zoom in or de-zoom to fit the modified crop box
+      const target = computeAutoZoom(cropBox);
+      setTransform({
+        ...target,
+        animate: true,
+      });
     }
   };
 
@@ -282,29 +362,75 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
         {/* Cropping Canvas/Container */}
         <div
           ref={containerRef}
-          className="relative w-full max-h-[60vh] min-h-[260px] bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center select-none touch-none"
+          className="relative w-full max-h-[60vh] min-h-[280px] bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center select-none touch-none"
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* Main Raw Image */}
-          <img
-            ref={imageRef}
-            src={imageSrc}
-            alt="الصورة المراد قصها"
-            onLoad={handleImageLoaded}
-            crossOrigin="anonymous"
-            className="max-w-full max-h-[60vh] object-contain block mx-auto pointer-events-none"
-          />
-
-          {/* Interactive Overlay & Crop Frame (Rendered only when image sizes are resolved) */}
-          {displayedSize && (
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                width: displayedSize.width,
-                height: displayedSize.height,
+          {/* Floating Zoom Indicator & Control Pill */}
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-2 bg-slate-900/80 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/10 text-white text-xs select-none">
+            <span className="font-mono text-[11px] text-emerald-400 font-bold">
+              {Math.round(transform.zoom * 100)}%
+            </span>
+            <div className="w-px h-3.5 bg-white/20" />
+            <button
+              type="button"
+              onClick={() => {
+                if (transform.zoom > 1.05) {
+                  setTransform({ zoom: 1.0, panX: 0, panY: 0, animate: true });
+                } else {
+                  const target = computeAutoZoom(cropBox);
+                  setTransform({ ...target, animate: true });
+                }
               }}
+              className="hover:text-emerald-300 transition-colors flex items-center gap-1 text-[11px] cursor-pointer"
+              title={transform.zoom > 1.05 ? 'عرض الصورة كاملة (100%)' : 'تكبير تلقائي لمنطقة القص'}
             >
+              {transform.zoom > 1.05 ? (
+                <>
+                  <ZoomOut className="w-3.5 h-3.5" />
+                  <span>عرض كامل</span>
+                </>
+              ) : (
+                <>
+                  <ZoomIn className="w-3.5 h-3.5" />
+                  <span>تكبير تلقائي</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Transforming Stage (Smoothly scales & centers on active crop area) */}
+          <div
+            className="relative flex items-center justify-center shrink-0 origin-center"
+            style={{
+              width: displayedSize ? displayedSize.width : 'auto',
+              height: displayedSize ? displayedSize.height : 'auto',
+              transform: `translate3d(${transform.panX}px, ${transform.panY}px, 0) scale(${transform.zoom})`,
+              transition: transform.animate
+                ? 'transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1)'
+                : 'none',
+              willChange: 'transform',
+            }}
+          >
+            {/* Main Raw Image */}
+            <img
+              ref={imageRef}
+              src={imageSrc}
+              alt="الصورة المراد قصها"
+              onLoad={handleImageLoaded}
+              crossOrigin="anonymous"
+              className="max-w-full max-h-[60vh] object-contain block mx-auto pointer-events-none"
+            />
+
+            {/* Interactive Overlay & Crop Frame (Rendered only when image sizes are resolved) */}
+            {displayedSize && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  width: displayedSize.width,
+                  height: displayedSize.height,
+                }}
+              >
               {/* Darkened backdrop with SVG cutout */}
               <svg
                 className="absolute inset-0 w-full h-full pointer-events-none"
@@ -355,26 +481,27 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                   <div />
                 </div>
 
-                {/* Corner Resize Handles */}
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, 'nw')}
-                  className="absolute -top-2.5 -left-2.5 w-5 h-5 bg-white border-2 border-emerald-600 rounded-full cursor-nwse-resize shadow-md"
-                />
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, 'ne')}
-                  className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-white border-2 border-emerald-600 rounded-full cursor-nesw-resize shadow-md"
-                />
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, 'sw')}
-                  className="absolute -bottom-2.5 -left-2.5 w-5 h-5 bg-white border-2 border-emerald-600 rounded-full cursor-nesw-resize shadow-md"
-                />
-                <div
-                  onPointerDown={(e) => handlePointerDown(e, 'se')}
-                  className="absolute -bottom-2.5 -right-2.5 w-5 h-5 bg-white border-2 border-emerald-600 rounded-full cursor-nwse-resize shadow-md"
-                />
+                  {/* Corner Resize Handles with generous touch targets */}
+                  <div
+                    onPointerDown={(e) => handlePointerDown(e, 'nw')}
+                    className="absolute -top-3 -left-3 w-6 h-6 bg-white border-2 border-emerald-600 rounded-full cursor-nwse-resize shadow-md hover:scale-110 active:scale-95 transition-transform"
+                  />
+                  <div
+                    onPointerDown={(e) => handlePointerDown(e, 'ne')}
+                    className="absolute -top-3 -right-3 w-6 h-6 bg-white border-2 border-emerald-600 rounded-full cursor-nesw-resize shadow-md hover:scale-110 active:scale-95 transition-transform"
+                  />
+                  <div
+                    onPointerDown={(e) => handlePointerDown(e, 'sw')}
+                    className="absolute -bottom-3 -left-3 w-6 h-6 bg-white border-2 border-emerald-600 rounded-full cursor-nesw-resize shadow-md hover:scale-110 active:scale-95 transition-transform"
+                  />
+                  <div
+                    onPointerDown={(e) => handlePointerDown(e, 'se')}
+                    className="absolute -bottom-3 -right-3 w-6 h-6 bg-white border-2 border-emerald-600 rounded-full cursor-nwse-resize shadow-md hover:scale-110 active:scale-95 transition-transform"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 pt-3">
