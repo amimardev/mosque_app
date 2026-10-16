@@ -83,7 +83,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     }
   }, [cameraStream]);
 
-  // Stop camera when dialog closes or user switches tabs
+  // Stop camera when dialog closes or user leaves camera tab
   useEffect(() => {
     if (!open || activeTab !== 'camera') {
       stopCamera();
@@ -96,6 +96,18 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
       stopCamera();
     };
   }, [stopCamera]);
+
+  // Attach stream to video element whenever cameraStream updates or video element mounts
+  useEffect(() => {
+    if (videoRef.current && cameraStream) {
+      const video = videoRef.current;
+      video.srcObject = cameraStream;
+      video.onloadedmetadata = () => {
+        void video.play().catch(() => {});
+      };
+      void video.play().catch(() => {});
+    }
+  }, [cameraStream]);
 
   // ── Camera Initializer ───────────────────────────────────────────────────────
   const startCamera = useCallback(async (deviceId?: string) => {
@@ -128,7 +140,10 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
+        videoRef.current.onloadedmetadata = () => {
+          void videoRef.current?.play().catch(() => {});
+        };
+        void videoRef.current.play().catch(() => {});
       }
 
       // Enumerate cameras
@@ -357,7 +372,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
           </TabsContent>
 
           {/* ── TAB 2: Camera ── */}
-          <TabsContent value="camera" className="space-y-3 pt-3">
+          <TabsContent value="camera" keepMounted className="space-y-3 pt-3">
             {cameraError ? (
               <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 text-right">
                 <div className="flex items-start gap-2.5">
@@ -385,7 +400,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover scale-x-[-1]"
                   />
 
                   {isCameraStarting && (
@@ -400,7 +415,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
                     <button
                       type="button"
                       onClick={handleSwitchCamera}
-                      className="absolute top-3 left-3 p-2 bg-slate-900/70 hover:bg-slate-900 text-white rounded-xl shadow-md transition-colors"
+                      className="absolute top-3 left-3 p-2 bg-slate-900/70 hover:bg-slate-900 text-white rounded-xl shadow-md transition-colors cursor-pointer"
                       title="تبديل الكاميرا (الأمامية / الخلفية)"
                     >
                       <SwitchCamera className="w-4 h-4" />
