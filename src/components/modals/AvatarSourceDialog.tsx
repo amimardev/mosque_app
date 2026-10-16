@@ -54,11 +54,22 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
 
   // ── Camera States ───────────────────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState<string>('');
   const [isCameraStarting, setIsCameraStarting] = useState(false);
+
+  // Detect mobile or touch environment
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+    return (
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 0 && /Macintosh/.test(navigator.userAgent))
+    );
+  }, []);
 
   // ── Scanner Agent States ───────────────────────────────────────────────────
   const agentUrl = useMemo(
@@ -74,6 +85,10 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
 
   // ── Stop Camera Stream Helper ───────────────────────────────────────────────
   const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
     if (cameraStream) {
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
@@ -109,71 +124,118 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     }
   }, [cameraStream]);
 
+  // Helpers to inspect camera labels
+  const isEnvironmentLabel = (label: string) => /back|rear|environment|خلف/i.test(label);
+  const isUserLabel = (label: string) => /front|user|selfie|وجه|أمام/i.test(label);
+
   // ── Camera Initializer ───────────────────────────────────────────────────────
-  const startCamera = useCallback(async (deviceId?: string) => {
-    setIsCameraStarting(true);
-    setCameraError('');
+  const startCamera = useCallback(
+    async (targetFacingMode?: 'user' | 'environment', targetDeviceId?: string) => {
+      setIsCameraStarting(true);
+      setCameraError('');
 
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('الكاميرا غير مدعومة على هذا المتصفح أو تتطلب اتصال HTTPS آمن.');
-      }
+      const desiredFacingMode = targetFacingMode ?? facingMode;
 
-      // Stop previous stream if active
-      if (cameraStream) {
-        cameraStream.getTracks().forEach((t) => t.stop());
-      }
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('الكاميرا غير مدعومة على هذا المتصفح أو تتطلب اتصال HTTPS آمن.');
+        }
 
-      const constraints: MediaStreamConstraints = {
-        video: deviceId
-          ? { deviceId: { exact: deviceId } }
-          : {
-              facingMode: { ideal: 'user' },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-        audio: false,
-      };
+        // Synchronously stop all previous tracks to release the camera hardware
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
+        }
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((t) => t.stop());
+          setCameraStream(null);
+        }
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
+        }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      setCameraStream(stream);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          void videoRef.current?.play().catch(() => {});
+        // Build video constraints
+        const videoConstraints: MediaTrackConstraints = {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
         };
-        void videoRef.current.play().catch(() => {});
-      }
 
-      // Enumerate cameras
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-      setCameraDevices(videoInputs);
+        if (targetDeviceId) {
+          videoConstraints.deviceId = { ideal: targetDeviceId };
+        }
+        if (desiredFacingMode) {
+          videoConstraints.facingMode = { ideal: desiredFacingMode };
+        }
 
-      // Track active device ID
-      const activeTrack = stream.getVideoTracks()[0];
-      const settings = activeTrack?.getSettings();
-      if (settings?.deviceId) {
-        setSelectedCameraId(settings.deviceId);
-      } else if (videoInputs.length > 0 && !selectedCameraId) {
-        setSelectedCameraId(videoInputs[0].deviceId);
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+            audio: false,
+          });
+        } catch (err: any) {
+          // Fallback: If deviceId caused an issue (common when ID is randomized on iOS Safari/Android),
+          // fall back to pure facingMode constraint
+          console.warn('Initial camera stream failed, trying fallback with facingMode:', err);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: desiredFacingMode
+              ? { facingMode: { ideal: desiredFacingMode } }
+              : true,
+            audio: false,
+          });
+        }
+
+        streamRef.current = stream;
+        setCameraStream(stream);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            void videoRef.current?.play().catch(() => {});
+          };
+          void videoRef.current.play().catch(() => {});
+        }
+
+        // Enumerate cameras
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+        setCameraDevices(videoInputs);
+
+        // Track active device settings
+        const activeTrack = stream.getVideoTracks()[0];
+        const settings = activeTrack?.getSettings();
+
+        // Update facingMode if reported by track settings
+        if (settings?.facingMode === 'user' || settings?.facingMode === 'environment') {
+          setFacingMode(settings.facingMode);
+        } else if (desiredFacingMode) {
+          setFacingMode(desiredFacingMode);
+        }
+
+        if (settings?.deviceId) {
+          setSelectedCameraId(settings.deviceId);
+        } else if (targetDeviceId) {
+          setSelectedCameraId(targetDeviceId);
+        } else if (videoInputs.length > 0 && !selectedCameraId) {
+          setSelectedCameraId(videoInputs[0].deviceId);
+        }
+      } catch (err: any) {
+        console.warn('Camera access failed:', err);
+        let msg = 'تعذر تشغيل الكاميرا. يرجى التحقق من إذن الوصول للكاميرا في إعدادات المتصفح.';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          msg = 'تم رفض الإذن بالوصول إلى الكاميرا. يرجى السماح بها من شريط العنوان في المتصفح.';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          msg = 'لم يتم العثور على أي كاميرا متصلة بالجهاز.';
+        } else if (err.message) {
+          msg = err.message;
+        }
+        setCameraError(msg);
+      } finally {
+        setIsCameraStarting(false);
       }
-    } catch (err: any) {
-      console.warn('Camera access failed:', err);
-      let msg = 'تعذر تشغيل الكاميرا. يرجى التحقق من إذن الوصول للكاميرا في إعدادات المتصفح.';
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        msg = 'تم رفض الإذن بالوصول إلى الكاميرا. يرجى السماح بها من شريط العنوان في المتصفح.';
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        msg = 'لم يتم العثور على أي كاميرا متصلة بالجهاز.';
-      } else if (err.message) {
-        msg = err.message;
-      }
-      setCameraError(msg);
-    } finally {
-      setIsCameraStarting(false);
-    }
-  }, [cameraStream, selectedCameraId]);
+    },
+    [facingMode, cameraStream, selectedCameraId]
+  );
 
   // Start camera when entering the camera tab
   useEffect(() => {
@@ -182,14 +244,39 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     }
   }, [open, activeTab, cameraStream, cameraError, startCamera]);
 
-  // Toggle/Switch Camera (for phones with front/back camera or multiple webcams)
+  // Toggle/Switch Camera (supports mobile front/back camera and desktop webcams)
   const handleSwitchCamera = () => {
-    if (cameraDevices.length < 2) return;
-    const currentIndex = cameraDevices.findIndex((d) => d.deviceId === selectedCameraId);
-    const nextIndex = (currentIndex + 1) % cameraDevices.length;
-    const nextDeviceId = cameraDevices[nextIndex].deviceId;
-    setSelectedCameraId(nextDeviceId);
-    void startCamera(nextDeviceId);
+    if (isCameraStarting) return;
+
+    if (isMobile) {
+      // On mobile devices, toggle facingMode
+      const nextFacing = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(nextFacing);
+
+      // Check if any enumerated device has a matching label
+      const matchingDevice = cameraDevices.find((d) =>
+        nextFacing === 'environment' ? isEnvironmentLabel(d.label) : isUserLabel(d.label)
+      );
+
+      if (matchingDevice) {
+        setSelectedCameraId(matchingDevice.deviceId);
+        void startCamera(nextFacing, matchingDevice.deviceId);
+      } else {
+        void startCamera(nextFacing);
+      }
+    } else if (cameraDevices.length > 1) {
+      // On desktop with multiple webcams, cycle through device IDs
+      const currentIndex = cameraDevices.findIndex((d) => d.deviceId === selectedCameraId);
+      const nextIndex = (currentIndex + 1) % cameraDevices.length;
+      const nextDevice = cameraDevices[nextIndex];
+      setSelectedCameraId(nextDevice.deviceId);
+      void startCamera(facingMode, nextDevice.deviceId);
+    } else {
+      // Fallback: toggle facingMode
+      const nextFacing = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(nextFacing);
+      void startCamera(nextFacing);
+    }
   };
 
   // Capture Snapshot from Camera
@@ -400,7 +487,9 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-full object-cover scale-x-[-1]"
+                    className={`w-full h-full object-cover transition-transform duration-200 ${
+                      facingMode === 'user' ? 'scale-x-[-1]' : 'scale-x-1'
+                    }`}
                   />
 
                   {isCameraStarting && (
@@ -410,15 +499,25 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
                     </div>
                   )}
 
-                  {/* Switch camera button if multiple are detected */}
-                  {cameraDevices.length > 1 && (
+                  {/* Switch camera button (for phones with front/back camera or multiple webcams) */}
+                  {(cameraDevices.length > 1 || isMobile) && (
                     <button
                       type="button"
                       onClick={handleSwitchCamera}
-                      className="absolute top-3 left-3 p-2 bg-slate-900/70 hover:bg-slate-900 text-white rounded-xl shadow-md transition-colors cursor-pointer"
-                      title="تبديل الكاميرا (الأمامية / الخلفية)"
+                      disabled={isCameraStarting}
+                      className="absolute top-3 left-3 px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-900 active:scale-95 disabled:opacity-50 text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 backdrop-blur-xs border border-white/10"
+                      title={
+                        facingMode === 'user'
+                          ? 'التبديل إلى الكاميرا الخلفية'
+                          : 'التبديل إلى الكاميرا الأمامية'
+                      }
                     >
-                      <SwitchCamera className="w-4 h-4" />
+                      <SwitchCamera
+                        className={`w-4 h-4 ${isCameraStarting ? 'animate-spin' : ''}`}
+                      />
+                      <span className="text-[11px] font-medium hidden sm:inline">
+                        {facingMode === 'user' ? 'خلفية' : 'أمامية'}
+                      </span>
                     </button>
                   )}
                 </div>
