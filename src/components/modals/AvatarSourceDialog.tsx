@@ -67,12 +67,7 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
     );
   }, []);
 
-  // Ensure mobile never stays on desktop camera tab
-  useEffect(() => {
-    if (isMobile && activeTab === 'camera') {
-      setActiveTab('upload');
-    }
-  }, [isMobile, activeTab]);
+  const mobileCameraInputRef = useRef<HTMLInputElement>(null);
 
   // ── Scanner Agent States ───────────────────────────────────────────────────
   const agentUrl = useMemo(
@@ -334,47 +329,40 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
           onValueChange={(val) => setActiveTab(val as typeof activeTab)}
           className="w-full pt-1"
         >
-          <TabsList className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <TabsList className="grid grid-cols-3">
             <TabsTrigger value="upload" className="gap-1.5">
-              {isMobile ? (
-                <>
-                  <Camera className="w-4 h-4" />
-                  <span>صورة أو كاميرا الهاتف</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4" />
-                  <span>ملف من الجهاز</span>
-                </>
-              )}
+              <Upload className="w-4 h-4" />
+              <span>ملف من الجهاز</span>
             </TabsTrigger>
-            {!isMobile && (
-              <TabsTrigger value="camera" className="gap-1.5">
-                <Camera className="w-4 h-4" />
-                <span>كاميرا الويب</span>
-              </TabsTrigger>
-            )}
+            <TabsTrigger
+              value="camera"
+              className="gap-1.5"
+              onClick={() => {
+                if (isMobile) {
+                  mobileCameraInputRef.current?.click();
+                }
+              }}
+            >
+              <Camera className="w-4 h-4" />
+              <span>الكاميرا</span>
+            </TabsTrigger>
             <TabsTrigger value="scanner" className="gap-1.5">
               <ScanLine className="w-4 h-4" />
               <span>ماسح ضوئي A4</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* ── TAB 1: File Upload / Mobile Unified Picker ── */}
+          {/* ── TAB 1: File Upload ── */}
           <TabsContent value="upload" className="space-y-4 pt-3">
             <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl cursor-pointer transition-all text-center group">
               <div className="w-12 h-12 rounded-2xl bg-white group-hover:bg-emerald-100 text-slate-500 group-hover:text-emerald-700 flex items-center justify-center shadow-xs mb-3 transition-colors">
-                {isMobile ? <Camera className="w-6 h-6" /> : <FileImage className="w-6 h-6" />}
+                <FileImage className="w-6 h-6" />
               </div>
               <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-900 mb-1">
-                {isMobile
-                  ? 'اضغط لالتقاط صورة بالكاميرا أو اختيارها من الهاتف'
-                  : 'اضغط لاختيار صورة من جهازك'}
+                اضغط لاختيار صورة من جهازك
               </span>
               <span className="text-xs text-slate-400">
-                {isMobile
-                  ? 'سيفتح لك الهاتف خيار التقاط صورة بالكاميرا أو اختيار صورة من المعرض'
-                  : 'يدعم صيغ JPG، PNG، WebP، أو HEIC'}
+                يدعم صيغ JPG، PNG، WebP، أو HEIC
               </span>
               <input
                 type="file"
@@ -385,61 +373,89 @@ export const AvatarSourceDialog: React.FC<AvatarSourceDialogProps> = ({
             </label>
           </TabsContent>
 
-          {/* ── TAB 2: Camera (Desktop Only) ── */}
-          {!isMobile && (
-            <TabsContent value="camera" keepMounted className="space-y-3 pt-3">
-              {cameraError ? (
-                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 text-right">
-                  <div className="flex items-start gap-2.5">
-                    <VideoOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                    <p className="text-xs text-rose-800 font-semibold leading-relaxed">
-                      {cameraError}
-                    </p>
+          {/* ── TAB 2: Camera (Native capture on mobile, live webcam on PC) ── */}
+          <TabsContent value="camera" keepMounted className="space-y-3 pt-3">
+            {isMobile ? (
+              <div className="space-y-3">
+                <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 hover:bg-emerald-50 rounded-2xl cursor-pointer transition-all text-center group">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md mb-3 group-hover:scale-105 transition-transform">
+                    <Camera className="w-7 h-7" />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void startCamera()}
-                    className="w-full text-xs font-bold gap-2"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    إعادة محاولة تشغيل الكاميرا
-                  </Button>
+                  <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-900 mb-1">
+                    اضغط لتشغيل كاميرا الهاتف والتقاط الصورة
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    سيتم فتح تطبيق الكاميرا على هاتفك مباشرة
+                  </span>
+                  <input
+                    ref={mobileCameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+                </label>
+                <Button
+                  type="button"
+                  onClick={() => mobileCameraInputRef.current?.click()}
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs gap-2 shadow-xs cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>تشغيل الكاميرا الآن</span>
+                </Button>
+              </div>
+            ) : cameraError ? (
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3 text-right">
+                <div className="flex items-start gap-2.5">
+                  <VideoOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-rose-800 font-semibold leading-relaxed">
+                    {cameraError}
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* Viewfinder */}
-                  <div className="relative w-full aspect-4/3 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover"
-                    />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void startCamera()}
+                  className="w-full text-xs font-bold gap-2"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  إعادة محاولة تشغيل الكاميرا
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Viewfinder */}
+                <div className="relative w-full aspect-4/3 bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
 
-                    {isCameraStarting && (
-                      <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center gap-2 text-white text-xs">
-                        <LoaderCircle className="w-6 h-6 animate-spin text-emerald-400" />
-                        <span>جارٍ تشغيل الكاميرا…</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Capture Button */}
-                  <Button
-                    type="button"
-                    onClick={handleCaptureSnapshot}
-                    disabled={isCameraStarting || !cameraStream}
-                    className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs gap-2 shadow-xs cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>التقاط الصورة الآن</span>
-                  </Button>
+                  {isCameraStarting && (
+                    <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center gap-2 text-white text-xs">
+                      <LoaderCircle className="w-6 h-6 animate-spin text-emerald-400" />
+                      <span>جارٍ تشغيل الكاميرا…</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </TabsContent>
-          )}
+
+                {/* Capture Button */}
+                <Button
+                  type="button"
+                  onClick={handleCaptureSnapshot}
+                  disabled={isCameraStarting || !cameraStream}
+                  className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs gap-2 shadow-xs cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>التقاط الصورة الآن</span>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
 
           {/* ── TAB 3: Scanner Agent ── */}
           <TabsContent value="scanner" className="space-y-4 pt-3">
