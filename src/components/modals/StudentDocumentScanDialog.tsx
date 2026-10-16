@@ -5,13 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from '../ui/toast';
 import { extractStudentDocumentFn, createScannedStudentFn } from '../../server/functions/studentDocuments';
 import { cropPhotoFromBlob } from '../../lib/warpQuad';
-
-/** Stable download URL for latest installer released via GitHub Actions */
-const SCANNER_AGENT_INSTALLER_URL =
-  'https://github.com/amimardev/mosque_app/releases/latest/download/ScannerAgentSetup-Rust.exe';
-
-/** Official download URL for NAPS2 scanning driver */
-const NAPS2_DOWNLOAD_URL = 'https://www.naps2.com/download';
+import { MissingScannerAgentNotice } from '../common/MissingScannerAgentNotice';
 
 type Phase =
   | 'checking'        // checking connection & loading scanners
@@ -411,72 +405,18 @@ export function StudentDocumentScanDialog({ open, onClose, onCreated }: Props) {
 
           {/* ── Agent not installed / not running ── */}
           {phase === 'agent_missing' && (
-            <div className="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/60 p-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-rose-950">برنامج الماسح الضوئي غير متصل</h3>
-                  <p className="text-xs leading-6 text-rose-800">
-                    لمسح الوثائق مباشرة من المتصفح، يلزم تثبيت وتشغيل برنامج الماسح على جهاز Windows المتصل بالماسح الضوئي.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-rose-200/60">
-                <a
-                  href={SCANNER_AGENT_INSTALLER_URL}
-                  download
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  تنزيل برنامج الماسح (Windows)
-                </a>
-                <a
-                  href={NAPS2_DOWNLOAD_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
-                >
-                  <ExternalLink className="h-4 w-4 text-slate-500" />
-                  تثبيت مشغل NAPS2
-                </a>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={initScannerAgent}
-                  className="border-slate-300 text-xs"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  إعادة المحاولة
-                </Button>
-              </div>
-            </div>
+            <MissingScannerAgentNotice
+              type="missing_agent"
+              onRetry={initScannerAgent}
+            />
           )}
 
           {/* ── No scanners found ── */}
           {phase === 'no_scanners' && (
-            <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-amber-950">لم يتم العثور على أي ماسح ضوئي</h3>
-                  <p className="text-xs leading-6 text-amber-800">
-                    برنامج الماسح يعمل بنجاح، لكن لم يتعرف النظام على ماسح ضوئي متصل. يرجى التأكد من توصيل كابل الماسح وتشغيله.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-amber-200/60">
-                <Button
-                  type="button"
-                  onClick={initScannerAgent}
-                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs cursor-pointer"
-                >
-                  <RefreshCw className="h-4 w-4 text-white" />
-                  إعادة البحث عن الماسحات
-                </Button>
-              </div>
-            </div>
+            <MissingScannerAgentNotice
+              type="no_scanners"
+              onRetry={initScannerAgent}
+            />
           )}
 
           {/* ── Ready to scan ── */}
